@@ -1,9 +1,7 @@
+import AppRoutes from "./routes/AppRoutes";
+
 function App() {
-  return (
-    <div>
-      <h2>Smart Governance and Civic Corporation System</h2>
-    </div>
-  );
+  return <AppRoutes />;
 }
 
 export default App;
