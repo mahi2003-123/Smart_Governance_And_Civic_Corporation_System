@@ -1,111 +1,165 @@
-import React from 'react';
-import { Box, Card, Typography, Grid, Button, Stack, Paper, Chip } from '@mui/material';
-import DownloadIcon from '@mui/icons-material/Download';
-import DnsIcon from '@mui/icons-material/Dns';
-import SecurityIcon from '@mui/icons-material/Security';
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Typography,
+  Button,
+  Grid,
+  Divider,
+} from '@mui/material';
+import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
+import PrintOutlinedIcon from '@mui/icons-material/PrintOutlined';
+import { adminService } from '../../services/adminService';
+import { CivicAnalytics, Ward } from '../../types';
+import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { AdminPageHeader } from '../../components/admin/AdminPageHeader';
+import { AdminStat } from '../../components/admin/AdminStat';
 
 export const SystemReports: React.FC = () => {
-  const auditLogs = [
-    { id: '1', event: 'System Backup Completed', user: 'SYSTEM_CRON', timestamp: '2026-08-05 04:00:00', status: 'SUCCESS' },
-    { id: '2', event: 'Role Upgrade: User usr_worker_02 promoted to Senior Field Tech', user: 'Dr. Rajesh Nair (Admin)', timestamp: '2026-08-04 14:22:10', status: 'AUDITED' },
-    { id: '3', event: 'Database Index Rebuild', user: 'SYSTEM_DBA', timestamp: '2026-08-04 02:15:00', status: 'SUCCESS' },
-    { id: '4', event: 'Ward 1 Boundary Coordinates Updated', user: 'Dr. Rajesh Nair (Admin)', timestamp: '2026-08-03 11:45:00', status: 'AUDITED' },
-  ];
+  const [loading, setLoading] = useState(true);
+  const [analytics, setAnalytics] = useState<CivicAnalytics | null>(null);
+  const [wards, setWards] = useState<Ward[]>([]);
 
-  const handleDownloadLog = () => {
-    alert('Downloading System Security & Operations Audit CSV Log...');
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [aData, wData] = await Promise.all([
+          adminService.getAnalytics(),
+          adminService.getWards(),
+        ]);
+        setAnalytics(aData);
+        setWards(wData);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const handleExportReport = () => {
+    window.print();
   };
 
+  if (loading || !analytics) return <LoadingSpinner message="Generating Municipal Performance Reports..." />;
+
   return (
-    <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2} mb={4}>
-        <Box>
-          <Typography variant="h3" fontWeight={800}>
-            System Audit & Governance Logs
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Enterprise infrastructure logging, security access audits, and system health status.
-          </Typography>
+    <Box sx={{ pb: 6, maxWidth: 1100, mx: 'auto' }}>
+      <AdminPageHeader
+        title="System Reports"
+        description="High-level analytics and performance summaries across municipal operations."
+        actionLabel="Print / Export Report"
+        actionIcon={<PrintOutlinedIcon sx={{ fontSize: 18 }} />}
+        onActionClick={handleExportReport}
+        secondaryAction={
+          <Button
+            variant="outlined"
+            startIcon={<DownloadOutlinedIcon sx={{ fontSize: 18 }} />}
+            onClick={() => alert('Downloading Municipal Report CSV archive...')}
+            sx={{
+              borderColor: '#E5E8E4',
+              color: '#202522',
+              textTransform: 'none',
+              fontSize: '0.875rem',
+              borderRadius: '8px',
+              '&:hover': { borderColor: '#496A57', backgroundColor: '#F8F9F7' },
+            }}
+          >
+            Export CSV
+          </Button>
+        }
+      />
+
+      {/* Report Summary Cards */}
+      <Box sx={{ mb: 5 }}>
+        <Typography variant="overline" sx={{ letterSpacing: '0.08em', color: '#68706B', fontWeight: 600, display: 'block', mb: 1 }}>
+          EXECUTIVE PERFORMANCE SUMMARY
+        </Typography>
+        <Divider sx={{ mb: 2.5, borderColor: '#E5E8E4' }} />
+
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr 1fr', md: '1fr 1fr 1fr 1fr' },
+            gap: 0,
+            border: '1px solid #E5E8E4',
+            borderRadius: '8px',
+            backgroundColor: '#FFFFFF',
+          }}
+        >
+          <AdminStat label="Total Complaints" value={analytics.totalComplaints} supportingText="Filed city-wide" />
+          <AdminStat label="Pending Resolution" value={analytics.pendingComplaints} supportingText="Awaiting action" highlightColor="#B58A45" />
+          <AdminStat label="Resolved Grievances" value={analytics.resolvedComplaints} supportingText="Target 90%+" highlightColor="#527A5E" />
+          <AdminStat label="Active Wards" value={wards.length || 5} supportingText="Municipal divisions" showRightBorder={false} />
         </Box>
-        <Button variant="contained" startIcon={<DownloadIcon />} onClick={handleDownloadLog} sx={{ borderRadius: 28, px: 3 }}>
-          Export System Audit CSV
-        </Button>
       </Box>
 
-      <Grid container spacing={3} mb={4}>
-        <Grid item xs={12} sm={4}>
-          <Card sx={{ p: 3, borderRadius: 4 }}>
-            <Box display="flex" alignItems="center" gap={1.5} mb={1}>
-              <DnsIcon sx={{ color: '#6F4E37' }} />
-              <Typography variant="subtitle2" fontWeight={700}>
-                Database Uptime
-              </Typography>
-            </Box>
-            <Typography variant="h3" fontWeight={800} color="success.main">
-              99.98%
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Zero unscheduled downtime past 90 days
-            </Typography>
-          </Card>
+      {/* Category Breakdown & Ward Performance */}
+      <Grid container spacing={4} sx={{ mb: 5 }}>
+        {/* Category Breakdown */}
+        <Grid item xs={12} md={6}>
+          <Typography variant="overline" sx={{ letterSpacing: '0.08em', color: '#68706B', fontWeight: 600, display: 'block', mb: 1 }}>
+            COMPLAINTS BY CATEGORY
+          </Typography>
+          <Divider sx={{ mb: 2.5, borderColor: '#E5E8E4' }} />
+
+          <Box sx={{ p: 3, border: '1px solid #E5E8E4', borderRadius: '8px', backgroundColor: '#FFFFFF' }}>
+            {analytics.categoryBreakdown.map((cat) => {
+              const pct = Math.round((cat.count / analytics.totalComplaints) * 100);
+
+              return (
+                <Box key={cat.category} sx={{ mb: 2.5, '&:last-child': { mb: 0 } }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#202522' }}>
+                      {cat.category}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#68706B', fontWeight: 600 }}>
+                      {cat.count} issues ({pct}%)
+                    </Typography>
+                  </Box>
+                  <Box sx={{ height: 6, width: '100%', backgroundColor: '#F3F5F2', borderRadius: 3, overflow: 'hidden' }}>
+                    <Box sx={{ height: '100%', width: `${pct}%`, backgroundColor: '#496A57', borderRadius: 3 }} />
+                  </Box>
+                </Box>
+              );
+            })}
+          </Box>
         </Grid>
 
-        <Grid item xs={12} sm={4}>
-          <Card sx={{ p: 3, borderRadius: 4 }}>
-            <Box display="flex" alignItems="center" gap={1.5} mb={1}>
-              <SecurityIcon sx={{ color: '#6F4E37' }} />
-              <Typography variant="subtitle2" fontWeight={700}>
-                Security Policy Status
-              </Typography>
-            </Box>
-            <Typography variant="h3" fontWeight={800} color="primary">
-              Active
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Role-based JWT encryption enabled
-            </Typography>
-          </Card>
-        </Grid>
+        {/* Ward Resolution Rates */}
+        <Grid item xs={12} md={6}>
+          <Typography variant="overline" sx={{ letterSpacing: '0.08em', color: '#68706B', fontWeight: 600, display: 'block', mb: 1 }}>
+            WARD RESOLUTION PERFORMANCE
+          </Typography>
+          <Divider sx={{ mb: 2.5, borderColor: '#E5E8E4' }} />
 
-        <Grid item xs={12} sm={4}>
-          <Card sx={{ p: 3, borderRadius: 4 }}>
-            <Box display="flex" alignItems="center" gap={1.5} mb={1}>
-              <DownloadIcon sx={{ color: '#6F4E37' }} />
-              <Typography variant="subtitle2" fontWeight={700}>
-                Daily Backup Archive
-              </Typography>
-            </Box>
-            <Typography variant="h3" fontWeight={800} color="text.primary">
-              2.4 GB
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Compressed encrypted snapshots
-            </Typography>
-          </Card>
+          <Box sx={{ p: 3, border: '1px solid #E5E8E4', borderRadius: '8px', backgroundColor: '#FFFFFF' }}>
+            {wards.map((w) => {
+              const total = w.activeComplaints + w.resolvedComplaints;
+              const pct = total > 0 ? Math.round((w.resolvedComplaints / total) * 100) : 100;
+
+              return (
+                <Box key={w.id} sx={{ mb: 2.5, '&:last-child': { mb: 0 } }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#202522' }}>
+                      {w.name}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#68706B', fontWeight: 600 }}>
+                      {pct}% Resolved ({w.activeComplaints} active)
+                    </Typography>
+                  </Box>
+                  <Box sx={{ height: 6, width: '100%', backgroundColor: '#F3F5F2', borderRadius: 3, overflow: 'hidden' }}>
+                    <Box sx={{ height: '100%', width: `${pct}%`, backgroundColor: '#527A5E', borderRadius: 3 }} />
+                  </Box>
+                </Box>
+              );
+            })}
+          </Box>
         </Grid>
       </Grid>
-
-      <Card sx={{ p: 3, borderRadius: 4 }}>
-        <Typography variant="h6" fontWeight={700} mb={2}>
-          System Operations Audit Trail
-        </Typography>
-
-        <Stack spacing={2}>
-          {auditLogs.map((log) => (
-            <Paper key={log.id} sx={{ p: 2, borderRadius: 3, bgcolor: '#F8F5F2', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Box>
-                <Typography variant="subtitle2" fontWeight={700}>
-                  {log.event}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Triggered by: {log.user} • {log.timestamp}
-                </Typography>
-              </Box>
-              <Chip label={log.status} color="success" size="small" sx={{ fontWeight: 700 }} />
-            </Paper>
-          ))}
-        </Stack>
-      </Card>
     </Box>
   );
 };
+
+export default SystemReports;

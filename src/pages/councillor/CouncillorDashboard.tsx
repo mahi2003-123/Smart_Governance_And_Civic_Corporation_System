@@ -4,7 +4,6 @@ import {
   Card,
   Typography,
   Button,
-  Chip,
   Table,
   TableBody,
   TableCell,
@@ -12,15 +11,15 @@ import {
   TableHead,
   TableRow
 } from '@mui/material';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import RateReviewIcon from '@mui/icons-material/RateReview';
-import CampaignIcon from '@mui/icons-material/Campaign';
-import AssessmentIcon from '@mui/icons-material/Assessment';
-import PersonIcon from '@mui/icons-material/Person';
-import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
-import TrackChangesIcon from '@mui/icons-material/TrackChanges';
+import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
+import RateReviewOutlinedIcon from '@mui/icons-material/RateReviewOutlined';
+import CampaignOutlinedIcon from '@mui/icons-material/CampaignOutlined';
+import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
+import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
+import HourglassEmptyOutlinedIcon from '@mui/icons-material/HourglassEmptyOutlined';
+import TrackChangesOutlinedIcon from '@mui/icons-material/TrackChangesOutlined';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
-import ForumIcon from '@mui/icons-material/Forum';
+import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined';
 import { useNavigate } from 'react-router-dom';
 import { matchesWard } from '../../utils/wardUtils';
 import {
@@ -37,12 +36,11 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { complaintService } from '../../services/complaintService';
 import { Complaint, ComplaintPriority } from '../../types';
-import { STATUS_COLORS, PRIORITY_COLORS } from '../../constants';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
-import { HeaderBreadcrumb } from '../../components/layout/HeaderBreadcrumb';
 import { WelcomeCard } from '../../components/cards/WelcomeCard';
 import { StatCard } from '../../components/cards/StatCard';
 import { AssignWorkerModal } from '../../components/modals/AssignWorkerModal';
+import { StatusBadge } from '../../components/common/StatusBadge';
 
 export const CouncillorDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -83,9 +81,8 @@ export const CouncillorDashboard: React.FC = () => {
     }
   };
 
-  if (loading) return <LoadingSpinner message="Loading Councillor Dashboard..." />;
+  if (loading) return <LoadingSpinner message="Loading Councillor Console..." />;
 
-  // Filter complaints dynamically for the logged-in Councillor's specific ward jurisdiction
   const wardComplaints = (user?.role === 'COUNCILLOR' && user?.ward)
     ? complaints.filter((c) => matchesWard(c.ward, user.ward))
     : complaints;
@@ -95,12 +92,11 @@ export const CouncillorDashboard: React.FC = () => {
   const resolvedList = wardComplaints.filter((c) => c.status === 'RESOLVED');
 
   const statusPieData = [
-    { name: 'Pending', value: pendingList.length, color: '#3B82F6' },
-    { name: 'In Progress', value: inProgressList.length, color: '#1D4ED8' },
-    { name: 'Resolved', value: resolvedList.length, color: '#64748B' },
+    { name: 'Pending', value: pendingList.length, color: '#B58A45' },
+    { name: 'In Progress', value: inProgressList.length, color: '#496A57' },
+    { name: 'Resolved', value: resolvedList.length, color: '#68706B' },
   ];
 
-  // Calculate dynamic real performance data across wards from actual complaints list
   const wardPerformanceData = ['Ward 1', 'Ward 2', 'Ward 3', 'Ward 4'].map((wardName) => {
     const matching = complaints.filter(
       (c) => c.ward && c.ward.toLowerCase().includes(wardName.toLowerCase())
@@ -111,22 +107,13 @@ export const CouncillorDashboard: React.FC = () => {
   });
 
   return (
-    <Box>
-      <HeaderBreadcrumb
-        title="Councillor Operations Console"
-        subtitle="Manage municipal complaints, dispatch field workers, and review community proposals."
-        breadcrumbs={[
-          { label: 'Councillor Module' },
-          { label: 'Dashboard' },
-        ]}
-      />
-
-      {/* Councillor Banner */}
+    <Box sx={{ pb: 8, maxWidth: 1120, mx: 'auto' }}>
+      {/* Header Banner */}
       <WelcomeCard
         title={user?.fullName || 'Hon. Priya Verma'}
-        subtitle={`Ward Councillor • ${user?.ward || 'Ward 1 - Central Town'} Operations Hub`}
-        actionText="Broadcast Ward Notice"
-        actionIcon={<CampaignIcon />}
+        subtitle={`Ward Councillor • ${user?.ward || 'Ward 1 - Central Town'} Operations`}
+        actionText="Publish Ward Notice"
+        actionIcon={<CampaignOutlinedIcon sx={{ fontSize: 18 }} />}
         onAction={() => navigate('/councillor/announcements')}
       />
 
@@ -140,23 +127,23 @@ export const CouncillorDashboard: React.FC = () => {
         }}
       >
         <StatCard
-          title="Pending Ward Complaints"
+          title="Pending Ward Queue"
           value={pendingList.length}
-          subtitle="Awaiting review or dispatch"
-          icon={<HourglassEmptyIcon />}
-          iconBgColor="#EFF6FF"
-          iconColor="#2563EB"
-          borderLeftColor="#2563EB"
+          subtitle="Awaiting triage or dispatch"
+          icon={<HourglassEmptyOutlinedIcon />}
+          iconBgColor="#FBF7F0"
+          iconColor="#B58A45"
+          borderLeftColor="#B58A45"
         />
 
         <StatCard
           title="Work In Progress"
           value={inProgressList.length}
           subtitle="Field technicians active"
-          icon={<TrackChangesIcon />}
-          iconBgColor="#DBEAFE"
-          iconColor="#1D4ED8"
-          borderLeftColor="#1D4ED8"
+          icon={<TrackChangesOutlinedIcon />}
+          iconBgColor="#E8EFE9"
+          iconColor="#304B3A"
+          borderLeftColor="#496A57"
         />
 
         <StatCard
@@ -164,23 +151,23 @@ export const CouncillorDashboard: React.FC = () => {
           value={resolvedList.length}
           subtitle="Avg resolution: 1.8 days"
           icon={<CheckCircleOutlinedIcon />}
-          iconBgColor="#F1F5F9"
-          iconColor="#475569"
-          borderLeftColor="#64748B"
+          iconBgColor="#F3F5F2"
+          iconColor="#68706B"
+          borderLeftColor="#68706B"
         />
 
         <StatCard
           title="Community Proposals"
           value={3}
           subtitle="Awaiting councillor review"
-          icon={<ForumIcon />}
-          iconBgColor="#F8FAFC"
-          iconColor="#0F172A"
-          borderLeftColor="#334155"
+          icon={<ForumOutlinedIcon />}
+          iconBgColor="#F8F9F7"
+          iconColor="#202522"
+          borderLeftColor="#202522"
         />
       </Box>
 
-      {/* Quick Action Navigation Buttons */}
+      {/* Action Buttons */}
       <Box
         sx={{
           display: 'grid',
@@ -192,16 +179,15 @@ export const CouncillorDashboard: React.FC = () => {
         <Button
           fullWidth
           variant="contained"
-          startIcon={<AssignmentIcon />}
+          startIcon={<AssignmentOutlinedIcon sx={{ fontSize: 18 }} />}
           onClick={() => navigate('/councillor/complaints')}
           sx={{
-            py: 1.5,
-            borderRadius: '16px',
-            backgroundColor: '#2563EB',
-            fontWeight: 700,
-            textTransform: 'none',
-            boxShadow: '0 4px 14px rgba(37, 99, 235, 0.25)',
-            '&:hover': { backgroundColor: '#1D4ED8' },
+            py: 1.2,
+            borderRadius: '8px',
+            backgroundColor: '#496A57',
+            color: '#FFFFFF',
+            fontWeight: 500,
+            '&:hover': { backgroundColor: '#304B3A' },
           }}
         >
           Manage Complaints
@@ -210,17 +196,16 @@ export const CouncillorDashboard: React.FC = () => {
         <Button
           fullWidth
           variant="outlined"
-          startIcon={<RateReviewIcon />}
+          startIcon={<RateReviewOutlinedIcon sx={{ fontSize: 18 }} />}
           onClick={() => navigate('/councillor/proposals')}
           sx={{
-            py: 1.5,
-            borderRadius: '16px',
-            borderColor: '#CBD5E1',
-            color: '#0F172A',
+            py: 1.2,
+            borderRadius: '8px',
+            borderColor: '#E5E8E4',
+            color: '#202522',
             backgroundColor: '#FFFFFF',
-            fontWeight: 700,
-            textTransform: 'none',
-            '&:hover': { borderColor: '#2563EB', backgroundColor: '#F8FAFC' },
+            fontWeight: 500,
+            '&:hover': { borderColor: '#496A57', backgroundColor: '#F3F5F2' },
           }}
         >
           Review Proposals
@@ -229,17 +214,16 @@ export const CouncillorDashboard: React.FC = () => {
         <Button
           fullWidth
           variant="outlined"
-          startIcon={<CampaignIcon />}
+          startIcon={<CampaignOutlinedIcon sx={{ fontSize: 18 }} />}
           onClick={() => navigate('/councillor/announcements')}
           sx={{
-            py: 1.5,
-            borderRadius: '16px',
-            borderColor: '#CBD5E1',
-            color: '#0F172A',
+            py: 1.2,
+            borderRadius: '8px',
+            borderColor: '#E5E8E4',
+            color: '#202522',
             backgroundColor: '#FFFFFF',
-            fontWeight: 700,
-            textTransform: 'none',
-            '&:hover': { borderColor: '#2563EB', backgroundColor: '#F8FAFC' },
+            fontWeight: 500,
+            '&:hover': { borderColor: '#496A57', backgroundColor: '#F3F5F2' },
           }}
         >
           Ward Announcements
@@ -248,24 +232,23 @@ export const CouncillorDashboard: React.FC = () => {
         <Button
           fullWidth
           variant="outlined"
-          startIcon={<AssessmentIcon />}
+          startIcon={<AssessmentOutlinedIcon sx={{ fontSize: 18 }} />}
           onClick={() => navigate('/councillor/reports')}
           sx={{
-            py: 1.5,
-            borderRadius: '16px',
-            borderColor: '#CBD5E1',
-            color: '#0F172A',
+            py: 1.2,
+            borderRadius: '8px',
+            borderColor: '#E5E8E4',
+            color: '#202522',
             backgroundColor: '#FFFFFF',
-            fontWeight: 700,
-            textTransform: 'none',
-            '&:hover': { borderColor: '#2563EB', backgroundColor: '#F8FAFC' },
+            fontWeight: 500,
+            '&:hover': { borderColor: '#496A57', backgroundColor: '#F3F5F2' },
           }}
         >
           Ward Reports
         </Button>
       </Box>
 
-      {/* Analytics Charts Grid */}
+      {/* Analytics Charts */}
       <Box
         sx={{
           display: 'grid',
@@ -274,31 +257,31 @@ export const CouncillorDashboard: React.FC = () => {
           mb: 4,
         }}
       >
-        <Card elevation={0} sx={{ p: 3, borderRadius: '24px', border: '1px solid #E2E8F0', backgroundColor: '#FFFFFF' }}>
-          <Typography variant="h6" sx={{ fontWeight: 800, color: '#0F172A', mb: 2 }}>
-            Ward-wise Complaint Resolution Comparison
+        <Box sx={{ p: 3, borderRadius: '8px', border: '1px solid #E5E8E4', backgroundColor: '#FFFFFF' }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#202522', mb: 2 }}>
+            Ward Grievance Volume Comparison
           </Typography>
-          <Box sx={{ height: 260 }}>
+          <Box sx={{ height: 240 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={wardPerformanceData}>
-                <XAxis dataKey="ward" stroke="#64748B" />
-                <YAxis stroke="#64748B" />
+                <XAxis dataKey="ward" stroke="#68706B" fontSize={12} />
+                <YAxis stroke="#68706B" fontSize={12} />
                 <RechartsTooltip />
-                <Bar dataKey="active" fill="#2563EB" name="Active" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="resolved" fill="#64748B" name="Resolved" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="active" fill="#496A57" name="Active" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="resolved" fill="#C2C9C3" name="Resolved" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </Box>
-        </Card>
+        </Box>
 
-        <Card elevation={0} sx={{ p: 3, borderRadius: '24px', border: '1px solid #E2E8F0', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <Typography variant="h6" sx={{ fontWeight: 800, color: '#0F172A', width: '100%', textAlign: 'left', mb: 2 }}>
-            Grievance Status Breakdown
+        <Box sx={{ p: 3, borderRadius: '8px', border: '1px solid #E5E8E4', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#202522', width: '100%', textAlign: 'left', mb: 2 }}>
+            Status Distribution
           </Typography>
-          <Box sx={{ height: 220, width: '100%' }}>
+          <Box sx={{ height: 200, width: '100%' }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={statusPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={85} label>
+                <Pie data={statusPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={75} label>
                   {statusPieData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
@@ -307,76 +290,60 @@ export const CouncillorDashboard: React.FC = () => {
               </PieChart>
             </ResponsiveContainer>
           </Box>
-        </Card>
+        </Box>
       </Box>
 
-      {/* Pending Triage Table */}
-      <Card elevation={0} sx={{ p: 3, borderRadius: '24px', border: '1px solid #E2E8F0', backgroundColor: '#FFFFFF' }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
-          <Typography variant="h6" sx={{ fontWeight: 800, color: '#0F172A' }}>
+      {/* Pending Queue Table */}
+      <Box sx={{ p: 3, borderRadius: '8px', border: '1px solid #E5E8E4', backgroundColor: '#FFFFFF' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#202522' }}>
             Pending Grievance Action Queue
           </Typography>
-          <Button size="small" onClick={() => navigate('/councillor/complaints')} sx={{ color: '#2563EB', fontWeight: 700, textTransform: 'none' }}>
+          <Button size="small" onClick={() => navigate('/councillor/complaints')} sx={{ color: '#496A57', fontWeight: 500 }}>
             View All Complaints
           </Button>
         </Box>
 
         <TableContainer>
           <Table>
-            <TableHead sx={{ bgcolor: '#F8FAFC' }}>
+            <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: 700, color: '#475569', fontSize: '0.8rem', textTransform: 'uppercase' }}>Tracking ID</TableCell>
-                <TableCell sx={{ fontWeight: 700, color: '#475569', fontSize: '0.8rem', textTransform: 'uppercase' }}>Citizen & Title</TableCell>
-                <TableCell sx={{ fontWeight: 700, color: '#475569', fontSize: '0.8rem', textTransform: 'uppercase' }}>Priority</TableCell>
-                <TableCell sx={{ fontWeight: 700, color: '#475569', fontSize: '0.8rem', textTransform: 'uppercase' }}>Status</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 700, color: '#475569', fontSize: '0.8rem', textTransform: 'uppercase' }}>Action</TableCell>
+                <TableCell>Tracking ID</TableCell>
+                <TableCell>Citizen & Title</TableCell>
+                <TableCell>Priority</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell align="center">Action</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {pendingList.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 5, color: '#64748B' }}>
+                  <TableCell colSpan={5} align="center" sx={{ py: 5, color: '#68706B' }}>
                     No pending complaints in your ward queue.
                   </TableCell>
                 </TableRow>
               ) : (
                 pendingList.map((row) => (
                   <TableRow key={row.id} hover>
-                    <TableCell>
-                      <Chip label={row.trackingNumber} size="small" sx={{ fontWeight: 800, backgroundColor: '#EFF6FF', color: '#2563EB' }} />
+                    <TableCell sx={{ fontWeight: 600, color: '#496A57' }}>
+                      #{row.trackingNumber}
                     </TableCell>
                     <TableCell>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#0F172A' }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 500, color: '#202522' }}>
                         {row.title}
                       </Typography>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.3 }}>
-                        <PersonIcon fontSize="small" sx={{ color: '#64748B', fontSize: 16 }} />
-                        <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 500 }}>
+                        <PersonOutlinedIcon sx={{ color: '#68706B', fontSize: 16 }} />
+                        <Typography variant="caption" sx={{ color: '#68706B' }}>
                           {row.citizenName} • {row.ward}
                         </Typography>
                       </Box>
                     </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={row.priority}
-                        size="small"
-                        sx={{
-                          fontWeight: 700,
-                          backgroundColor: PRIORITY_COLORS[row.priority]?.bg || '#F1F5F9',
-                          color: PRIORITY_COLORS[row.priority]?.text || '#475569',
-                        }}
-                      />
+                    <TableCell sx={{ color: row.priority === 'HIGH' ? '#B45D59' : '#68706B', fontWeight: 500 }}>
+                      {row.priority}
                     </TableCell>
                     <TableCell>
-                      <Chip
-                        label={row.status}
-                        size="small"
-                        sx={{
-                          fontWeight: 700,
-                          backgroundColor: STATUS_COLORS[row.status]?.bg || '#F1F5F9',
-                          color: STATUS_COLORS[row.status]?.text || '#475569',
-                        }}
-                      />
+                      <StatusBadge status={row.status} />
                     </TableCell>
                     <TableCell align="center">
                       <Button
@@ -384,13 +351,12 @@ export const CouncillorDashboard: React.FC = () => {
                         variant="contained"
                         onClick={() => setAssignModalComplaint(row)}
                         sx={{
-                          borderRadius: '12px',
-                          backgroundColor: '#2563EB',
+                          borderRadius: '6px',
+                          backgroundColor: '#496A57',
                           color: '#FFFFFF',
-                          fontWeight: 700,
-                          textTransform: 'none',
+                          fontWeight: 500,
                           fontSize: '0.8rem',
-                          '&:hover': { backgroundColor: '#1D4ED8' },
+                          '&:hover': { backgroundColor: '#304B3A' },
                         }}
                       >
                         Assign Worker
@@ -402,7 +368,7 @@ export const CouncillorDashboard: React.FC = () => {
             </TableBody>
           </Table>
         </TableContainer>
-      </Card>
+      </Box>
 
       {/* Assign Worker Modal */}
       <AssignWorkerModal
@@ -414,3 +380,5 @@ export const CouncillorDashboard: React.FC = () => {
     </Box>
   );
 };
+
+export default CouncillorDashboard;

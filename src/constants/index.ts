@@ -25,23 +25,23 @@ export const COMPLAINT_CATEGORIES: ComplaintCategory[] = [
 export const COMPLAINT_PRIORITIES: ComplaintPriority[] = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
 
 export const STATUS_COLORS: Record<ComplaintStatus, { bg: string; text: string }> = {
-  PENDING: { bg: '#EFF6FF', text: '#2563EB' },
-  IN_PROGRESS: { bg: '#DBEAFE', text: '#1E40AF' },
-  RESOLVED: { bg: '#F1F5F9', text: '#334155' },
-  REJECTED: { bg: '#F8FAFC', text: '#64748B' }
+  PENDING: { bg: '#E8EFE9', text: '#304B3A' },
+  IN_PROGRESS: { bg: '#F3F5F2', text: '#496A57' },
+  RESOLVED: { bg: '#F8F9F7', text: '#202522' },
+  REJECTED: { bg: '#FDF2F2', text: '#B45D59' }
 };
 
 export const PRIORITY_COLORS: Record<ComplaintPriority, { bg: string; text: string }> = {
-  LOW: { bg: '#F8FAFC', text: '#64748B' },
-  MEDIUM: { bg: '#F1F5F9', text: '#475569' },
-  HIGH: { bg: '#EFF6FF', text: '#2563EB' },
-  URGENT: { bg: '#1E3A8A', text: '#FFFFFF' }
+  LOW: { bg: '#F8F9F7', text: '#68706B' },
+  MEDIUM: { bg: '#E8EFE9', text: '#304B3A' },
+  HIGH: { bg: '#FBF4E8', text: '#B58A45' },
+  URGENT: { bg: '#496A57', text: '#FFFFFF' }
 };
 
 export const NOTICE_PRIORITY_COLORS: Record<NoticePriority, { bg: string; text: string; border: string }> = {
-  NORMAL: { bg: '#F8FAFC', text: '#334155', border: '#E2E8F0' },
-  IMPORTANT: { bg: '#EFF6FF', text: '#1E40AF', border: '#BFDBFE' },
-  EMERGENCY: { bg: '#1E3A8A', text: '#FFFFFF', border: '#1E40AF' }
+  NORMAL: { bg: '#F8F9F7', text: '#202522', border: '#E5E8E4' },
+  IMPORTANT: { bg: '#E8EFE9', text: '#304B3A', border: '#496A57' },
+  EMERGENCY: { bg: '#496A57', text: '#FFFFFF', border: '#304B3A' }
 };
 
 export const ROLE_LABELS: Record<UserRole, string> = {

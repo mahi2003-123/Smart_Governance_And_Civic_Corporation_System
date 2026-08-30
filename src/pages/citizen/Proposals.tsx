@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Card,
   Typography,
   Chip,
   Button,
-  LinearProgress,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -14,16 +12,18 @@ import {
   Stack,
   Alert,
   MenuItem,
+  Divider,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import LocationCityIcon from '@mui/icons-material/LocationCity';
-import ThumbUpIcon from '@mui/icons-material/ThumbUp';
+import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
+import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import LocationCityOutlinedIcon from '@mui/icons-material/LocationCityOutlined';
 import { proposalService } from '../../services/proposalService';
 import { CommunityProposal } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { WardSelector } from '../../components/common/WardSelector';
+import { StatusBadge } from '../../components/common/StatusBadge';
 
 export const Proposals: React.FC = () => {
   const { user } = useAuth();
@@ -107,174 +107,123 @@ export const Proposals: React.FC = () => {
     }
   };
 
-  const getStatusBadgeStyle = (status: string) => {
-    switch (status) {
-      case 'APPROVED':
-        return { label: 'Approved', bg: '#DCFCE7', color: '#166534' };
-      case 'UNDER_REVIEW':
-        return { label: 'Under Review', bg: '#FEF3C7', color: '#B45309' };
-      case 'REJECTED':
-        return { label: 'Rejected', bg: '#FEE2E2', color: '#991B1B' };
-      case 'PROPOSED':
-      default:
-        return { label: 'Proposed', bg: '#EFF6FF', color: '#1D4ED8' };
-    }
-  };
-
-  if (loading) return <LoadingSpinner message="Loading Ward Proposals..." />;
+  if (loading) return <LoadingSpinner message="Loading Community Proposals..." />;
 
   return (
-    <Box sx={{ pb: 6 }}>
-      {/* Page Header */}
-      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+    <Box sx={{ pb: 8, maxWidth: 960, mx: 'auto' }}>
+      {/* Header */}
+      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2 }}>
         <Box>
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 800, color: '#0F172A', mb: 0.5, letterSpacing: '-0.02em' }}>
+          <Typography variant="h1" sx={{ fontWeight: 600, color: '#202522', mb: 1, letterSpacing: '-0.015em' }}>
             Community Proposals
           </Typography>
-          <Typography variant="body1" sx={{ color: '#64748B' }}>
-            Propose civic improvement projects for your ward and upvote proposals submitted by fellow citizens.
+          <Typography variant="body1" sx={{ color: '#68706B' }}>
+            Propose local civic improvement projects for your ward and support initiatives submitted by fellow citizens.
           </Typography>
         </Box>
 
         <Button
           variant="contained"
-          startIcon={<AddIcon />}
+          startIcon={<AddOutlinedIcon sx={{ fontSize: 18 }} />}
           onClick={() => setOpenModal(true)}
           sx={{
-            borderRadius: '20px',
-            backgroundColor: '#2563EB',
+            py: 1,
+            px: 2.5,
+            borderRadius: '8px',
+            backgroundColor: '#496A57',
             color: '#FFFFFF',
-            fontWeight: 700,
-            px: 3,
-            py: 1.2,
-            textTransform: 'none',
-            boxShadow: '0 4px 14px rgba(37, 99, 235, 0.25)',
-            '&:hover': { backgroundColor: '#1D4ED8' },
+            fontWeight: 500,
+            '&:hover': { backgroundColor: '#304B3A' },
           }}
         >
           Submit Proposal
         </Button>
       </Box>
 
-      {/* Proposals Grid */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
+      {/* Proposals List */}
+      <Stack spacing={2.5}>
         {proposals.map((item) => {
           const hasVoted = item.userVoted === 'UP';
-          const targetGoal = 150;
-          const percent = Math.min(100, Math.round((item.upvotes / targetGoal) * 100));
-          const statusBadge = getStatusBadgeStyle(item.status);
 
           return (
-            <Card
+            <Box
               key={item.id}
-              elevation={0}
               sx={{
-                p: 3.5,
-                borderRadius: '24px',
-                border: '1px solid #E2E8F0',
+                p: { xs: 3, sm: 3.5 },
+                borderRadius: '8px',
+                border: '1px solid #E5E8E4',
                 backgroundColor: '#FFFFFF',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                height: '100%',
-                transition: 'all 0.2s ease',
-                '&:hover': {
-                  borderColor: '#BFDBFE',
-                  boxShadow: '0 8px 24px -4px rgba(0, 0, 0, 0.05)',
-                },
+                transition: 'border-color 0.15s ease',
+                '&:hover': { borderColor: '#496A57' },
               }}
             >
-              <Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Chip
-                    label={item.category}
-                    size="small"
-                    sx={{ backgroundColor: '#EFF6FF', color: '#2563EB', fontWeight: 700, borderRadius: '8px' }}
-                  />
-                  <Chip
-                    label={statusBadge.label}
-                    size="small"
-                    sx={{
-                      fontWeight: 700,
-                      backgroundColor: statusBadge.bg,
-                      color: statusBadge.color,
-                      borderRadius: '8px',
-                    }}
-                  />
-                </Box>
-
-                <Typography variant="h6" sx={{ fontWeight: 800, color: '#0F172A', mb: 1 }}>
-                  {item.title}
-                </Typography>
-
-                <Typography variant="body2" sx={{ color: '#64748B', mb: 3, lineHeight: 1.6 }}>
-                  {item.description}
-                </Typography>
-              </Box>
-
-              <Box>
-                {/* Author & Ward Info */}
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, color: '#475569' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <LocationCityIcon fontSize="small" sx={{ color: '#2563EB' }} />
-                    <Typography variant="caption" sx={{ fontWeight: 700, color: '#0F172A' }}>
-                      {item.ward}
-                    </Typography>
-                  </Box>
-                  <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 600 }}>
+              {/* Proposal Header Meta */}
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5, flexWrap: 'wrap', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Chip label={item.category} size="small" sx={{ backgroundColor: '#E8EFE9', color: '#304B3A', height: 22 }} />
+                  <Typography variant="caption" sx={{ color: '#68706B' }}>
                     Proposed by: {item.authorName}
                   </Typography>
                 </Box>
+                <StatusBadge status={item.status} />
+              </Box>
 
-                {/* Progress Bar */}
-                <Box sx={{ mb: 2.5 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                    <Typography variant="caption" sx={{ fontWeight: 700, color: '#0F172A' }}>
-                      {item.upvotes} Votes
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 600 }}>
-                      Target: {targetGoal} ({percent}%)
-                    </Typography>
-                  </Box>
-                  <LinearProgress
-                    variant="determinate"
-                    value={percent}
-                    sx={{
-                      height: 8,
-                      borderRadius: 4,
-                      backgroundColor: '#EFF6FF',
-                      '& .MuiLinearProgress-bar': { backgroundColor: '#2563EB', borderRadius: 4 },
-                    }}
-                  />
-                </Box>
+              {/* Title */}
+              <Typography variant="h3" sx={{ fontWeight: 600, color: '#202522', mb: 1, fontSize: '1.2rem' }}>
+                {item.title}
+              </Typography>
 
-                {/* Upvote Support Button */}
+              {/* Ward Location */}
+              <Typography variant="caption" sx={{ color: '#68706B', display: 'flex', alignItems: 'center', gap: 0.5, mb: 1.5 }}>
+                <LocationCityOutlinedIcon sx={{ fontSize: 16, color: '#496A57' }} /> Jurisdiction: {item.ward}
+              </Typography>
+
+              {/* Description */}
+              <Typography variant="body2" sx={{ color: '#68706B', mb: 2.5, lineHeight: 1.6 }}>
+                {item.description}
+              </Typography>
+
+              <Divider sx={{ mb: 2, borderColor: '#E5E8E4' }} />
+
+              {/* Subtle Support Interaction */}
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Button
-                  fullWidth
-                  variant={hasVoted ? 'outlined' : 'contained'}
-                  startIcon={hasVoted ? <CheckCircleIcon sx={{ color: '#16A34A' }} /> : <ThumbUpIcon />}
+                  size="small"
                   onClick={() => handleUpvote(item.id)}
+                  startIcon={
+                    hasVoted ? (
+                      <FavoriteIcon sx={{ color: '#B45D59', fontSize: 18 }} />
+                    ) : (
+                      <FavoriteBorderOutlinedIcon sx={{ color: '#68706B', fontSize: 18 }} />
+                    )
+                  }
                   sx={{
-                    borderRadius: '16px',
-                    py: 1.2,
-                    fontWeight: 700,
+                    color: hasVoted ? '#304B3A' : '#202522',
+                    backgroundColor: hasVoted ? '#E8EFE9' : '#FFFFFF',
+                    border: '1px solid #E5E8E4',
+                    borderRadius: '6px',
+                    px: 2,
+                    py: 0.6,
+                    fontWeight: 500,
                     textTransform: 'none',
-                    backgroundColor: hasVoted ? '#F0FDF4' : '#2563EB',
-                    borderColor: hasVoted ? '#DCFCE7' : 'transparent',
-                    color: hasVoted ? '#16A34A' : '#FFFFFF',
-                    boxShadow: hasVoted ? 'none' : '0 4px 12px rgba(37, 99, 235, 0.25)',
+                    fontSize: '0.825rem',
                     '&:hover': {
-                      backgroundColor: hasVoted ? '#F0FDF4' : '#1D4ED8',
+                      backgroundColor: '#F3F5F2',
+                      borderColor: '#496A57',
                     },
                   }}
                 >
-                  {hasVoted ? 'Upvoted' : 'Upvote Proposal'}
+                  {hasVoted ? `Supported (${item.upvotes})` : `♡ ${item.upvotes} citizens support this proposal`}
                 </Button>
+
+                <Typography variant="caption" sx={{ color: '#68706B' }}>
+                  Community Initiative
+                </Typography>
               </Box>
-            </Card>
+            </Box>
           );
         })}
-      </Box>
+      </Stack>
 
       {/* Modal to Submit Proposal */}
       <Dialog
@@ -284,16 +233,16 @@ export const Proposals: React.FC = () => {
         fullWidth
         slotProps={{
           paper: {
-            sx: { borderRadius: '24px', p: 1 },
+            sx: { borderRadius: '8px', p: 1 },
           },
         }}
       >
-        <DialogTitle sx={{ fontWeight: 800, color: '#0F172A', pt: 3 }}>
+        <DialogTitle sx={{ fontWeight: 600, color: '#202522', pt: 3 }}>
           Submit Community Proposal
         </DialogTitle>
         <DialogContent>
           {error && (
-            <Alert severity="error" onClose={() => setError('')} sx={{ mb: 2, borderRadius: '12px' }}>
+            <Alert severity="error" onClose={() => setError('')} sx={{ mb: 2, borderRadius: '6px' }}>
               {error}
             </Alert>
           )}
@@ -302,11 +251,10 @@ export const Proposals: React.FC = () => {
               <TextField
                 fullWidth
                 label="Proposal Title"
-                placeholder="e.g. Solar Streetlights Installation"
+                placeholder="e.g. Solar Streetlights Installation on Main Road"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
-                sx={textFieldStyles}
               />
 
               <TextField
@@ -316,7 +264,6 @@ export const Proposals: React.FC = () => {
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 required
-                sx={textFieldStyles}
               >
                 {proposalCategories.map((cat) => (
                   <MenuItem key={cat} value={cat}>
@@ -325,7 +272,6 @@ export const Proposals: React.FC = () => {
                 ))}
               </TextField>
 
-              {/* MANUAL WARD SELECTION */}
               <WardSelector
                 value={ward}
                 onChange={(val) => setWard(val)}
@@ -343,7 +289,6 @@ export const Proposals: React.FC = () => {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 required
-                sx={textFieldStyles}
               />
             </Stack>
           </Box>
@@ -351,7 +296,7 @@ export const Proposals: React.FC = () => {
         <DialogActions sx={{ p: 3, pt: 1 }}>
           <Button
             onClick={() => setOpenModal(false)}
-            sx={{ color: '#64748B', fontWeight: 600, textTransform: 'none', borderRadius: '20px' }}
+            sx={{ color: '#68706B', fontWeight: 500, textTransform: 'none' }}
           >
             Cancel
           </Button>
@@ -360,13 +305,12 @@ export const Proposals: React.FC = () => {
             onClick={handleCreateProposal}
             disabled={submitting}
             sx={{
-              borderRadius: '16px',
-              backgroundColor: '#2563EB',
+              borderRadius: '8px',
+              backgroundColor: '#496A57',
               px: 3,
               py: 1,
-              fontWeight: 700,
-              textTransform: 'none',
-              '&:hover': { backgroundColor: '#1D4ED8' },
+              fontWeight: 500,
+              '&:hover': { backgroundColor: '#304B3A' },
             }}
           >
             Submit Proposal
@@ -375,24 +319,6 @@ export const Proposals: React.FC = () => {
       </Dialog>
     </Box>
   );
-};
-
-const textFieldStyles = {
-  '& .MuiOutlinedInput-root': {
-    borderRadius: '12px',
-    backgroundColor: '#FFFFFF',
-    fontSize: '0.9rem',
-    '& fieldset': {
-      borderColor: '#E2E8F0',
-    },
-    '&:hover fieldset': {
-      borderColor: '#CBD5E1',
-    },
-    '&.Mui-focused fieldset': {
-      borderColor: '#2563EB',
-      borderWidth: '1.5px',
-    },
-  },
 };
 
 export default Proposals;

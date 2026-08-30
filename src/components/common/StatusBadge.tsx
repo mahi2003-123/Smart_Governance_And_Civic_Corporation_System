@@ -1,12 +1,12 @@
 import React from 'react';
-import { Chip } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 interface StatusBadgeProps {
   status: string;
   size?: 'small' | 'medium';
 }
 
-export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'small' }) => {
+export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   const getBadgeStyle = (stat: string) => {
     const formatted = stat ? stat.toUpperCase() : 'PENDING';
     switch (formatted) {
@@ -15,35 +15,39 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'small'
       case 'CLOSED':
         return {
           label: 'Resolved',
-          bg: '#EDF7ED',
-          color: '#1E4620',
+          bg: '#E8EFE9',
+          color: '#304B3A',
+          dot: '#527A5E',
         };
       case 'IN_PROGRESS':
+        return {
+          label: 'In Progress',
+          bg: '#FBF4E8',
+          color: '#8A6424',
+          dot: '#B58A45',
+        };
       case 'UNDER_REVIEW':
         return {
-          label: formatted === 'IN_PROGRESS' ? 'In Progress' : 'Under Review',
-          bg: '#E8F4FD',
-          color: '#1D6FBA',
-        };
-      case 'ACTIVE':
-        return {
-          label: 'Active',
-          bg: '#EFF6FF',
-          color: '#2563EB',
+          label: 'Under Review',
+          bg: '#F3F5F2',
+          color: '#496A57',
+          dot: '#496A57',
         };
       case 'REJECTED':
         return {
           label: 'Rejected',
-          bg: '#FEE2E2',
-          color: '#991B1B',
+          bg: '#FDF2F2',
+          color: '#B45D59',
+          dot: '#B45D59',
         };
       case 'PENDING':
       case 'SUBMITTED':
       default:
         return {
-          label: 'Pending',
-          bg: '#FFF4E5',
-          color: '#B76E00',
+          label: 'Submitted',
+          bg: '#F8F9F7',
+          color: '#68706B',
+          dot: '#8E9691',
         };
     }
   };
@@ -51,17 +55,36 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'small'
   const style = getBadgeStyle(status);
 
   return (
-    <Chip
-      label={style.label}
-      size={size}
+    <Box
+      component="span"
       sx={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 0.75,
+        px: 1.25,
+        py: 0.35,
+        borderRadius: '4px',
         backgroundColor: style.bg,
         color: style.color,
-        fontWeight: 700,
-        borderRadius: '8px',
-        fontSize: size === 'small' ? '0.75rem' : '0.85rem',
+        fontSize: '0.775rem',
+        fontWeight: 500,
+        lineHeight: 1,
+        border: '1px solid #E5E8E4',
       }}
-    />
+    >
+      <Box
+        component="span"
+        sx={{
+          width: 6,
+          height: 6,
+          borderRadius: '50%',
+          backgroundColor: style.dot,
+        }}
+      />
+      <Typography component="span" sx={{ fontSize: 'inherit', fontWeight: 'inherit', color: 'inherit' }}>
+        {style.label}
+      </Typography>
+    </Box>
   );
 };
 

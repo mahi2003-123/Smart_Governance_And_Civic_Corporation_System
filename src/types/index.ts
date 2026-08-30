@@ -1,4 +1,5 @@
 export type UserRole = 'CITIZEN' | 'COUNCILLOR' | 'WORKER' | 'ADMIN';
+export type UserStatus = 'ACTIVE' | 'INACTIVE';
 
 export interface User {
   id: string;
@@ -7,7 +8,9 @@ export interface User {
   phone: string;
   role: UserRole;
   ward?: string;
+  status?: UserStatus;
   avatarUrl?: string;
+  assignedTasks?: number;
   createdAt: string;
 }
 
@@ -94,9 +97,13 @@ export interface WardNotice {
   ward: string;
   priority: NoticePriority;
   publishedBy: string;
+  publishedByRole?: string;
   publishDate: string;
   expiryDate?: string;
   category: string;
+  attachmentUrl?: string;
+  attachmentName?: string;
+  attachmentType?: 'image' | 'pdf' | 'other';
 }
 
 export interface Ward {
@@ -130,4 +137,15 @@ export interface NotificationItem {
   createdAt: string;
   linkUrl?: string;
 }
+
+export interface SystemActivityLog {
+  id: string;
+  timestamp: string;
+  user: string;
+  role: UserRole;
+  action: string;
+  module: 'COMPLAINT' | 'PROPOSAL' | 'NOTICE' | 'USER' | 'WARD' | 'SYSTEM';
+  details: string;
+}
+
 

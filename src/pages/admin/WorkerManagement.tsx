@@ -28,25 +28,24 @@ import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
+import SwapHorizOutlinedIcon from '@mui/icons-material/SwapHorizOutlined';
 import { adminService } from '../../services/adminService';
-import { User, UserRole, Ward } from '../../types';
-import { ROLE_LABELS } from '../../utils/constants';
+import { User, Ward } from '../../types';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader';
 import { FilterBar, FilterOption } from '../../components/admin/FilterBar';
 import { ActionMenu, ActionMenuItem } from '../../components/admin/ActionMenu';
 import { CustomTextField } from '../../components/common/CustomTextField';
 
-export const UserManagement: React.FC = () => {
+export const WorkerManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
-  const [users, setUsers] = useState<User[]>([]);
+  const [workers, setWorkers] = useState<User[]>([]);
   const [wards, setWards] = useState<Ward[]>([]);
 
-  // Filter States
+  // Filters
   const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState('ALL');
-  const [statusFilter, setStatusFilter] = useState('ALL');
   const [wardFilter, setWardFilter] = useState('ALL');
+  const [statusFilter, setStatusFilter] = useState('ALL');
 
   // Modal State
   const [openModal, setOpenModal] = useState(false);
@@ -57,9 +56,7 @@ export const UserManagement: React.FC = () => {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
-    password: 'password123',
     phone: '',
-    role: 'CITIZEN' as UserRole,
     ward: 'Ward 1 - Central Town',
   });
 
@@ -70,7 +67,7 @@ export const UserManagement: React.FC = () => {
         adminService.getUsers(),
         adminService.getWards(),
       ]);
-      setUsers(uData);
+      setWorkers(uData.filter((u) => u.role === 'WORKER'));
       setWards(wData);
       if (wData.length > 0) {
         setFormData((prev) => ({ ...prev, ward: `Ward ${wData[0].wardNumber} - ${wData[0].name}` }));
@@ -89,31 +86,19 @@ export const UserManagement: React.FC = () => {
   const handleToggleStatus = async (user: User) => {
     const nextStatus = user.status === 'INACTIVE' ? 'ACTIVE' : 'INACTIVE';
     await adminService.updateUserStatus(user.id, nextStatus);
-    setUsers((prev) =>
+    setWorkers((prev) =>
       prev.map((u) => (u.id === user.id ? { ...u, status: nextStatus } : u))
     );
   };
 
-  const handleCreateUser = async (e: React.FormEvent) => {
+  const handleCreateWorker = async (e: React.FormEvent) => {
     e.preventDefault();
     setModalError('');
     setModalSuccess('');
 
     if (!formData.fullName || !formData.email) {
-      setModalError('Please enter full name and email address.');
+      setModalError('Please fill in name and email address.');
       return;
-    }
-
-    if (formData.role === 'COUNCILLOR' && formData.ward && formData.ward !== 'All Wards') {
-      const existingCouncillor = users.find(
-        (u) => u.role === 'COUNCILLOR' && u.ward?.toLowerCase() === formData.ward.toLowerCase()
-      );
-      if (existingCouncillor) {
-        setModalError(
-          `Ward "${formData.ward}" already has an assigned Councillor (${existingCouncillor.fullName} - ${existingCouncillor.email}). Only 1 Councillor permitted per ward.`
-        );
-        return;
-      }
     }
 
     setModalLoading(true);
@@ -121,60 +106,50 @@ export const UserManagement: React.FC = () => {
       const created = await adminService.createUser({
         fullName: formData.fullName,
         email: formData.email,
-        password: formData.password,
         phone: formData.phone,
-        role: formData.role,
+        role: 'WORKER',
         ward: formData.ward,
       });
 
-      setModalSuccess(`Successfully created ${ROLE_LABELS[formData.role]} "${created.fullName}"!`);
-      setUsers([created, ...users]);
+      setModalSuccess(`Successfully registered Local Worker "${created.fullName}"!`);
+      setWorkers([{ ...created, assignedTasks: 0 }, ...workers]);
       setFormData({
         fullName: '',
         email: '',
-        password: 'password123',
         phone: '',
-        role: 'CITIZEN',
         ward: wards.length > 0 ? `Ward ${wards[0].wardNumber} - ${wards[0].name}` : 'Ward 1 - Central Town',
       });
 
-      setTimeout(() => {
-        setOpenModal(false);
-      }, 1200);
+      setTimeout(() => setOpenModal(false), 1200);
     } catch (err: any) {
-      setModalError(err.message || 'Failed to create user record.');
+      setModalError(err.message || 'Failed to create worker record.');
     } finally {
       setModalLoading(false);
     }
   };
 
-  // Filter application
-  const filteredUsers = users.filter((u) => {
+  const filtered = workers.filter((w) => {
     const matchesSearch =
-      u.fullName.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase()) ||
-      u.phone.toLowerCase().includes(search.toLowerCase());
+      w.fullName.toLowerCase().includes(search.toLowerCase()) ||
+      w.email.toLowerCase().includes(search.toLowerCase()) ||
+      (w.ward && w.ward.toLowerCase().includes(search.toLowerCase()));
 
-    const matchesRole = roleFilter === 'ALL' || u.role === roleFilter;
-    const matchesStatus = statusFilter === 'ALL' || (u.status || 'ACTIVE') === statusFilter;
-    const matchesWard = wardFilter === 'ALL' || (u.ward && u.ward.includes(wardFilter));
+    const matchesWard = wardFilter === 'ALL' || (w.ward && w.ward.includes(wardFilter));
+    const matchesStatus = statusFilter === 'ALL' || (w.status || 'ACTIVE') === statusFilter;
 
-    return matchesSearch && matchesRole && matchesStatus && matchesWard;
+    return matchesSearch && matchesWard && matchesStatus;
   });
 
   const filterOptions: FilterOption[] = [
     {
-      id: 'role',
-      label: 'Role',
-      value: roleFilter,
+      id: 'ward',
+      label: 'Ward',
+      value: wardFilter,
       options: [
-        { label: 'All Roles', value: 'ALL' },
-        { label: 'Citizen', value: 'CITIZEN' },
-        { label: 'Councillor', value: 'COUNCILLOR' },
-        { label: 'Local Worker', value: 'WORKER' },
-        { label: 'Super Admin', value: 'ADMIN' },
+        { label: 'All Wards', value: 'ALL' },
+        ...wards.map((w) => ({ label: `Ward ${w.wardNumber}`, value: `Ward ${w.wardNumber}` })),
       ],
-      onChange: setRoleFilter,
+      onChange: setWardFilter,
     },
     {
       id: 'status',
@@ -187,26 +162,16 @@ export const UserManagement: React.FC = () => {
       ],
       onChange: setStatusFilter,
     },
-    {
-      id: 'ward',
-      label: 'Ward',
-      value: wardFilter,
-      options: [
-        { label: 'All Wards', value: 'ALL' },
-        ...wards.map((w) => ({ label: `Ward ${w.wardNumber}`, value: `Ward ${w.wardNumber}` })),
-      ],
-      onChange: setWardFilter,
-    },
   ];
 
-  if (loading) return <LoadingSpinner message="Loading User Directory..." />;
+  if (loading) return <LoadingSpinner message="Loading Local Worker Registry..." />;
 
   return (
     <Box sx={{ pb: 6 }}>
       <AdminPageHeader
-        title="Users"
-        description="Manage citizens, councillors and workers across the system."
-        actionLabel="Add User"
+        title="Local Workers"
+        description="Manage field maintenance workers and service tasks."
+        actionLabel="Add Worker"
         actionIcon={<AddOutlinedIcon sx={{ fontSize: 18 }} />}
         onActionClick={() => {
           setModalError('');
@@ -215,15 +180,13 @@ export const UserManagement: React.FC = () => {
         }}
       />
 
-      {/* Filter Bar */}
       <FilterBar
         searchQuery={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Search users by name, email or phone..."
+        searchPlaceholder="Search workers by name, email or ward..."
         filters={filterOptions}
       />
 
-      {/* Standardized Data Table */}
       <TableContainer
         sx={{
           border: '1px solid #E5E8E4',
@@ -232,94 +195,79 @@ export const UserManagement: React.FC = () => {
           overflow: 'hidden',
         }}
       >
-        <Table size="medium">
+        <Table>
           <TableHead sx={{ backgroundColor: '#F8F9F7' }}>
             <TableRow>
               <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Name</TableCell>
               <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Email</TableCell>
-              <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Role</TableCell>
-              <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Ward</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Assigned Ward</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Active Tasks</TableCell>
               <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Status</TableCell>
-              <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Created Date</TableCell>
               <TableCell align="right" sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredUsers.length === 0 ? (
+            {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 6, color: '#68706B' }}>
-                  No users found matching your search and filter criteria.
+                <TableCell colSpan={6} align="center" sx={{ py: 6, color: '#68706B' }}>
+                  No field workers found matching filter criteria.
                 </TableCell>
               </TableRow>
             ) : (
-              filteredUsers.map((user) => {
-                const isActive = (user.status || 'ACTIVE') === 'ACTIVE';
+              filtered.map((w) => {
+                const isActive = (w.status || 'ACTIVE') === 'ACTIVE';
 
                 const actionItems: ActionMenuItem[] = [
                   {
                     label: 'View Profile',
                     icon: <VisibilityOutlinedIcon fontSize="small" />,
-                    onClick: () => alert(`User details: ${user.fullName} (${user.email})`),
+                    onClick: () => alert(`Worker Details: ${w.fullName}`),
+                  },
+                  {
+                    label: 'Assign Ward',
+                    icon: <SwapHorizOutlinedIcon fontSize="small" />,
+                    onClick: () => alert(`Assign Ward for ${w.fullName}`),
                   },
                   {
                     label: 'Edit Details',
                     icon: <EditOutlinedIcon fontSize="small" />,
-                    onClick: () => alert(`Edit ${user.fullName}`),
+                    onClick: () => alert(`Edit Worker ${w.fullName}`),
                   },
                   {
-                    label: isActive ? 'Deactivate User' : 'Activate User',
+                    label: isActive ? 'Deactivate' : 'Activate',
                     icon: isActive ? <BlockOutlinedIcon fontSize="small" /> : <CheckCircleOutlinedIcon fontSize="small" />,
                     color: isActive ? 'error' : 'primary',
-                    onClick: () => handleToggleStatus(user),
+                    onClick: () => handleToggleStatus(w),
                   },
                 ];
 
                 return (
-                  <TableRow
-                    key={user.id}
-                    sx={{
-                      '&:hover': { backgroundColor: '#F8F9F7' },
-                      borderBottom: '1px solid #E5E8E4',
-                    }}
-                  >
+                  <TableRow key={w.id} sx={{ '&:hover': { backgroundColor: '#F8F9F7' }, borderBottom: '1px solid #E5E8E4' }}>
                     <TableCell>
                       <Typography variant="body2" sx={{ fontWeight: 600, color: '#202522' }}>
-                        {user.fullName}
+                        {w.fullName}
                       </Typography>
                       <Typography variant="caption" sx={{ color: '#68706B' }}>
-                        {user.phone || 'No phone'}
+                        {w.phone || 'No phone'}
                       </Typography>
                     </TableCell>
-                    <TableCell sx={{ fontSize: '0.85rem', color: '#68706B' }}>{user.email}</TableCell>
+                    <TableCell sx={{ fontSize: '0.85rem', color: '#68706B' }}>{w.email}</TableCell>
+                    <TableCell sx={{ fontSize: '0.85rem', color: '#68706B' }}>
+                      {w.ward ? w.ward.split(' - ')[0] : 'Unassigned'}
+                    </TableCell>
                     <TableCell>
                       <Chip
-                        label={ROLE_LABELS[user.role] || user.role}
+                        label={`${w.assignedTasks || 0} tasks`}
                         size="small"
                         sx={{
                           fontWeight: 500,
-                          fontSize: '0.725rem',
-                          backgroundColor:
-                            user.role === 'ADMIN'
-                              ? '#FDE8E8'
-                              : user.role === 'COUNCILLOR'
-                              ? '#E8EFE9'
-                              : user.role === 'WORKER'
-                              ? '#FBF4E8'
-                              : '#F3F5F2',
-                          color:
-                            user.role === 'ADMIN'
-                              ? '#B45D59'
-                              : user.role === 'COUNCILLOR'
-                              ? '#304B3A'
-                              : user.role === 'WORKER'
-                              ? '#B58A45'
-                              : '#68706B',
+                          fontSize: '0.7rem',
+                          backgroundColor: '#F3F5F2',
+                          color: '#202522',
                           borderRadius: '4px',
+                          height: '20px',
                         }}
                       />
-                    </TableCell>
-                    <TableCell sx={{ fontSize: '0.85rem', color: '#68706B' }}>
-                      {user.ward ? user.ward.split(' - ')[0] : 'System Wide'}
                     </TableCell>
                     <TableCell>
                       <Chip
@@ -335,9 +283,6 @@ export const UserManagement: React.FC = () => {
                         }}
                       />
                     </TableCell>
-                    <TableCell sx={{ fontSize: '0.85rem', color: '#68706B' }}>
-                      {user.createdAt ? user.createdAt.split('T')[0] : '2026-01-10'}
-                    </TableCell>
                     <TableCell align="right">
                       <ActionMenu items={actionItems} />
                     </TableCell>
@@ -349,7 +294,7 @@ export const UserManagement: React.FC = () => {
         </Table>
       </TableContainer>
 
-      {/* Add User Modal */}
+      {/* Add Worker Modal */}
       <Dialog
         open={openModal}
         onClose={() => setOpenModal(false)}
@@ -359,42 +304,25 @@ export const UserManagement: React.FC = () => {
       >
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
           <Typography variant="h6" sx={{ fontWeight: 600, color: '#202522' }}>
-            Add New User Account
+            Register Local Worker
           </Typography>
           <IconButton size="small" onClick={() => setOpenModal(false)}>
             <CloseOutlinedIcon fontSize="small" />
           </IconButton>
         </DialogTitle>
-        <Box component="form" onSubmit={handleCreateUser}>
+        <Box component="form" onSubmit={handleCreateWorker}>
           <DialogContent dividers sx={{ borderColor: '#E5E8E4' }}>
             {modalError && <Alert severity="error" sx={{ mb: 2, borderRadius: '6px' }}>{modalError}</Alert>}
             {modalSuccess && <Alert severity="success" sx={{ mb: 2, borderRadius: '6px' }}>{modalSuccess}</Alert>}
 
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12}>
                 <FormControl fullWidth size="small">
-                  <InputLabel id="role-select-label">Account Role</InputLabel>
+                  <InputLabel id="worker-ward-label">Assigned Ward</InputLabel>
                   <Select
-                    labelId="role-select-label"
-                    value={formData.role}
-                    label="Account Role"
-                    onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
-                  >
-                    <MenuItem value="CITIZEN">Citizen</MenuItem>
-                    <MenuItem value="COUNCILLOR">Ward Councillor</MenuItem>
-                    <MenuItem value="WORKER">Local Worker</MenuItem>
-                    <MenuItem value="ADMIN">Super Admin</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth size="small">
-                  <InputLabel id="ward-select-label">Ward Jurisdiction</InputLabel>
-                  <Select
-                    labelId="ward-select-label"
+                    labelId="worker-ward-label"
                     value={formData.ward}
-                    label="Ward Jurisdiction"
+                    label="Assigned Ward"
                     onChange={(e) => setFormData({ ...formData, ward: e.target.value })}
                   >
                     {wards.map((w) => (
@@ -402,15 +330,14 @@ export const UserManagement: React.FC = () => {
                         Ward {w.wardNumber} - {w.name}
                       </MenuItem>
                     ))}
-                    <MenuItem value="System Wide">System Wide</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
 
               <Grid item xs={12}>
                 <CustomTextField
-                  label="Full Name"
-                  placeholder="e.g. Rajesh Sharma"
+                  label="Worker Full Name"
+                  placeholder="e.g. Suresh Kumar"
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                   required
@@ -421,7 +348,7 @@ export const UserManagement: React.FC = () => {
                 <CustomTextField
                   label="Email Address"
                   type="email"
-                  placeholder="name@example.com"
+                  placeholder="worker@sgcs.gov.in"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
@@ -430,8 +357,8 @@ export const UserManagement: React.FC = () => {
 
               <Grid item xs={12} sm={6}>
                 <CustomTextField
-                  label="Phone Number"
-                  placeholder="+91 98765 43210"
+                  label="Mobile Phone"
+                  placeholder="+91 98765 22001"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 />
@@ -454,7 +381,7 @@ export const UserManagement: React.FC = () => {
                 '&:hover': { backgroundColor: '#304B3A' },
               }}
             >
-              {modalLoading ? 'Creating...' : 'Create Account'}
+              {modalLoading ? 'Registering...' : 'Register Worker'}
             </Button>
           </DialogActions>
         </Box>
@@ -463,4 +390,4 @@ export const UserManagement: React.FC = () => {
   );
 };
 
-export default UserManagement;
+export default WorkerManagement;

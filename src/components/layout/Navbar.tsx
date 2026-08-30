@@ -1,44 +1,30 @@
 import React, { useState } from 'react';
 import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
   Box,
+  Typography,
   IconButton,
   Menu,
   MenuItem,
   Avatar,
-  Chip,
-  Container,
-  Tooltip,
-  Paper,
+  Breadcrumbs,
+  Link as MuiLink,
 } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
+import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
+import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import {
-  DashboardIcon,
-  ReportProblemIcon,
-  HistoryIcon,
-  CampaignIcon,
-  HowToVoteIcon,
-  PersonIcon,
-  LogoutIcon,
-  MenuIcon,
-  CloseIcon,
-  ShieldIcon,
-  SearchSvgIcon,
-  PlusSvgIcon,
-} from '../common/Icons';
 import { NotificationPopover } from '../citizen/NotificationPopover';
 
-export const Navbar: React.FC = () => {
+interface NavbarProps {
+  onMobileMenuToggle?: () => void;
+}
+
+export const Navbar: React.FC<NavbarProps> = ({ onMobileMenuToggle }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
-
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElUser(event.currentTarget);
@@ -54,383 +40,190 @@ export const Navbar: React.FC = () => {
     navigate('/login');
   };
 
-  const getNavLinks = () => {
-    if (!user) return [];
-
-    switch (user.role) {
-      case 'CITIZEN':
-        return [
-          { label: 'Dashboard', path: '/citizen/dashboard', icon: <DashboardIcon size={16} /> },
-          { label: 'Report Issue', path: '/citizen/complaints/submit', icon: <ReportProblemIcon size={16} /> },
-          { label: 'Track Issue', path: '/citizen/track', icon: <SearchSvgIcon size={16} /> },
-          { label: 'My Complaints', path: '/citizen/complaints', icon: <HistoryIcon size={16} /> },
-          { label: 'Proposals', path: '/citizen/proposals', icon: <HowToVoteIcon size={16} /> },
-          { label: 'Ward Notices', path: '/citizen/notices', icon: <CampaignIcon size={16} /> },
-        ];
-      case 'COUNCILLOR':
-        return [
-          { label: 'Dashboard', path: '/councillor/dashboard', icon: <DashboardIcon size={16} /> },
-          { label: 'Manage Complaints', path: '/councillor/complaints', icon: <ReportProblemIcon size={16} /> },
-          { label: 'Review Proposals', path: '/councillor/proposals', icon: <HowToVoteIcon size={16} /> },
-          { label: 'Announcements', path: '/councillor/announcements', icon: <CampaignIcon size={16} /> },
-        ];
-      case 'WORKER':
-        return [
-          { label: 'Dashboard', path: '/worker/dashboard', icon: <DashboardIcon size={16} /> },
-          { label: 'Assigned Tasks', path: '/worker/tasks', icon: <ReportProblemIcon size={16} /> },
-          { label: 'Completed Tasks', path: '/worker/completed', icon: <HistoryIcon size={16} /> },
-        ];
-      case 'ADMIN':
-        return [
-          { label: 'Dashboard', path: '/admin/dashboard', icon: <DashboardIcon size={16} /> },
-          { label: 'User Management', path: '/admin/users', icon: <PersonIcon size={16} /> },
-          { label: 'Ward Management', path: '/admin/wards', icon: <ShieldIcon size={16} /> },
-          { label: 'All Complaints', path: '/admin/complaints', icon: <ReportProblemIcon size={16} /> },
-        ];
-      default:
-        return [];
-    }
+  // Derive human readable page title & breadcrumbs from path
+  const getPageTitle = (pathname: string) => {
+    if (pathname.includes('/citizen/dashboard')) return 'Citizen Dashboard';
+    if (pathname.includes('/citizen/complaints/submit')) return 'Report Civic Grievance';
+    if (pathname.includes('/citizen/complaints/') && pathname !== '/citizen/complaints') return 'Complaint Details';
+    if (pathname.includes('/citizen/complaints')) return 'My Complaints';
+    if (pathname.includes('/citizen/track')) return 'Track Complaint';
+    if (pathname.includes('/citizen/proposals')) return 'Community Proposals';
+    if (pathname.includes('/citizen/notices')) return 'Ward Notices';
+    if (pathname.includes('/citizen/profile')) return 'Account Profile';
+    
+    if (pathname.includes('/councillor/dashboard')) return 'Councillor Dashboard';
+    if (pathname.includes('/councillor/complaints')) return 'Manage Ward Complaints';
+    if (pathname.includes('/councillor/proposals')) return 'Review Proposals';
+    if (pathname.includes('/councillor/announcements')) return 'Ward Bulletins';
+    if (pathname.includes('/councillor/reports')) return 'Ward Analytics';
+    
+    if (pathname.includes('/worker/dashboard')) return 'Field Worker Dashboard';
+    if (pathname.includes('/worker/tasks')) return 'Assigned Work Tasks';
+    if (pathname.includes('/worker/completed')) return 'Completed Work Tasks';
+    
+    if (pathname.includes('/admin/dashboard')) return 'Super Admin Dashboard';
+    if (pathname.includes('/admin/users')) return 'User Administration';
+    if (pathname.includes('/admin/wards')) return 'Ward Management';
+    if (pathname.includes('/admin/complaints')) return 'All Complaints System Monitoring';
+    if (pathname.includes('/admin/reports')) return 'System Analytics & Reports';
+    
+    return 'SGCS Public Portal';
   };
 
-  const navLinks = getNavLinks();
-
-  const getRoleColor = (role?: string) => {
-    switch (role) {
-      case 'ADMIN':
-        return { bg: '#FEF2F2', color: '#EF4444', label: 'Admin' };
-      case 'COUNCILLOR':
-        return { bg: '#F0F9FF', color: '#0EA5E9', label: 'Councillor' };
-      case 'WORKER':
-        return { bg: '#ECFDF5', color: '#10B981', label: 'Staff' };
-      default:
-        return { bg: '#EFF6FF', color: '#2563EB', label: 'Citizen' };
-    }
-  };
-
-  const roleInfo = getRoleColor(user?.role);
+  const pageTitle = getPageTitle(location.pathname);
 
   return (
-    <AppBar
-      position="sticky"
-      elevation={0}
+    <Box
+      component="header"
       sx={{
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-        backdropFilter: 'blur(16px)',
-        borderBottom: '1px solid #E2E8F0',
-        color: '#0F172A',
-        py: 0.5,
-        boxShadow: '0 4px 20px -2px rgba(15, 23, 42, 0.04)',
+        height: 60,
+        backgroundColor: '#FFFFFF',
+        borderBottom: '1px solid #E5E8E4',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        px: { xs: 2, md: 4 },
+        position: 'sticky',
+        top: 0,
+        zIndex: 90,
       }}
     >
-      <Container maxWidth="xl">
-        <Toolbar disableGutters sx={{ justifyContent: 'space-between', height: 68, minHeight: '68px !important' }}>
-          {/* Next-Gen Brand Logo */}
-          <Box
-            sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer' }}
-            onClick={() => navigate(user ? `/${user.role.toLowerCase()}/dashboard` : '/')}
-          >
-            <Box
-              sx={{
-                width: 42,
-                height: 42,
-                borderRadius: '14px',
-                background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#FFFFFF',
-                fontWeight: 900,
-                fontSize: '1.15rem',
-                boxShadow: '0 4px 14px rgba(37, 99, 235, 0.3)',
-                letterSpacing: '-0.02em',
-              }}
+      {/* Left: Mobile Toggle & Page Title / Breadcrumbs */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <IconButton
+          onClick={onMobileMenuToggle}
+          edge="start"
+          sx={{ display: { xs: 'flex', md: 'none' }, color: '#202522' }}
+        >
+          <MenuIcon />
+        </IconButton>
+
+        <Box>
+          <Breadcrumbs separator="/" sx={{ '& .MuiBreadcrumbs-separator': { color: '#E5E8E4', fontSize: '0.8rem' } }}>
+            <MuiLink
+              underline="none"
+              color="inherit"
+              onClick={() => navigate(user ? `/${user.role.toLowerCase()}/dashboard` : '/')}
+              sx={{ color: '#68706B', fontSize: '0.775rem', cursor: 'pointer', '&:hover': { color: '#496A57' } }}
             >
-              SG
-            </Box>
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 800, color: '#0F172A', lineHeight: 1.1, letterSpacing: '-0.02em', fontSize: '1.1rem' }}>
-                CivicSphere <span style={{ color: '#2563EB' }}>SGCS</span>
-              </Typography>
-              <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 600, display: 'block', fontSize: '0.72rem' }}>
-                Smart Governance Portal
-              </Typography>
-            </Box>
-          </Box>
-
-          {/* New-Generation Full Uncollapsed Menu Bar */}
-          {isAuthenticated && (
-            <Paper
-              elevation={0}
-              sx={{
-                display: { xs: 'none', md: 'flex' },
-                alignItems: 'center',
-                gap: 0.5,
-                p: 0.75,
-                borderRadius: '24px',
-                backgroundColor: '#F8FAFC',
-                border: '1px solid #E2E8F0',
-              }}
-            >
-              {navLinks.map((link) => {
-                const isActive = location.pathname === link.path;
-                return (
-                  <Button
-                    key={link.path}
-                    onClick={() => navigate(link.path)}
-                    startIcon={link.icon}
-                    sx={{
-                      px: 2,
-                      py: 0.85,
-                      borderRadius: '18px',
-                      fontWeight: isActive ? 800 : 600,
-                      fontSize: '0.84rem',
-                      textTransform: 'none',
-                      color: isActive ? '#FFFFFF' : '#475569',
-                      background: isActive
-                        ? 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)'
-                        : 'transparent',
-                      boxShadow: isActive ? '0 4px 14px rgba(37, 99, 235, 0.28)' : 'none',
-                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                      '&:hover': {
-                        backgroundColor: isActive ? '#1D4ED8' : '#EFF6FF',
-                        color: isActive ? '#FFFFFF' : '#2563EB',
-                        transform: isActive ? 'none' : 'translateY(-1px)',
-                      },
-                    }}
-                  >
-                    {link.label}
-                  </Button>
-                );
-              })}
-            </Paper>
-          )}
-
-          {/* User Profile / Right Actions */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            {isAuthenticated && user ? (
-              <>
-                {/* Submit Issue Direct Action Pill (Visible on Large Desktop) */}
-                {user.role === 'CITIZEN' && (
-                  <Tooltip title="Quickly Report a Civic Issue">
-                    <Button
-                      variant="contained"
-                      onClick={() => navigate('/citizen/complaints/submit')}
-                      startIcon={<PlusSvgIcon size={16} color="#FFFFFF" />}
-                      sx={{
-                        display: { xs: 'none', xl: 'flex' },
-                        borderRadius: '20px',
-                        backgroundColor: '#2563EB',
-                        color: '#FFFFFF',
-                        fontWeight: 700,
-                        fontSize: '0.82rem',
-                        textTransform: 'none',
-                        px: 2.2,
-                        py: 0.8,
-                        boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)',
-                        '&:hover': { backgroundColor: '#1D4ED8' },
-                      }}
-                    >
-                      New Issue
-                    </Button>
-                  </Tooltip>
-                )}
-
-                {/* Notification Bell */}
-                <NotificationPopover />
-
-                {/* Role Chip */}
-                <Chip
-                  label={roleInfo.label}
-                  size="small"
-                  sx={{
-                    display: { xs: 'none', sm: 'inline-flex' },
-                    backgroundColor: roleInfo.bg,
-                    color: roleInfo.color,
-                    fontWeight: 800,
-                    borderRadius: '10px',
-                    px: 0.5,
-                    fontSize: '0.75rem',
-                  }}
-                />
-
-                {/* User Avatar Menu Trigger */}
-                <Box
-                  onClick={handleOpenUserMenu}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1.2,
-                    cursor: 'pointer',
-                    p: 0.6,
-                    pr: 1.5,
-                    borderRadius: '30px',
-                    border: '1px solid #E2E8F0',
-                    backgroundColor: '#FFFFFF',
-                    transition: 'all 0.2s ease',
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
-                    '&:hover': { borderColor: '#2563EB', backgroundColor: '#F8FAFC' },
-                  }}
-                >
-                  <Avatar
-                    sx={{
-                      width: 34,
-                      height: 34,
-                      background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
-                      color: '#FFFFFF',
-                      fontSize: '0.9rem',
-                      fontWeight: 800,
-                    }}
-                  >
-                    {user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'}
-                  </Avatar>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontWeight: 700,
-                      color: '#0F172A',
-                      display: { xs: 'none', sm: 'block' },
-                      fontSize: '0.85rem',
-                    }}
-                  >
-                    {user.fullName || 'User'}
-                  </Typography>
-                </Box>
-
-                <Menu
-                  anchorEl={anchorElUser}
-                  open={Boolean(anchorElUser)}
-                  onClose={handleCloseUserMenu}
-                  slotProps={{
-                    paper: {
-                      elevation: 0,
-                      sx: {
-                        mt: 1.5,
-                        borderRadius: '20px',
-                        border: '1px solid #E2E8F0',
-                        boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.1)',
-                        minWidth: 220,
-                        p: 0.5,
-                      },
-                    },
-                  }}
-                  transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                  anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                >
-                  <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid #F1F5F9', mb: 0.5 }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#0F172A' }}>
-                      {user.fullName}
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: '#64748B', display: 'block' }}>
-                      {user.email}
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: '#2563EB', fontWeight: 700, display: 'block', mt: 0.5 }}>
-                      {user.ward || 'Ward 1 - Central Town'}
-                    </Typography>
-                  </Box>
-
-                  {user.role === 'CITIZEN' && (
-                    <MenuItem
-                      onClick={() => {
-                        handleCloseUserMenu();
-                        navigate('/citizen/profile');
-                      }}
-                      sx={{ py: 1.2, gap: 1.5, color: '#0F172A', fontWeight: 600, borderRadius: '12px' }}
-                    >
-                      <PersonIcon size={18} color="#64748B" /> My Profile & Ward
-                    </MenuItem>
-                  )}
-
-                  <MenuItem
-                    onClick={handleLogout}
-                    sx={{ py: 1.2, gap: 1.5, color: '#EF4444', fontWeight: 700, borderRadius: '12px' }}
-                  >
-                    <LogoutIcon size={18} color="#EF4444" /> Sign Out
-                  </MenuItem>
-                </Menu>
-              </>
-            ) : (
-              <Box sx={{ display: 'flex', gap: 1.5 }}>
-                <Button
-                  variant="outlined"
-                  onClick={() => navigate('/login')}
-                  sx={{
-                    borderRadius: '20px',
-                    borderColor: '#E2E8F0',
-                    color: '#0F172A',
-                    fontWeight: 700,
-                    px: 3,
-                  }}
-                >
-                  Sign In
-                </Button>
-                <Button
-                  variant="contained"
-                  onClick={() => navigate('/register')}
-                  sx={{
-                    borderRadius: '20px',
-                    backgroundColor: '#2563EB',
-                    color: '#FFFFFF',
-                    fontWeight: 700,
-                    px: 3,
-                  }}
-                >
-                  Register
-                </Button>
-              </Box>
-            )}
-
-            {/* Mobile Menu Button (Mobile view only) */}
-            {isAuthenticated && (
-              <IconButton
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                sx={{ display: { xs: 'flex', md: 'none' }, color: '#0F172A' }}
-              >
-                {mobileMenuOpen ? <CloseIcon size={24} /> : <MenuIcon size={24} />}
-              </IconButton>
-            )}
-          </Box>
-        </Toolbar>
-
-        {/* Mobile Navigation Menu Dropdown */}
-        {isAuthenticated && mobileMenuOpen && (
-          <Box
+              SGCS Portal
+            </MuiLink>
+            <Typography variant="caption" sx={{ color: '#202522', fontWeight: 500, fontSize: '0.775rem' }}>
+              {pageTitle}
+            </Typography>
+          </Breadcrumbs>
+          <Typography
+            variant="h6"
             sx={{
-              display: { xs: 'flex', md: 'none' },
-              flexDirection: 'column',
-              gap: 1,
-              py: 2,
-              borderTop: '1px solid #E2E8F0',
+              fontWeight: 600,
+              color: '#202522',
+              fontSize: '1rem',
+              lineHeight: 1.2,
+              letterSpacing: '-0.01em',
             }}
           >
-            {navLinks.map((link) => {
-              const isActive = location.pathname === link.path;
-              return (
-                <Button
-                  key={link.path}
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    navigate(link.path);
-                  }}
-                  startIcon={link.icon}
-                  sx={{
-                    px: 2,
-                    py: 1.2,
-                    borderRadius: '14px',
-                    fontWeight: isActive ? 800 : 600,
-                    color: isActive ? '#FFFFFF' : '#475569',
-                    backgroundColor: isActive ? '#2563EB' : 'transparent',
-                    textTransform: 'none',
-                    justifyContent: 'flex-start',
-                  }}
-                >
-                  {link.label}
-                </Button>
-              );
-            })}
-          </Box>
+            {pageTitle}
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* Right: Notifications & Profile Trigger */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        {isAuthenticated && user && (
+          <>
+            <NotificationPopover />
+
+            <Box
+              onClick={handleOpenUserMenu}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                cursor: 'pointer',
+                p: 0.5,
+                pl: 1,
+                pr: 1.5,
+                borderRadius: '6px',
+                border: '1px solid #E5E8E4',
+                backgroundColor: '#FFFFFF',
+                transition: 'all 0.15s ease',
+                '&:hover': { backgroundColor: '#F3F5F2', borderColor: '#496A57' },
+              }}
+            >
+              <Avatar
+                sx={{
+                  width: 28,
+                  height: 28,
+                  backgroundColor: '#496A57',
+                  color: '#FFFFFF',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                }}
+              >
+                {user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'}
+              </Avatar>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontWeight: 500,
+                  color: '#202522',
+                  display: { xs: 'none', sm: 'block' },
+                  fontSize: '0.85rem',
+                }}
+              >
+                {user.fullName || 'User'}
+              </Typography>
+            </Box>
+
+            <Menu
+              anchorEl={anchorElUser}
+              open={Boolean(anchorElUser)}
+              onClose={handleCloseUserMenu}
+              slotProps={{
+                paper: {
+                  elevation: 0,
+                  sx: {
+                    mt: 1,
+                    borderRadius: '8px',
+                    border: '1px solid #E5E8E4',
+                    minWidth: 200,
+                    p: 0.5,
+                  },
+                },
+              }}
+              transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+              anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+            >
+              <Box sx={{ px: 2, py: 1, borderBottom: '1px solid #E5E8E4', mb: 0.5 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#202522', fontSize: '0.85rem' }}>
+                  {user.fullName}
+                </Typography>
+                <Typography variant="caption" sx={{ color: '#68706B', display: 'block', fontSize: '0.75rem' }}>
+                  {user.email}
+                </Typography>
+              </Box>
+
+              <MenuItem
+                onClick={() => {
+                  handleCloseUserMenu();
+                  navigate('/citizen/profile');
+                }}
+                sx={{ py: 1, gap: 1.5, color: '#202522', fontSize: '0.85rem' }}
+              >
+                <PersonOutlinedIcon sx={{ fontSize: 18, color: '#68706B' }} /> Account Settings
+              </MenuItem>
+
+              <MenuItem
+                onClick={handleLogout}
+                sx={{ py: 1, gap: 1.5, color: '#B45D59', fontSize: '0.85rem', fontWeight: 500 }}
+              >
+                <LogoutOutlinedIcon sx={{ fontSize: 18, color: '#B45D59' }} /> Sign Out
+              </MenuItem>
+            </Menu>
+          </>
         )}
-      </Container>
-    </AppBar>
+      </Box>
+    </Box>
   );
 };
 

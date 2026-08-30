@@ -92,54 +92,54 @@ export const ManageComplaints: React.FC = () => {
   return (
     <Box>
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: 800, color: '#0F172A' }}>
+        <Typography variant="h4" sx={{ fontWeight: 600, color: '#202522', letterSpacing: '-0.015em' }}>
           Ward Complaint Management & Triage
         </Typography>
-        <Typography variant="body1" sx={{ color: '#64748B', mt: 0.5 }}>
+        <Typography variant="body2" sx={{ color: '#68706B', mt: 0.5 }}>
           Inspect resident grievances for <strong>{user?.ward || 'All Wards'}</strong>, dispatch qualified field personnel, and verify status updates.
         </Typography>
       </Box>
 
-      <Card elevation={0} sx={{ borderRadius: '24px', border: '1px solid #E2E8F0', backgroundColor: '#FFFFFF' }}>
+      <Card elevation={0} sx={{ borderRadius: '8px', border: '1px solid #E5E8E4', backgroundColor: '#FFFFFF' }}>
         <TableContainer>
           <Table>
-            <TableHead sx={{ bgcolor: '#F8FAFC' }}>
+            <TableHead sx={{ bgcolor: '#F8F9F7' }}>
               <TableRow>
-                <TableCell sx={{ fontWeight: 800, color: '#0F172A' }}>Tracking ID</TableCell>
-                <TableCell sx={{ fontWeight: 800, color: '#0F172A' }}>Complaint & Ward</TableCell>
-                <TableCell sx={{ fontWeight: 800, color: '#0F172A' }}>Citizen Contact</TableCell>
-                <TableCell sx={{ fontWeight: 800, color: '#0F172A' }}>Priority</TableCell>
-                <TableCell sx={{ fontWeight: 800, color: '#0F172A' }}>Assigned Worker</TableCell>
-                <TableCell sx={{ fontWeight: 800, color: '#0F172A' }}>Status</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 800, color: '#0F172A' }}>Actions</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#202522', py: 1.5 }}>Tracking ID</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#202522', py: 1.5 }}>Complaint & Ward</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#202522', py: 1.5 }}>Citizen Contact</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#202522', py: 1.5 }}>Priority</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#202522', py: 1.5 }}>Assigned Worker</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#202522', py: 1.5 }}>Status</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600, color: '#202522', py: 1.5 }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {displayedComplaints.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} align="center" sx={{ py: 6 }}>
-                    <Typography variant="body1" sx={{ color: '#64748B', fontWeight: 600 }}>
+                    <Typography variant="body2" sx={{ color: '#68706B', fontWeight: 500 }}>
                       No complaints submitted for {user?.ward || 'this ward'} yet.
                     </Typography>
                   </TableCell>
                 </TableRow>
               ) : (
                 displayedComplaints.map((row) => (
-                  <TableRow key={row.id} hover sx={{ '&:hover': { bgcolor: '#F8FAFC' } }}>
+                  <TableRow key={row.id} hover sx={{ '&:hover': { bgcolor: '#F8F9F7' } }}>
                     <TableCell>
-                      <Chip label={row.trackingNumber} size="small" sx={{ fontWeight: 800, backgroundColor: '#EFF6FF', color: '#2563EB' }} />
+                      <Chip label={row.trackingNumber} size="small" sx={{ fontWeight: 600, backgroundColor: '#E8EFE9', color: '#304B3A' }} />
                     </TableCell>
                     <TableCell>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#0F172A' }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#202522' }}>
                         {row.title}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: '#64748B' }}>
+                      <Typography variant="caption" sx={{ color: '#68706B' }}>
                         {row.category} • {row.ward}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2" sx={{ fontWeight: 700, color: '#0F172A' }}>{row.citizenName}</Typography>
-                      <Typography variant="caption" sx={{ color: '#64748B' }}>
+                      <Typography variant="body2" sx={{ fontWeight: 500, color: '#202522' }}>{row.citizenName}</Typography>
+                      <Typography variant="caption" sx={{ color: '#68706B' }}>
                         {row.citizenPhone}
                       </Typography>
                     </TableCell>
@@ -148,19 +148,19 @@ export const ManageComplaints: React.FC = () => {
                         label={row.priority}
                         size="small"
                         sx={{
-                          bgcolor: PRIORITY_COLORS[row.priority]?.bg || '#F1F5F9',
-                          color: PRIORITY_COLORS[row.priority]?.text || '#475569',
-                          fontWeight: 700,
+                          bgcolor: PRIORITY_COLORS[row.priority]?.bg || '#F8F9F7',
+                          color: PRIORITY_COLORS[row.priority]?.text || '#68706B',
+                          fontWeight: 600,
                         }}
                       />
                     </TableCell>
                     <TableCell>
                       {row.assignedWorkerName ? (
-                        <Typography variant="body2" sx={{ fontWeight: 700, color: '#2563EB' }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#304B3A' }}>
                           {row.assignedWorkerName}
                         </Typography>
                       ) : (
-                        <Chip label="Unassigned" size="small" sx={{ backgroundColor: '#FEF2F2', color: '#991B1B', fontWeight: 700 }} />
+                        <Chip label="Unassigned" size="small" sx={{ backgroundColor: '#FDF2F2', color: '#B45D59', fontWeight: 600 }} />
                       )}
                     </TableCell>
                     <TableCell>
@@ -168,16 +168,16 @@ export const ManageComplaints: React.FC = () => {
                         label={row.status.replace('_', ' ')}
                         size="small"
                         sx={{
-                          bgcolor: STATUS_COLORS[row.status]?.bg || '#F1F5F9',
-                          color: STATUS_COLORS[row.status]?.text || '#475569',
-                          fontWeight: 700,
+                          bgcolor: STATUS_COLORS[row.status]?.bg || '#F8F9F7',
+                          color: STATUS_COLORS[row.status]?.text || '#68706B',
+                          fontWeight: 600,
                         }}
                       />
                     </TableCell>
                     <TableCell align="center">
                       <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
                         <Tooltip title="View Timeline & Details">
-                          <IconButton size="small" color="primary" onClick={() => navigate(`/citizen/history/${row.id}`)}>
+                          <IconButton size="small" sx={{ color: '#496A57', '&:hover': { bgcolor: '#E8EFE9' } }} onClick={() => navigate(`/citizen/history/${row.id}`)}>
                             <VisibilityIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
@@ -188,11 +188,12 @@ export const ManageComplaints: React.FC = () => {
                           startIcon={<BuildIcon />}
                           onClick={() => setAssignDialogComplaint(row)}
                           sx={{
-                            borderRadius: '12px',
-                            backgroundColor: '#2563EB',
-                            fontWeight: 700,
+                            borderRadius: '6px',
+                            backgroundColor: '#496A57',
+                            fontWeight: 500,
                             textTransform: 'none',
-                            '&:hover': { backgroundColor: '#1D4ED8' }
+                            fontSize: '0.825rem',
+                            '&:hover': { backgroundColor: '#304B3A' }
                           }}
                         >
                           Triage & Assign

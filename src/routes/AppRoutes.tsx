@@ -28,8 +28,13 @@ import { CompletedTasks } from '../pages/worker/CompletedTasks';
 
 import { AdminDashboard } from '../pages/admin/AdminDashboard';
 import { UserManagement } from '../pages/admin/UserManagement';
+import { CouncillorManagement } from '../pages/admin/CouncillorManagement';
+import { WorkerManagement } from '../pages/admin/WorkerManagement';
 import { WardManagement } from '../pages/admin/WardManagement';
 import { ComplaintMonitoring } from '../pages/admin/ComplaintMonitoring';
+import { ProposalMonitoring } from '../pages/admin/ProposalMonitoring';
+import { NoticeManagement } from '../pages/admin/NoticeManagement';
+import { SystemActivity } from '../pages/admin/SystemActivity';
 import { SystemReports } from '../pages/admin/SystemReports';
 
 import { NotFoundPage, UnauthorizedPage } from '../components/common/NotFoundPage';
@@ -203,6 +208,22 @@ export const AppRoutes: React.FC = () => {
         }
       />
       <Route
+        path="/admin/councillors"
+        element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <CouncillorManagement />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/workers"
+        element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <WorkerManagement />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/admin/wards"
         element={
           <ProtectedRoute allowedRoles={['ADMIN']}>
@@ -215,6 +236,30 @@ export const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute allowedRoles={['ADMIN']}>
             <ComplaintMonitoring />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/proposals"
+        element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <ProposalMonitoring />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/notices"
+        element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <NoticeManagement />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/activity"
+        element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <SystemActivity />
           </ProtectedRoute>
         }
       />
@@ -233,3 +278,5 @@ export const AppRoutes: React.FC = () => {
     </Routes>
   );
 };
+
+export default AppRoutes;

@@ -117,18 +117,18 @@ export const AssignWorkerModal: React.FC<AssignWorkerModalProps> = ({
       onClose={onClose}
       maxWidth="sm"
       fullWidth
-      slotProps={{ paper: { sx: { borderRadius: '24px', p: 1.5 } } }}
+      slotProps={{ paper: { sx: { borderRadius: '12px', p: 1 } } }}
     >
-      <DialogTitle sx={{ fontWeight: 800, color: '#0F172A', fontSize: '1.25rem' }}>
+      <DialogTitle sx={{ fontWeight: 600, color: '#202522', fontSize: '1.15rem' }}>
         Review Grievance & Assign Technician
       </DialogTitle>
       <DialogContent>
         {complaint && (
           <Box sx={{ mb: 1 }}>
-            <Typography variant="subtitle2" sx={{ color: '#2563EB', fontWeight: 800, mb: 0.5 }}>
+            <Typography variant="subtitle2" sx={{ color: '#304B3A', fontWeight: 600, mb: 0.5 }}>
               {complaint.trackingNumber}: {complaint.title}
             </Typography>
-            <Typography variant="body2" sx={{ color: '#64748B', mb: 3 }}>
+            <Typography variant="body2" sx={{ color: '#68706B', mb: 3 }}>
               Category: {complaint.category} | Location: {complaint.locationAddress}
             </Typography>
 
@@ -157,15 +157,15 @@ export const AssignWorkerModal: React.FC<AssignWorkerModalProps> = ({
                     PaperProps: {
                       sx: {
                         maxHeight: 280,
-                        borderRadius: '12px',
-                        boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                        borderRadius: '8px',
+                        border: '1px solid #E5E8E4',
                       },
                     },
                   },
                 } as any}
               >
                 {workersList.map((w) => (
-                  <MenuItem key={w.id} value={w.id} sx={{ py: 1, fontWeight: 600, fontSize: '0.875rem' }}>
+                  <MenuItem key={w.id} value={w.id} sx={{ py: 1, fontWeight: 500, fontSize: '0.85rem' }}>
                     {w.name}
                   </MenuItem>
                 ))}
@@ -175,10 +175,10 @@ export const AssignWorkerModal: React.FC<AssignWorkerModalProps> = ({
         )}
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose} sx={{ borderRadius: '14px', textTransform: 'none', color: '#64748B', fontWeight: 600 }}>
+        <Button onClick={onClose} sx={{ borderRadius: '8px', textTransform: 'none', color: '#68706B', fontWeight: 500 }}>
           Cancel
         </Button>
-        <CustomButton loading={loading} onClick={handleConfirm}>
+        <CustomButton loading={loading} onClick={handleConfirm} sx={{ backgroundColor: '#496A57', '&:hover': { backgroundColor: '#304B3A' } }}>
           Confirm Triage & Assign
         </CustomButton>
       </DialogActions>

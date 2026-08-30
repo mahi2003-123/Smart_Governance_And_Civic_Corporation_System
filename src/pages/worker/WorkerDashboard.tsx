@@ -149,7 +149,7 @@ export const WorkerDashboard: React.FC = () => {
         actionText={`Assigned Tasks Queue (${pendingTasks.length})`}
         actionIcon={<BuildIcon />}
         onAction={() => navigate('/worker/tasks')}
-        gradientBackground="linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%)"
+        gradientBackground="linear-gradient(135deg, #496A57 0%, #304B3A 100%)"
       />
 
       {/* 3-Column Metrics Grid */}
@@ -157,7 +157,7 @@ export const WorkerDashboard: React.FC = () => {
         sx={{
           display: 'grid',
           gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
-          gap: 3,
+          gap: 2.5,
           mb: 4,
         }}
       >
@@ -166,9 +166,9 @@ export const WorkerDashboard: React.FC = () => {
           value={pendingTasks.length}
           subtitle="Dispatched by ward councillor"
           icon={<BuildIcon />}
-          iconBgColor="#EFF6FF"
-          iconColor="#2563EB"
-          borderLeftColor="#2563EB"
+          iconBgColor="#E8EFE9"
+          iconColor="#304B3A"
+          borderLeftColor="#496A57"
         />
 
         <StatCard
@@ -176,9 +176,9 @@ export const WorkerDashboard: React.FC = () => {
           value={completedTasks.length}
           subtitle="Verified with completion photo"
           icon={<TaskAltIcon />}
-          iconBgColor="#F1F5F9"
-          iconColor="#475569"
-          borderLeftColor="#64748B"
+          iconBgColor="#F8F9F7"
+          iconColor="#202522"
+          borderLeftColor="#68706B"
         />
 
         <StatCard
@@ -186,23 +186,23 @@ export const WorkerDashboard: React.FC = () => {
           value="98%"
           subtitle="Turnaround SLA score"
           icon={<MyLocationIcon />}
-          iconBgColor="#DBEAFE"
-          iconColor="#1D4ED8"
-          borderLeftColor="#1D4ED8"
+          iconBgColor="#E8EFE9"
+          iconColor="#304B3A"
+          borderLeftColor="#496A57"
         />
       </Box>
 
       {/* Immediate Tasks Queue */}
-      <Typography variant="h6" sx={{ fontWeight: 800, color: '#0F172A', mb: 2 }}>
+      <Typography variant="h6" sx={{ fontWeight: 600, color: '#202522', mb: 2 }}>
         Immediate Assigned Field Tasks
       </Typography>
 
       {pendingTasks.length === 0 ? (
-        <Paper elevation={0} sx={{ p: 4, borderRadius: '24px', border: '1px solid #E2E8F0', textAlign: 'center', backgroundColor: '#FFFFFF' }}>
-          <Typography variant="h6" sx={{ fontWeight: 800, color: '#0F172A', mb: 1 }}>
+        <Paper elevation={0} sx={{ p: 4, borderRadius: '8px', border: '1px solid #E5E8E4', textAlign: 'center', backgroundColor: '#FFFFFF' }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, color: '#202522', mb: 1 }}>
             All Assigned Tasks Completed! 🎉
           </Typography>
-          <Typography variant="body2" sx={{ color: '#64748B' }}>
+          <Typography variant="body2" sx={{ color: '#68706B' }}>
             There are currently no active repair orders pending for your profile.
           </Typography>
         </Paper>
@@ -211,7 +211,7 @@ export const WorkerDashboard: React.FC = () => {
           sx={{
             display: 'grid',
             gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' },
-            gap: 3,
+            gap: 2.5,
           }}
         >
           {pendingTasks.map((task) => (
@@ -220,60 +220,62 @@ export const WorkerDashboard: React.FC = () => {
               elevation={0}
               sx={{
                 p: 3,
-                borderRadius: '24px',
+                borderRadius: '8px',
                 backgroundColor: '#FFFFFF',
-                border: '1px solid #E2E8F0',
-                borderLeft: '5px solid #2563EB',
+                border: '1px solid #E5E8E4',
+                borderLeft: '4px solid #496A57',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
+                transition: 'all 0.15s ease',
+                '&:hover': { borderColor: '#496A57' },
               }}
             >
               <Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-                  <Chip label={task.trackingNumber} size="small" sx={{ fontWeight: 800, backgroundColor: '#EFF6FF', color: '#2563EB' }} />
+                  <Chip label={task.trackingNumber} size="small" sx={{ fontWeight: 600, backgroundColor: '#E8EFE9', color: '#304B3A' }} />
                   <Box sx={{ display: 'flex', gap: 1 }}>
                     <Chip
                       label={task.priority}
                       size="small"
                       sx={{
-                        fontWeight: 700,
-                        backgroundColor: PRIORITY_COLORS[task.priority]?.bg || '#F1F5F9',
-                        color: PRIORITY_COLORS[task.priority]?.text || '#475569',
+                        fontWeight: 600,
+                        backgroundColor: PRIORITY_COLORS[task.priority]?.bg || '#F8F9F7',
+                        color: PRIORITY_COLORS[task.priority]?.text || '#68706B',
                       }}
                     />
                     <Chip
                       label={task.status.replace('_', ' ')}
                       size="small"
                       sx={{
-                        fontWeight: 700,
-                        backgroundColor: STATUS_COLORS[task.status]?.bg || '#F1F5F9',
-                        color: STATUS_COLORS[task.status]?.text || '#475569',
+                        fontWeight: 600,
+                        backgroundColor: STATUS_COLORS[task.status]?.bg || '#F8F9F7',
+                        color: STATUS_COLORS[task.status]?.text || '#68706B',
                       }}
                     />
                   </Box>
                 </Box>
 
-                <Typography variant="h6" sx={{ fontWeight: 800, color: '#0F172A', mb: 1 }}>
+                <Typography variant="h6" sx={{ fontWeight: 600, color: '#202522', mb: 1 }}>
                   {task.title}
                 </Typography>
 
-                <Typography variant="body2" sx={{ color: '#64748B', mb: 2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                <Typography variant="body2" sx={{ color: '#68706B', mb: 2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                   {task.description}
                 </Typography>
 
-                <Paper elevation={0} sx={{ p: 1.5, bgcolor: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0', mb: 2.5 }}>
+                <Paper elevation={0} sx={{ p: 1.5, bgcolor: '#F8F9F7', borderRadius: '6px', border: '1px solid #E5E8E4', mb: 2.5 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <LocationOnIcon fontSize="small" sx={{ color: '#2563EB' }} />
-                    <Typography variant="caption" sx={{ fontWeight: 600, color: '#0F172A' }}>
+                    <LocationOnIcon fontSize="small" sx={{ color: '#496A57' }} />
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: '#202522' }}>
                       {task.locationAddress} ({task.ward})
                     </Typography>
                   </Box>
                 </Paper>
               </Box>
 
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pt: 1, borderTop: '1px solid #F1F5F9' }}>
-                <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 600 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pt: 1.5, borderTop: '1px solid #E5E8E4' }}>
+                <Typography variant="caption" sx={{ color: '#68706B', fontWeight: 500 }}>
                   Resident: {task.citizenName}
                 </Typography>
                 <Button
@@ -282,15 +284,15 @@ export const WorkerDashboard: React.FC = () => {
                   startIcon={<VisibilityIcon />}
                   onClick={() => setSelectedComplaint(task)}
                   sx={{
-                    borderRadius: '12px',
-                    backgroundColor: '#2563EB',
+                    borderRadius: '6px',
+                    backgroundColor: '#496A57',
                     color: '#FFFFFF',
-                    fontWeight: 700,
+                    fontWeight: 500,
                     textTransform: 'none',
                     fontSize: '0.825rem',
                     px: 2,
-                    py: 0.8,
-                    '&:hover': { backgroundColor: '#1D4ED8' },
+                    py: 0.7,
+                    '&:hover': { backgroundColor: '#304B3A' },
                   }}
                 >
                   View Details & Action
@@ -307,53 +309,53 @@ export const WorkerDashboard: React.FC = () => {
         onClose={() => setSelectedComplaint(null)}
         maxWidth="md"
         fullWidth
-        slotProps={{ paper: { sx: { borderRadius: '24px', p: 1.5 } } }}
+        slotProps={{ paper: { sx: { borderRadius: '12px', p: 1 } } }}
       >
         {selectedComplaint && (
           <>
-            <DialogTitle sx={{ fontWeight: 800, color: '#0F172A', fontSize: '1.25rem', pb: 1 }}>
+            <DialogTitle sx={{ fontWeight: 600, color: '#202522', fontSize: '1.15rem', pb: 1 }}>
               Grievance Order Details: {selectedComplaint.trackingNumber}
             </DialogTitle>
-            <DialogContent dividers sx={{ borderTop: '1px solid #E2E8F0', borderBottom: '1px solid #E2E8F0' }}>
+            <DialogContent dividers sx={{ borderTop: '1px solid #E5E8E4', borderBottom: '1px solid #E5E8E4' }}>
               <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3, mb: 3 }}>
                 <Box>
-                  <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 700, display: 'block', mb: 0.5 }}>
+                  <Typography variant="caption" sx={{ color: '#68706B', fontWeight: 600, display: 'block', mb: 0.5 }}>
                     TASK TITLE & CATEGORY
                   </Typography>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#0F172A', mb: 1 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#202522', mb: 1 }}>
                     {selectedComplaint.title}
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                    <Chip label={selectedComplaint.category} size="small" sx={{ fontWeight: 700, backgroundColor: '#EFF6FF', color: '#2563EB' }} />
-                    <Chip label={selectedComplaint.priority} size="small" sx={{ fontWeight: 700, backgroundColor: PRIORITY_COLORS[selectedComplaint.priority]?.bg, color: PRIORITY_COLORS[selectedComplaint.priority]?.text }} />
-                    <Chip label={selectedComplaint.status} size="small" sx={{ fontWeight: 700, backgroundColor: STATUS_COLORS[selectedComplaint.status]?.bg, color: STATUS_COLORS[selectedComplaint.status]?.text }} />
+                    <Chip label={selectedComplaint.category} size="small" sx={{ fontWeight: 600, backgroundColor: '#E8EFE9', color: '#304B3A' }} />
+                    <Chip label={selectedComplaint.priority} size="small" sx={{ fontWeight: 600, backgroundColor: PRIORITY_COLORS[selectedComplaint.priority]?.bg, color: PRIORITY_COLORS[selectedComplaint.priority]?.text }} />
+                    <Chip label={selectedComplaint.status} size="small" sx={{ fontWeight: 600, backgroundColor: STATUS_COLORS[selectedComplaint.status]?.bg, color: STATUS_COLORS[selectedComplaint.status]?.text }} />
                   </Box>
 
-                  <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 700, display: 'block', mb: 0.5 }}>
+                  <Typography variant="caption" sx={{ color: '#68706B', fontWeight: 600, display: 'block', mb: 0.5 }}>
                     LOCATION / ADDRESS
                   </Typography>
-                  <Paper elevation={0} sx={{ p: 1.5, bgcolor: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0', mb: 2 }}>
+                  <Paper elevation={0} sx={{ p: 1.5, bgcolor: '#F8F9F7', borderRadius: '6px', border: '1px solid #E5E8E4', mb: 2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <LocationOnIcon sx={{ color: '#2563EB', fontSize: 20 }} />
-                      <Typography variant="body2" sx={{ fontWeight: 700, color: '#0F172A' }}>
+                      <LocationOnIcon sx={{ color: '#496A57', fontSize: 20 }} />
+                      <Typography variant="body2" sx={{ fontWeight: 600, color: '#202522' }}>
                         {selectedComplaint.locationAddress} • {selectedComplaint.ward}
                       </Typography>
                     </Box>
                   </Paper>
 
-                  <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 700, display: 'block', mb: 0.5 }}>
+                  <Typography variant="caption" sx={{ color: '#68706B', fontWeight: 600, display: 'block', mb: 0.5 }}>
                     CITIZEN REPORTER
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <PersonIcon sx={{ color: '#64748B', fontSize: 18 }} />
-                      <Typography variant="body2" sx={{ fontWeight: 700, color: '#0F172A' }}>
+                      <PersonIcon sx={{ color: '#68706B', fontSize: 18 }} />
+                      <Typography variant="body2" sx={{ fontWeight: 600, color: '#202522' }}>
                         {selectedComplaint.citizenName}
                       </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <PhoneIcon sx={{ color: '#2563EB', fontSize: 16 }} />
-                      <Typography variant="body2" sx={{ fontWeight: 700, color: '#2563EB' }}>
+                      <PhoneIcon sx={{ color: '#496A57', fontSize: 16 }} />
+                      <Typography variant="body2" sx={{ fontWeight: 600, color: '#496A57' }}>
                         {selectedComplaint.citizenPhone}
                       </Typography>
                     </Box>
@@ -361,23 +363,23 @@ export const WorkerDashboard: React.FC = () => {
                 </Box>
 
                 <Box>
-                  <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 700, display: 'block', mb: 0.5 }}>
+                  <Typography variant="caption" sx={{ color: '#68706B', fontWeight: 600, display: 'block', mb: 0.5 }}>
                     GRIEVANCE DESCRIPTION
                   </Typography>
-                  <Paper elevation={0} sx={{ p: 2, bgcolor: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0', mb: 2, minHeight: 100 }}>
-                    <Typography variant="body2" sx={{ color: '#334155', lineHeight: 1.6 }}>
+                  <Paper elevation={0} sx={{ p: 2, bgcolor: '#F8F9F7', borderRadius: '6px', border: '1px solid #E5E8E4', mb: 2, minHeight: 100 }}>
+                    <Typography variant="body2" sx={{ color: '#202522', lineHeight: 1.6 }}>
                       {selectedComplaint.description}
                     </Typography>
                   </Paper>
 
                   {selectedComplaint.images && selectedComplaint.images.length > 0 && (
                     <Box sx={{ mb: 2 }}>
-                      <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 700, display: 'block', mb: 1 }}>
+                      <Typography variant="caption" sx={{ color: '#68706B', fontWeight: 600, display: 'block', mb: 1 }}>
                         SITE ATTACHMENTS
                       </Typography>
                       <Box sx={{ display: 'flex', gap: 1 }}>
                         {selectedComplaint.images.map((img, idx) => (
-                          <img key={idx} src={img} alt="Site" style={{ width: 80, height: 80, borderRadius: 12, objectFit: 'cover', border: '1px solid #E2E8F0' }} />
+                          <img key={idx} src={img} alt="Site" style={{ width: 80, height: 80, borderRadius: 6, objectFit: 'cover', border: '1px solid #E5E8E4' }} />
                         ))}
                       </Box>
                     </Box>
@@ -385,10 +387,10 @@ export const WorkerDashboard: React.FC = () => {
                 </Box>
               </Box>
 
-              <Divider sx={{ my: 2 }} />
+              <Divider sx={{ my: 2, borderColor: '#E5E8E4' }} />
 
               {/* Action Form */}
-              <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#0F172A', mb: 2 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#202522', mb: 2 }}>
                 Update Work Order Status & Submit Proof
               </Typography>
 
@@ -397,20 +399,20 @@ export const WorkerDashboard: React.FC = () => {
                   variant="outlined"
                   startIcon={<BuildIcon />}
                   onClick={() => handleStartWork(selectedComplaint.id)}
-                  sx={{ mb: 3, borderRadius: '12px', textTransform: 'none', fontWeight: 700, borderColor: '#2563EB', color: '#2563EB' }}
+                  sx={{ mb: 3, borderRadius: '8px', textTransform: 'none', fontWeight: 500, borderColor: '#496A57', color: '#304B3A', '&:hover': { borderColor: '#304B3A', backgroundColor: '#F3F5F2' } }}
                 >
                   Mark Arrived On-Site / Start Repair Work
                 </Button>
               )}
 
               <Box sx={{ mb: 2 }}>
-                <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 700, display: 'block', mb: 1 }}>
+                <Typography variant="caption" sx={{ color: '#68706B', fontWeight: 600, display: 'block', mb: 1 }}>
                   UPLOAD REPAIR COMPLETION PHOTO (REQUIRED FOR RESOLUTION)
                 </Typography>
                 {photoPreview ? (
                   <Box sx={{ mb: 2, textAlign: 'center' }}>
-                    <img src={photoPreview} alt="Completion Proof" style={{ maxHeight: 180, borderRadius: 12, border: '1px solid #E2E8F0' }} />
-                    <Button size="small" color="error" onClick={() => setPhotoPreview(null)} sx={{ display: 'block', mx: 'auto', mt: 1, textTransform: 'none', fontWeight: 600 }}>
+                    <img src={photoPreview} alt="Completion Proof" style={{ maxHeight: 180, borderRadius: 6, border: '1px solid #E5E8E4' }} />
+                    <Button size="small" color="error" onClick={() => setPhotoPreview(null)} sx={{ display: 'block', mx: 'auto', mt: 1, textTransform: 'none', fontWeight: 500 }}>
                       Remove & Retake Photo
                     </Button>
                   </Box>
@@ -419,19 +421,19 @@ export const WorkerDashboard: React.FC = () => {
                     component="label"
                     sx={{
                       p: 3,
-                      border: '2px dashed #CBD5E1',
-                      borderRadius: '16px',
+                      border: '2px dashed #E5E8E4',
+                      borderRadius: '8px',
                       textAlign: 'center',
                       cursor: 'pointer',
-                      bgcolor: '#F8FAFC',
+                      bgcolor: '#F8F9F7',
                       display: 'block',
                       mb: 2.5,
-                      '&:hover': { borderColor: '#2563EB', bgcolor: '#EFF6FF' },
+                      '&:hover': { borderColor: '#496A57', bgcolor: '#E8EFE9' },
                     }}
                   >
                     <input type="file" accept="image/*" hidden onChange={handlePhotoUpload} />
-                    <CloudUploadIcon sx={{ fontSize: 40, color: '#2563EB', mb: 1 }} />
-                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#0F172A' }}>
+                    <CloudUploadIcon sx={{ fontSize: 36, color: '#496A57', mb: 1 }} />
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#202522' }}>
                       Click to Attach On-Site Repair Proof Photo
                     </Typography>
                   </Paper>
@@ -448,14 +450,14 @@ export const WorkerDashboard: React.FC = () => {
               </Box>
             </DialogContent>
             <DialogActions sx={{ px: 3, py: 2 }}>
-              <Button onClick={() => setSelectedComplaint(null)} sx={{ borderRadius: '12px', color: '#64748B', fontWeight: 600, textTransform: 'none' }}>
+              <Button onClick={() => setSelectedComplaint(null)} sx={{ borderRadius: '8px', color: '#68706B', fontWeight: 500, textTransform: 'none' }}>
                 Close
               </Button>
               <CustomButton
                 loading={submitting}
                 onClick={handleCompleteTask}
                 startIcon={<CheckCircleIcon />}
-                sx={{ borderRadius: '12px', backgroundColor: '#2563EB', '&:hover': { backgroundColor: '#1D4ED8' } }}
+                sx={{ borderRadius: '8px', backgroundColor: '#496A57', '&:hover': { backgroundColor: '#304B3A' } }}
               >
                 Mark Task Fully Resolved
               </CustomButton>

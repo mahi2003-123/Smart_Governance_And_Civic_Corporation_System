@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   Box,
-  Card,
   Typography,
   TextField,
   Button,
@@ -9,15 +8,15 @@ import {
   Alert,
   Avatar,
   Divider,
-  Paper,
   InputAdornment,
+  Chip,
 } from '@mui/material';
-import PersonIcon from '@mui/icons-material/Person';
-import EmailIcon from '@mui/icons-material/Email';
-import PhoneIcon from '@mui/icons-material/Phone';
-import HomeIcon from '@mui/icons-material/Home';
-import SaveIcon from '@mui/icons-material/Save';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
+import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
+import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
+import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
+import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
+import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import { useAuth } from '../../hooks/useAuth';
 import { WardSelector } from '../../components/common/WardSelector';
 
@@ -25,7 +24,7 @@ export const Profile: React.FC = () => {
   const { user, updateUser } = useAuth();
 
   const [fullName, setFullName] = useState(user?.fullName || 'Rahul Sharma');
-  const [email, setEmail] = useState(user?.email || 'citizen@sgcs.gov.in');
+  const [email] = useState(user?.email || 'citizen@sgcs.gov.in');
   const [phone, setPhone] = useState(user?.phone || '+91 98765 43210');
   const [address, setAddress] = useState(user?.address || 'Flat 402, Green Valley Apartments, Main Street');
   const [ward, setWard] = useState(user?.ward || 'Ward 1 - Central Town');
@@ -68,101 +67,151 @@ export const Profile: React.FC = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 720, mx: 'auto', pb: 6 }}>
+    <Box sx={{ maxWidth: 760, mx: 'auto', pb: 8 }}>
       {/* Header */}
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 800, color: '#0F172A', mb: 0.5, letterSpacing: '-0.02em' }}>
-          My Profile & Ward Settings
+        <Typography variant="h1" sx={{ fontWeight: 600, color: '#202522', mb: 1, letterSpacing: '-0.015em' }}>
+          Government Service Account Profile
         </Typography>
-        <Typography variant="body1" sx={{ color: '#64748B' }}>
-          Manage your personal details and municipal ward association.
+        <Typography variant="body1" sx={{ color: '#68706B' }}>
+          Official citizen registration record and municipal ward jurisdiction settings.
         </Typography>
       </Box>
 
       {success && (
         <Alert
-          icon={<CheckCircleIcon fontSize="inherit" />}
+          icon={<CheckCircleOutlinedIcon fontSize="inherit" />}
           severity="success"
           onClose={() => setSuccess(false)}
-          sx={{ mb: 3, borderRadius: '16px', fontWeight: 600 }}
+          sx={{ mb: 4, borderRadius: '6px' }}
         >
-          Profile details updated successfully!
+          Citizen profile details updated successfully!
         </Alert>
       )}
 
       {error && (
-        <Alert severity="error" onClose={() => setError('')} sx={{ mb: 3, borderRadius: '16px' }}>
+        <Alert severity="error" onClose={() => setError('')} sx={{ mb: 4, borderRadius: '6px' }}>
           {error}
         </Alert>
       )}
 
-      <Card
-        elevation={0}
-        sx={{
-          p: { xs: 3, sm: 4.5 },
-          borderRadius: '24px',
-          border: '1px solid #E2E8F0',
-          backgroundColor: '#FFFFFF',
-          boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.05)',
-        }}
-      >
-        {/* User Identity Banner */}
-        <Paper
-          elevation={0}
-          sx={{
-            p: 3,
-            mb: 4,
-            borderRadius: '20px',
-            backgroundColor: '#F8FAFC',
-            border: '1px solid #E2E8F0',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 2.5,
-          }}
-        >
+      {/* Main Profile Form structured with sections & dividers */}
+      <Box component="form" onSubmit={handleSaveProfile} sx={{ border: '1px solid #E5E8E4', borderRadius: '8px', backgroundColor: '#FFFFFF', p: { xs: 3, sm: 5 } }}>
+        
+        {/* Profile Identity Header */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, pb: 4, mb: 4, borderBottom: '1px solid #E5E8E4' }}>
           <Avatar
             sx={{
-              width: 64,
-              height: 64,
-              backgroundColor: '#2563EB',
-              fontSize: '1.5rem',
-              fontWeight: 800,
-              boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)',
+              width: 56,
+              height: 56,
+              backgroundColor: '#496A57',
+              color: '#FFFFFF',
+              fontSize: '1.25rem',
+              fontWeight: 600,
             }}
           >
             {fullName.substring(0, 2).toUpperCase()}
           </Avatar>
           <Box>
-            <Typography variant="h6" sx={{ fontWeight: 800, color: '#0F172A', lineHeight: 1.2 }}>
+            <Typography variant="h3" sx={{ fontWeight: 600, color: '#202522', mb: 0.5, fontSize: '1.25rem' }}>
               {fullName}
             </Typography>
-            <Typography variant="body2" sx={{ color: '#64748B', fontWeight: 600 }}>
-              Registered Citizen • {ward}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Chip label="Registered Citizen" size="small" sx={{ backgroundColor: '#E8EFE9', color: '#304B3A', height: 20 }} />
+              <Typography variant="caption" sx={{ color: '#68706B' }}>
+                {ward}
+              </Typography>
+            </Box>
           </Box>
-        </Paper>
+        </Box>
 
-        <Box component="form" onSubmit={handleSaveProfile}>
-          <Stack spacing={3}>
-            {/* Full Name & Phone */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2.5 }}>
+        <Stack spacing={4}>
+          {/* Section 1: Personal Information */}
+          <Box>
+            <Typography variant="overline" sx={{ letterSpacing: '0.08em', color: '#68706B', fontWeight: 600, display: 'block', mb: 1 }}>
+              1. PERSONAL INFORMATION
+            </Typography>
+            <Divider sx={{ mb: 2.5, borderColor: '#E5E8E4' }} />
+
+            <TextField
+              fullWidth
+              id="profile-fullname-field"
+              label="Full Name (Official Record)"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PersonOutlinedIcon sx={{ color: '#68706B', fontSize: 18 }} />
+                    </InputAdornment>
+                  ),
+                },
+              }}
+            />
+          </Box>
+
+          {/* Section 2: Ward & Address */}
+          <Box>
+            <Typography variant="overline" sx={{ letterSpacing: '0.08em', color: '#68706B', fontWeight: 600, display: 'block', mb: 1 }}>
+              2. WARD JURISDICTION & RESIDENCE
+            </Typography>
+            <Divider sx={{ mb: 2.5, borderColor: '#E5E8E4' }} />
+
+            <Stack spacing={2.5}>
+              <WardSelector
+                value={ward}
+                onChange={(val) => setWard(val)}
+                label="Assigned Municipal Ward"
+                required
+                helperText="Ward selection determines councillor routing and notices"
+              />
+
               <TextField
                 fullWidth
-                id="profile-fullname-field"
-                label="Full Name"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                id="profile-address-field"
+                label="Residential Address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
                 required
                 slotProps={{
                   input: {
                     startAdornment: (
                       <InputAdornment position="start">
-                        <PersonIcon sx={{ color: '#64748B', fontSize: 20 }} />
+                        <HomeOutlinedIcon sx={{ color: '#68706B', fontSize: 18 }} />
                       </InputAdornment>
                     ),
                   },
                 }}
-                sx={textFieldStyles}
+              />
+            </Stack>
+          </Box>
+
+          {/* Section 3: Contact & Credentials */}
+          <Box>
+            <Typography variant="overline" sx={{ letterSpacing: '0.08em', color: '#68706B', fontWeight: 600, display: 'block', mb: 1 }}>
+              3. CONTACT & CREDENTIALS
+            </Typography>
+            <Divider sx={{ mb: 2.5, borderColor: '#E5E8E4' }} />
+
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2.5 }}>
+              <TextField
+                fullWidth
+                disabled
+                id="profile-email-field"
+                label="Registered Email Address"
+                value={email}
+                helperText="Email is bound to citizen credentials"
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <EmailOutlinedIcon sx={{ color: '#8E9691', fontSize: 18 }} />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
               />
 
               <TextField
@@ -176,119 +225,40 @@ export const Profile: React.FC = () => {
                   input: {
                     startAdornment: (
                       <InputAdornment position="start">
-                        <PhoneIcon sx={{ color: '#64748B', fontSize: 20 }} />
+                        <PhoneOutlinedIcon sx={{ color: '#68706B', fontSize: 18 }} />
                       </InputAdornment>
                     ),
                   },
                 }}
-                sx={textFieldStyles}
               />
             </Box>
+          </Box>
 
-            {/* Email Address (ReadOnly) */}
-            <TextField
-              fullWidth
-              disabled
-              id="profile-email-field"
-              label="Email Address (Registered)"
-              value={email}
-              helperText="Email is bound to your citizen account credentials"
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <EmailIcon sx={{ color: '#94A3B8', fontSize: 20 }} />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-              sx={textFieldStyles}
-            />
-
-            {/* Address */}
-            <TextField
-              fullWidth
-              id="profile-address-field"
-              label="Residential Address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              required
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <HomeIcon sx={{ color: '#64748B', fontSize: 20 }} />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-              sx={textFieldStyles}
-            />
-
-            {/* Manual Ward Selection */}
-            <WardSelector
-              value={ward}
-              onChange={(val) => setWard(val)}
-              label="Assigned Municipal Ward"
-              required
-              helperText="Manual ward selection determines councillor routing and notices"
-            />
-
-            <Divider sx={{ my: 1, borderColor: '#E2E8F0' }} />
-
-            {/* Submit Button */}
+          {/* Save Action */}
+          <Box sx={{ pt: 2, borderTop: '1px solid #E5E8E4', display: 'flex', justifyContent: 'flex-end' }}>
             <Button
               type="submit"
               disabled={loading}
               variant="contained"
-              startIcon={<SaveIcon />}
+              startIcon={<SaveOutlinedIcon sx={{ fontSize: 18 }} />}
               sx={{
-                py: 1.5,
-                borderRadius: '16px',
-                backgroundColor: '#2563EB',
+                py: 1.2,
+                px: 4,
+                borderRadius: '8px',
+                backgroundColor: '#496A57',
                 color: '#FFFFFF',
-                fontWeight: 700,
-                fontSize: '0.95rem',
-                textTransform: 'none',
-                boxShadow: '0 4px 14px rgba(37, 99, 235, 0.25)',
-                '&:hover': {
-                  backgroundColor: '#1D4ED8',
-                },
+                fontWeight: 500,
+                fontSize: '0.9rem',
+                '&:hover': { backgroundColor: '#304B3A' },
               }}
             >
-              {loading ? 'Saving Profile...' : 'Save Profile Changes'}
+              {loading ? 'Saving Changes...' : 'Save Profile Changes'}
             </Button>
-          </Stack>
-        </Box>
-      </Card>
+          </Box>
+        </Stack>
+      </Box>
     </Box>
   );
-};
-
-const textFieldStyles = {
-  '& .MuiOutlinedInput-root': {
-    borderRadius: '12px',
-    backgroundColor: '#FFFFFF',
-    fontSize: '0.9rem',
-    '& fieldset': {
-      borderColor: '#E2E8F0',
-    },
-    '&:hover fieldset': {
-      borderColor: '#CBD5E1',
-    },
-    '&.Mui-focused fieldset': {
-      borderColor: '#2563EB',
-      borderWidth: '1.5px',
-    },
-  },
-  '& .MuiInputLabel-root': {
-    color: '#64748B',
-    fontSize: '0.9rem',
-    '&.Mui-focused': {
-      color: '#2563EB',
-      fontWeight: 600,
-    },
-  },
 };
 
 export default Profile;

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   Box,
-  Card,
   Typography,
   TextField,
   Button,
@@ -11,10 +10,10 @@ import {
   Paper,
   InputAdornment,
 } from '@mui/material';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
+import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
-import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
-import SearchIcon from '@mui/icons-material/Search';
+import AssignmentTurnedInOutlinedIcon from '@mui/icons-material/AssignmentTurnedInOutlined';
+import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { complaintService } from '../../services/complaintService';
@@ -31,7 +30,7 @@ export const SubmitComplaint: React.FC = () => {
   const [description, setDescription] = useState('');
   const [ward, setWard] = useState(user?.ward || 'Ward 1 - Central Town');
   const [locationAddress, setLocationAddress] = useState('');
-  const [priority, setPriority] = useState<ComplaintPriority>('MEDIUM');
+  const [priority] = useState<ComplaintPriority>('MEDIUM');
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -104,96 +103,95 @@ export const SubmitComplaint: React.FC = () => {
 
   if (submittedData) {
     return (
-      <Box sx={{ maxWidth: 640, mx: 'auto', py: 6, px: 2 }}>
-        <Card
+      <Box sx={{ maxWidth: 680, mx: 'auto', py: 4 }}>
+        <Paper
           elevation={0}
           sx={{
             p: { xs: 4, sm: 5 },
-            borderRadius: '24px',
-            border: '1px solid #E2E8F0',
+            borderRadius: '8px',
+            border: '1px solid #E5E8E4',
             textAlign: 'center',
             backgroundColor: '#FFFFFF',
-            boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.05)',
           }}
         >
           <Box
             sx={{
-              width: 72,
-              height: 72,
+              width: 56,
+              height: 56,
               borderRadius: '50%',
-              backgroundColor: '#ECFDF5',
-              color: '#059669',
+              backgroundColor: '#E8EFE9',
+              color: '#304B3A',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               mx: 'auto',
-              mb: 3,
+              mb: 2.5,
             }}
           >
-            <CheckCircleOutlinedIcon sx={{ fontSize: 48 }} />
+            <CheckCircleOutlinedIcon sx={{ fontSize: 36 }} />
           </Box>
 
-          <Typography variant="h4" sx={{ fontWeight: 800, color: '#0F172A', mb: 1 }}>
-            Complaint Submitted Successfully
+          <Typography variant="h2" sx={{ fontWeight: 600, color: '#202522', mb: 1, fontSize: '1.5rem' }}>
+            Grievance Registered Successfully
           </Typography>
-          <Typography variant="body1" sx={{ color: '#64748B', mb: 3 }}>
-            Your civic complaint has been registered and routed to your ward councillor.
+          <Typography variant="body1" sx={{ color: '#68706B', mb: 4 }}>
+            Your complaint has been submitted and routed to your municipal ward councillor for inspection.
           </Typography>
 
           <Paper
             elevation={0}
             sx={{
               p: 3,
-              borderRadius: '16px',
-              backgroundColor: '#F8FAFC',
-              border: '1px solid #E2E8F0',
+              borderRadius: '6px',
+              backgroundColor: '#F8F9F7',
+              border: '1px solid #E5E8E4',
               mb: 4,
               textAlign: 'left',
             }}
           >
-            <Box sx={{ textAlign: 'center', mb: 2, pb: 2, borderBottom: '1px solid #E2E8F0' }}>
-              <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 700, display: 'block', mb: 0.5 }}>
-                REFERENCE NUMBER
+            <Box sx={{ textAlign: 'center', mb: 2.5, pb: 2, borderBottom: '1px solid #E5E8E4' }}>
+              <Typography variant="caption" sx={{ color: '#68706B', fontWeight: 600, display: 'block', mb: 0.5, letterSpacing: '0.05em' }}>
+                COMPLAINT REFERENCE NUMBER
               </Typography>
-              <Typography variant="h4" sx={{ fontWeight: 800, color: '#2563EB', letterSpacing: '0.04em' }}>
+              <Typography variant="h3" sx={{ fontWeight: 600, color: '#496A57', letterSpacing: '0.04em' }}>
                 {submittedData.trackingNumber}
               </Typography>
             </Box>
 
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, fontSize: '0.9rem' }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, fontSize: '0.875rem' }}>
               <Box>
-                <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 600, display: 'block' }}>
-                  Ward
+                <Typography variant="caption" sx={{ color: '#68706B', display: 'block' }}>
+                  Municipal Ward
                 </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 700, color: '#0F172A' }}>
+                <Typography variant="body2" sx={{ fontWeight: 500, color: '#202522' }}>
                   {submittedData.ward}
                 </Typography>
               </Box>
 
               <Box>
-                <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 600, display: 'block' }}>
+                <Typography variant="caption" sx={{ color: '#68706B', display: 'block' }}>
                   Category
                 </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 700, color: '#0F172A' }}>
+                <Typography variant="body2" sx={{ fontWeight: 500, color: '#202522' }}>
                   {submittedData.category}
                 </Typography>
               </Box>
 
-              <Box sx={{ mt: 1 }}>
-                <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 600, display: 'block' }}>
-                  Submitted Date
+              <Box>
+                <Typography variant="caption" sx={{ color: '#68706B', display: 'block' }}>
+                  Submission Date
                 </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 700, color: '#0F172A' }}>
+                <Typography variant="body2" sx={{ fontWeight: 500, color: '#202522' }}>
                   {submittedData.date}
                 </Typography>
               </Box>
 
-              <Box sx={{ mt: 1 }}>
-                <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 600, display: 'block' }}>
+              <Box>
+                <Typography variant="caption" sx={{ color: '#68706B', display: 'block' }}>
                   Current Status
                 </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 800, color: '#D97706' }}>
-                  PENDING
+                <Typography variant="body2" sx={{ fontWeight: 600, color: '#B58A45' }}>
+                  SUBMITTED / PENDING
                 </Typography>
               </Box>
             </Box>
@@ -202,232 +200,176 @@ export const SubmitComplaint: React.FC = () => {
           <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, justifyContent: 'center' }}>
             <Button
               variant="contained"
-              startIcon={<SearchIcon />}
+              startIcon={<SearchOutlinedIcon />}
               onClick={() => navigate(`/citizen/track?ref=${submittedData.trackingNumber}`)}
               sx={{
-                borderRadius: '20px',
-                backgroundColor: '#2563EB',
+                borderRadius: '8px',
+                backgroundColor: '#496A57',
                 color: '#FFFFFF',
-                fontWeight: 700,
+                fontWeight: 500,
                 px: 3,
-                py: 1.2,
-                textTransform: 'none',
-                boxShadow: '0 4px 14px rgba(37, 99, 235, 0.25)',
-                '&:hover': { backgroundColor: '#1D4ED8' },
+                py: 1,
+                '&:hover': { backgroundColor: '#304B3A' },
               }}
             >
-              Track Complaint
+              Track Status
             </Button>
 
             <Button
               variant="outlined"
               onClick={() => navigate('/citizen/complaints')}
               sx={{
-                borderRadius: '20px',
-                borderColor: '#E2E8F0',
-                color: '#0F172A',
-                fontWeight: 700,
+                borderRadius: '8px',
+                borderColor: '#E5E8E4',
+                color: '#202522',
+                fontWeight: 500,
                 px: 3,
-                py: 1.2,
-                textTransform: 'none',
-                backgroundColor: '#FFFFFF',
-                '&:hover': { borderColor: '#CBD5E1', backgroundColor: '#F8FAFC' },
+                py: 1,
+                '&:hover': { borderColor: '#496A57', backgroundColor: '#F3F5F2' },
               }}
             >
               My Complaints
             </Button>
-
-            <Button
-              variant="text"
-              onClick={() => {
-                setSubmittedData(null);
-                setTitle('');
-                setDescription('');
-                setLocationAddress('');
-                setImages([]);
-              }}
-              sx={{
-                color: '#64748B',
-                fontWeight: 600,
-                py: 1.2,
-                textTransform: 'none',
-              }}
-            >
-              Report Another Issue
-            </Button>
           </Box>
-        </Card>
+        </Paper>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ maxWidth: 800, mx: 'auto', pb: 6 }}>
+    <Box sx={{ maxWidth: 760, mx: 'auto', pb: 8 }}>
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 800, color: '#0F172A', mb: 1, letterSpacing: '-0.02em' }}>
-          Report a Civic Issue
+        <Typography variant="h1" sx={{ fontWeight: 600, color: '#202522', mb: 1, letterSpacing: '-0.015em' }}>
+          Report a Civic Grievance
         </Typography>
-        <Typography variant="body1" sx={{ color: '#64748B' }}>
-          Submit public grievances directly to your municipal ward councillor for inspection and repair.
+        <Typography variant="body1" sx={{ color: '#68706B' }}>
+          Submit public grievances directly to your municipal ward councillor for inspection and repair work assignment.
         </Typography>
       </Box>
 
       {error && (
-        <Alert severity="error" onClose={() => setError('')} sx={{ mb: 3, borderRadius: '12px' }}>
+        <Alert severity="error" onClose={() => setError('')} sx={{ mb: 3, borderRadius: '6px' }}>
           {error}
         </Alert>
       )}
 
-      <Card
-        elevation={0}
+      <Box
+        component="form"
+        onSubmit={handleSubmit}
         sx={{
-          p: { xs: 3, sm: 4.5 },
-          borderRadius: '24px',
-          border: '1px solid #E2E8F0',
+          p: { xs: 3, sm: 5 },
+          borderRadius: '8px',
+          border: '1px solid #E5E8E4',
           backgroundColor: '#FFFFFF',
-          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05)',
         }}
       >
-        <Box component="form" onSubmit={handleSubmit}>
-          <Stack spacing={3}>
-            {/* Title */}
+        <Stack spacing={3}>
+          {/* Title */}
+          <TextField
+            fullWidth
+            id="complaint-title-input"
+            name="title"
+            label="Complaint Title *"
+            placeholder="e.g. Deep Pothole near Central Market Gate"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+            slotProps={{ inputLabel: { shrink: true } }}
+          />
+
+          {/* Category & Ward */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2.5 }}>
             <TextField
+              select
               fullWidth
-              id="complaint-title-field"
-              label="Complaint Title"
-              placeholder="e.g. Deep Pothole near Central Market Gate"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              id="complaint-category-field"
+              label="Complaint Category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value as ComplaintCategory)}
               required
-              sx={textFieldStyles}
-            />
-
-            {/* Category & Manual Ward Dropdown */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2.5 }}>
-              <TextField
-                select
-                fullWidth
-                id="complaint-category-field"
-                label="Complaint Category"
-                value={category}
-                onChange={(e) => setCategory(e.target.value as ComplaintCategory)}
-                required
-                sx={textFieldStyles}
-              >
-                {categories.map((cat) => (
-                  <MenuItem key={cat} value={cat}>
-                    {cat}
-                  </MenuItem>
-                ))}
-              </TextField>
-
-              {/* MANUAL WARD SELECTION */}
-              <WardSelector
-                value={ward}
-                onChange={(val) => setWard(val)}
-                label="Ward"
-                required
-                helperText="Select your municipal ward manually"
-              />
-            </Box>
-
-            {/* Description */}
-            <TextField
-              fullWidth
-              multiline
-              rows={4}
-              id="complaint-description-field"
-              label="Description"
-              placeholder="Describe the complaint in detail, including physical condition, time observed, and any safety hazards..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              required
-              sx={textFieldStyles}
-            />
-
-            {/* Location Address */}
-            <TextField
-              fullWidth
-              id="complaint-location-field"
-              label="Location / Address"
-              placeholder="e.g. Opposite City Bank, Main Street"
-              value={locationAddress}
-              onChange={(e) => setLocationAddress(e.target.value)}
-              required
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LocationOnIcon sx={{ color: '#2563EB', fontSize: 20 }} />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-              sx={textFieldStyles}
-            />
-
-            {/* Photo Attachment UI */}
-            <ImageUpload
-              images={images}
-              onChange={(newImages) => setImages(newImages)}
-              maxImages={3}
-              label="Photo (Attach complaint image)"
-              helperText="Upload clear images of the site condition"
-            />
-
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              disabled={loading}
-              variant="contained"
-              startIcon={<AssignmentTurnedInIcon />}
-              sx={{
-                py: 1.6,
-                borderRadius: '16px',
-                backgroundColor: '#2563EB',
-                color: '#FFFFFF',
-                fontWeight: 700,
-                fontSize: '1rem',
-                textTransform: 'none',
-                boxShadow: '0 4px 14px rgba(37, 99, 235, 0.25)',
-                '&:hover': {
-                  backgroundColor: '#1D4ED8',
-                },
-              }}
             >
-              {loading ? 'Submitting...' : 'Submit Complaint'}
-            </Button>
-          </Stack>
-        </Box>
-      </Card>
+              {categories.map((cat) => (
+                <MenuItem key={cat} value={cat}>
+                  {cat}
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <WardSelector
+              value={ward}
+              onChange={(val) => setWard(val)}
+              label="Ward Jurisdiction"
+              required
+              helperText="Select municipal ward for this complaint"
+            />
+          </Box>
+
+          {/* Description */}
+          <TextField
+            fullWidth
+            multiline
+            rows={4}
+            id="complaint-description-field"
+            label="Grievance Description"
+            placeholder="Describe the condition in detail, including street landmarks, severity, and any public safety hazard..."
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            required
+          />
+
+          {/* Location Address */}
+          <TextField
+            fullWidth
+            id="complaint-location-field"
+            label="Specific Location / Street Address"
+            placeholder="e.g. Opposite City Bank, Main Street"
+            value={locationAddress}
+            onChange={(e) => setLocationAddress(e.target.value)}
+            required
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LocationOnOutlinedIcon sx={{ color: '#68706B', fontSize: 18 }} />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
+
+          {/* Photo Attachment UI */}
+          <ImageUpload
+            images={images}
+            onChange={(newImages) => setImages(newImages)}
+            maxImages={3}
+            label="Attach Photo Evidence (Optional)"
+            helperText="Upload clear images of the site condition"
+          />
+
+          {/* Submit Button */}
+          <Button
+            type="submit"
+            disabled={loading}
+            variant="contained"
+            startIcon={<AssignmentTurnedInOutlinedIcon />}
+            sx={{
+              py: 1.3,
+              borderRadius: '8px',
+              backgroundColor: '#496A57',
+              color: '#FFFFFF',
+              fontWeight: 500,
+              fontSize: '0.9rem',
+              '&:hover': {
+                backgroundColor: '#304B3A',
+              },
+            }}
+          >
+            {loading ? 'Submitting Grievance...' : 'Submit Civic Complaint'}
+          </Button>
+        </Stack>
+      </Box>
     </Box>
   );
-};
-
-const textFieldStyles = {
-  '& .MuiOutlinedInput-root': {
-    borderRadius: '12px',
-    backgroundColor: '#FFFFFF',
-    fontSize: '0.925rem',
-    '& fieldset': {
-      borderColor: '#E2E8F0',
-    },
-    '&:hover fieldset': {
-      borderColor: '#CBD5E1',
-    },
-    '&.Mui-focused fieldset': {
-      borderColor: '#2563EB',
-      borderWidth: '1.5px',
-    },
-  },
-  '& .MuiInputLabel-root': {
-    color: '#64748B',
-    fontSize: '0.925rem',
-    '&.Mui-focused': {
-      color: '#2563EB',
-      fontWeight: 600,
-    },
-  },
 };
 
 export default SubmitComplaint;

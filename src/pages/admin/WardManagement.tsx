@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Card,
   Typography,
   Table,
   TableBody,
@@ -11,36 +10,46 @@ import {
   TableRow,
   Chip,
   Button,
+  IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  Grid,
 } from '@mui/material';
-import MapIcon from '@mui/icons-material/Map';
-import AddIcon from '@mui/icons-material/Add';
+import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
+import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
+import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
 import { adminService } from '../../services/adminService';
 import { Ward } from '../../types';
-import { CustomTextField } from '../../components/common/CustomTextField';
-import { CustomButton } from '../../components/common/CustomButton';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { AdminPageHeader } from '../../components/admin/AdminPageHeader';
+import { FilterBar } from '../../components/admin/FilterBar';
+import { ActionMenu, ActionMenuItem } from '../../components/admin/ActionMenu';
+import { CustomTextField } from '../../components/common/CustomTextField';
 
 export const WardManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [wards, setWards] = useState<Ward[]>([]);
+  const [search, setSearch] = useState('');
   const [openModal, setOpenModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const [wardNumber, setWardNumber] = useState(5);
+  const [wardNumber, setWardNumber] = useState(6);
   const [name, setName] = useState('');
   const [councillorName, setCouncillorName] = useState('');
   const [councillorEmail, setCouncillorEmail] = useState('');
-  const [population, setPopulation] = useState(40000);
-  const [submitting, setSubmitting] = useState(false);
+  const [population, setPopulation] = useState(42000);
 
   const fetchWards = async () => {
     setLoading(true);
     try {
       const data = await adminService.getWards();
       setWards(data);
+      setWardNumber(data.length + 1);
     } catch (e) {
       console.error(e);
     } finally {
@@ -59,7 +68,7 @@ export const WardManagement: React.FC = () => {
     try {
       const newW = await adminService.createWard({
         wardNumber,
-        name,
+        name: name.startsWith('Ward') ? name : `Ward ${wardNumber} - ${name}`,
         councillorName,
         councillorEmail: councillorEmail || 'councillor@sgcs.gov.in',
         population,
@@ -67,6 +76,8 @@ export const WardManagement: React.FC = () => {
       setWards([...wards, newW]);
       setOpenModal(false);
       setName('');
+      setCouncillorName('');
+      setCouncillorEmail('');
     } catch (e) {
       console.error(e);
     } finally {
@@ -74,115 +85,230 @@ export const WardManagement: React.FC = () => {
     }
   };
 
-  if (loading) return <LoadingSpinner message="Loading Ward Boundaries Registry..." />;
+  const filtered = wards.filter(
+    (w) =>
+      w.name.toLowerCase().includes(search.toLowerCase()) ||
+      w.councillorName.toLowerCase().includes(search.toLowerCase())
+  );
+
+  if (loading) return <LoadingSpinner message="Loading Ward Management Directory..." />;
 
   return (
-    <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2} mb={4}>
-        <Box>
-          <Typography variant="h3" fontWeight={800}>
-            Municipal Wards Directory
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Configure administrative boundaries, assign ward councillors, and monitor ward workload.
-          </Typography>
-        </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => setOpenModal(true)}
-          sx={{ borderRadius: 28, px: 3 }}
-        >
-          Add Municipal Ward
-        </Button>
-      </Box>
+    <Box sx={{ pb: 6 }}>
+      <AdminPageHeader
+        title="Ward Management"
+        description="Manage municipal wards, assigned councillors and field staff."
+        actionLabel="Add Ward"
+        actionIcon={<AddOutlinedIcon sx={{ fontSize: 18 }} />}
+        onActionClick={() => setOpenModal(true)}
+      />
 
-      <Card sx={{ borderRadius: 4 }}>
-        <TableContainer>
-          <Table>
-            <TableHead sx={{ bgcolor: 'action.hover' }}>
+      <FilterBar
+        searchQuery={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search wards by name or councillor..."
+      />
+
+      <TableContainer
+        sx={{
+          border: '1px solid #E5E8E4',
+          borderRadius: '8px',
+          backgroundColor: '#FFFFFF',
+          overflow: 'hidden',
+        }}
+      >
+        <Table>
+          <TableHead sx={{ backgroundColor: '#F8F9F7' }}>
+            <TableRow>
+              <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Ward Number</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Ward Name</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Assigned Councillor</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Population</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Active Grievances</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Resolved</TableCell>
+              <TableCell align="right" sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filtered.length === 0 ? (
               <TableRow>
-                <TableCell sx={{ fontWeight: 700 }}>Ward #</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Ward Name</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Assigned Councillor</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Population</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Active Grievances</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Total Resolved</TableCell>
+                <TableCell colSpan={7} align="center" sx={{ py: 6, color: '#68706B' }}>
+                  No municipal wards found matching your search.
+                </TableCell>
               </TableRow>
-            </TableHead>
-            <TableBody>
-              {wards.map((row) => (
-                <TableRow key={row.id} hover>
-                  <TableCell>
-                    <Chip label={`Ward ${row.wardNumber}`} size="small" sx={{ fontWeight: 800 }} />
-                  </TableCell>
-                  <TableCell fontWeight={700}>{row.name}</TableCell>
-                  <TableCell>
-                    <Typography variant="body2" fontWeight={600}>
-                      {row.councillorName}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {row.councillorEmail}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>{row.population.toLocaleString()} Residents</TableCell>
-                  <TableCell>
-                    <Chip label={`${row.activeComplaints} Active`} color="warning" size="small" sx={{ fontWeight: 700 }} />
-                  </TableCell>
-                  <TableCell>
-                    <Chip label={`${row.resolvedComplaints} Resolved`} color="success" size="small" sx={{ fontWeight: 700 }} />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Card>
+            ) : (
+              filtered.map((w) => {
+                const actionItems: ActionMenuItem[] = [
+                  {
+                    label: 'View Ward Details',
+                    icon: <VisibilityOutlinedIcon fontSize="small" />,
+                    onClick: () => alert(`Ward Details: ${w.name}`),
+                  },
+                  {
+                    label: 'Assign Councillor',
+                    icon: <PersonAddOutlinedIcon fontSize="small" />,
+                    onClick: () => alert(`Assign Councillor to ${w.name}`),
+                  },
+                  {
+                    label: 'View Field Workers',
+                    icon: <GroupOutlinedIcon fontSize="small" />,
+                    onClick: () => alert(`View field workers in ${w.name}`),
+                  },
+                  {
+                    label: 'Edit Ward Info',
+                    icon: <EditOutlinedIcon fontSize="small" />,
+                    onClick: () => alert(`Edit ${w.name}`),
+                  },
+                ];
+
+                return (
+                  <TableRow key={w.id} sx={{ '&:hover': { backgroundColor: '#F8F9F7' }, borderBottom: '1px solid #E5E8E4' }}>
+                    <TableCell sx={{ fontWeight: 600, color: '#202522' }}>
+                      Ward {w.wardNumber}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#496A57' }}>
+                      {w.name}
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontWeight: 600, color: '#202522' }}>
+                        {w.councillorName}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: '#68706B' }}>
+                        {w.councillorEmail}
+                      </Typography>
+                    </TableCell>
+                    <TableCell sx={{ fontSize: '0.85rem', color: '#68706B' }}>
+                      {w.population.toLocaleString()} Residents
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={`${w.activeComplaints} Active`}
+                        size="small"
+                        sx={{
+                          fontWeight: 500,
+                          fontSize: '0.7rem',
+                          backgroundColor: '#FBF4E8',
+                          color: '#B58A45',
+                          borderRadius: '4px',
+                          height: '20px',
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={`${w.resolvedComplaints} Fixed`}
+                        size="small"
+                        sx={{
+                          fontWeight: 500,
+                          fontSize: '0.7rem',
+                          backgroundColor: '#E8EFE9',
+                          color: '#304B3A',
+                          borderRadius: '4px',
+                          height: '20px',
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell align="right">
+                      <ActionMenu items={actionItems} />
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
       {/* Add Ward Modal */}
-      <Dialog open={openModal} onClose={() => setOpenModal(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 4, p: 2 } }}>
-        <DialogTitle fontWeight={800}>Register New Municipal Ward</DialogTitle>
-        <form onSubmit={handleCreateWard}>
-          <DialogContent>
-            <CustomTextField
-              label="Ward Number"
-              type="number"
-              value={wardNumber}
-              onChange={(e) => setWardNumber(parseInt(e.target.value, 10))}
-              required
-            />
-            <CustomTextField
-              label="Ward Name"
-              placeholder="e.g. West Tech Park Corridor"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-            <CustomTextField
-              label="Councillor Full Name"
-              placeholder="Hon. Name"
-              value={councillorName}
-              onChange={(e) => setCouncillorName(e.target.value)}
-              required
-            />
-            <CustomTextField
-              label="Councillor Email Address"
-              type="email"
-              value={councillorEmail}
-              onChange={(e) => setCouncillorEmail(e.target.value)}
-              required
-            />
+      <Dialog
+        open={openModal}
+        onClose={() => setOpenModal(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: '8px', p: 1 } }}
+      >
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, color: '#202522' }}>
+            Add Municipal Ward
+          </Typography>
+          <IconButton size="small" onClick={() => setOpenModal(false)}>
+            <CloseOutlinedIcon fontSize="small" />
+          </IconButton>
+        </DialogTitle>
+        <Box component="form" onSubmit={handleCreateWard}>
+          <DialogContent dividers sx={{ borderColor: '#E5E8E4' }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <CustomTextField
+                  label="Ward Number"
+                  type="number"
+                  value={wardNumber}
+                  onChange={(e) => setWardNumber(parseInt(e.target.value, 10))}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <CustomTextField
+                  label="Estimated Population"
+                  type="number"
+                  value={population}
+                  onChange={(e) => setPopulation(parseInt(e.target.value, 10))}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <CustomTextField
+                  label="Ward Name"
+                  placeholder="e.g. Central Town or West Ridge"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <CustomTextField
+                  label="Assigned Councillor Name"
+                  placeholder="e.g. Hon. Rajesh Sharma"
+                  value={councillorName}
+                  onChange={(e) => setCouncillorName(e.target.value)}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <CustomTextField
+                  label="Councillor Email Address"
+                  type="email"
+                  placeholder="councillor@sgcs.gov.in"
+                  value={councillorEmail}
+                  onChange={(e) => setCouncillorEmail(e.target.value)}
+                  required
+                />
+              </Grid>
+            </Grid>
           </DialogContent>
-          <DialogActions sx={{ px: 3, pb: 2 }}>
-            <Button onClick={() => setOpenModal(false)} sx={{ borderRadius: 28 }}>
+          <DialogActions sx={{ p: 2 }}>
+            <Button onClick={() => setOpenModal(false)} sx={{ color: '#68706B', textTransform: 'none' }}>
               Cancel
             </Button>
-            <CustomButton type="submit" loading={submitting}>
-              Create Ward
-            </CustomButton>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={submitting}
+              sx={{
+                backgroundColor: '#496A57',
+                color: '#FFFFFF',
+                textTransform: 'none',
+                px: 3,
+                '&:hover': { backgroundColor: '#304B3A' },
+              }}
+            >
+              {submitting ? 'Creating...' : 'Create Ward'}
+            </Button>
           </DialogActions>
-        </form>
+        </Box>
       </Dialog>
     </Box>
   );
 };
+
+export default WardManagement;
