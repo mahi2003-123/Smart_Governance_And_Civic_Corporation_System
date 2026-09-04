@@ -182,7 +182,7 @@ export const WorkerDashboard: React.FC = () => {
         />
 
         <StatCard
-          title="GPS On-Site Score"
+          title="On-Site Resolution Score"
           value="98%"
           subtitle="Turnaround SLA score"
           icon={<MyLocationIcon />}

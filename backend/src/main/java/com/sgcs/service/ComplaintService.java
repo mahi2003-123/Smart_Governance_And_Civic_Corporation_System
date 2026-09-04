@@ -13,6 +13,8 @@ import java.util.Optional;
 @Service
 public class ComplaintService {
 
+    private static final List<String> VALID_STATUSES = List.of("PENDING", "IN_PROGRESS", "RESOLVED", "REJECTED");
+
     @Autowired
     private ComplaintRepository complaintRepository;
 
@@ -47,9 +49,7 @@ public class ComplaintService {
         if (complaint.getPriority() == null || complaint.getPriority().isEmpty()) {
             complaint.setPriority("MEDIUM");
         }
-        if (complaint.getPriority() == null) {
-            complaint.setPriority("MEDIUM");
-        }
+
         complaint.setCreatedAt(LocalDateTime.now());
         complaint.setUpdatedAt(LocalDateTime.now());
 
@@ -57,9 +57,14 @@ public class ComplaintService {
     }
 
     public Complaint updateStatus(String id, String status) {
+        if (status == null || !VALID_STATUSES.contains(status.toUpperCase().trim())) {
+            throw new IllegalArgumentException("Invalid status value. Allowed status values are PENDING, IN_PROGRESS, RESOLVED, REJECTED.");
+        }
+
         Complaint complaint = complaintRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Complaint not found with id: " + id));
-        complaint.setStatus(status);
+
+        complaint.setStatus(status.toUpperCase().trim());
         complaint.setUpdatedAt(LocalDateTime.now());
         return complaintRepository.save(complaint);
     }

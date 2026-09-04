@@ -12,7 +12,7 @@ interface AuthHeroCardProps {
 
 export const AuthHeroCard: React.FC<AuthHeroCardProps> = ({
   title = 'Building Smarter Cities Together',
-  subtitle = 'Digital governance platform connecting citizens and local authorities through transparency, collaboration and AI-powered civic services.',
+  subtitle = 'Digital governance platform connecting citizens and local authorities through transparency, collaboration and structured civic services.',
 }) => {
   return (
     <Card
@@ -136,10 +136,10 @@ export const AuthHeroCard: React.FC<AuthHeroCardProps> = ({
             </Avatar>
             <Box>
               <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#FFFFFF' }}>
-                Geo-Tagged Grievance Engine
+                Structured Grievance Engine
               </Typography>
               <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.75)' }}>
-                Report potholes, water & lighting issues with automated GPS tags and SMS alerts.
+                Report potholes, water & lighting issues with explicit ward locations and SMS alerts.
               </Typography>
             </Box>
           </Paper>
