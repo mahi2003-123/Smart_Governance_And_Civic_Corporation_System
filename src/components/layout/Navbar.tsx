@@ -78,7 +78,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onMobileMenuToggle }) => {
       sx={{
         height: 60,
         backgroundColor: '#FFFFFF',
-        borderBottom: '1px solid #E5E8E4',
+        borderBottom: '1px solid #E2E6EA',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -93,30 +93,30 @@ export const Navbar: React.FC<NavbarProps> = ({ onMobileMenuToggle }) => {
         <IconButton
           onClick={onMobileMenuToggle}
           edge="start"
-          sx={{ display: { xs: 'flex', md: 'none' }, color: '#202522' }}
+          sx={{ display: { xs: 'flex', md: 'none' }, color: '#1A232A' }}
         >
           <MenuIcon />
         </IconButton>
 
         <Box>
-          <Breadcrumbs separator="/" sx={{ '& .MuiBreadcrumbs-separator': { color: '#E5E8E4', fontSize: '0.8rem' } }}>
+          <Breadcrumbs separator="/" sx={{ '& .MuiBreadcrumbs-separator': { color: '#E2E6EA', fontSize: '0.8rem' } }}>
             <MuiLink
               underline="none"
               color="inherit"
               onClick={() => navigate(user ? `/${user.role.toLowerCase()}/dashboard` : '/')}
-              sx={{ color: '#68706B', fontSize: '0.775rem', cursor: 'pointer', '&:hover': { color: '#496A57' } }}
+              sx={{ color: '#5A6672', fontSize: '0.775rem', cursor: 'pointer', fontWeight: 600, '&:hover': { color: '#0F4C5C' } }}
             >
               SGCS Portal
             </MuiLink>
-            <Typography variant="caption" sx={{ color: '#202522', fontWeight: 500, fontSize: '0.775rem' }}>
+            <Typography variant="caption" sx={{ color: '#1A232A', fontWeight: 600, fontSize: '0.775rem' }}>
               {pageTitle}
             </Typography>
           </Breadcrumbs>
           <Typography
             variant="h6"
             sx={{
-              fontWeight: 600,
-              color: '#202522',
+              fontWeight: 700,
+              color: '#1A232A',
               fontSize: '1rem',
               lineHeight: 1.2,
               letterSpacing: '-0.01em',
@@ -144,20 +144,20 @@ export const Navbar: React.FC<NavbarProps> = ({ onMobileMenuToggle }) => {
                 pl: 1,
                 pr: 1.5,
                 borderRadius: '6px',
-                border: '1px solid #E5E8E4',
+                border: '1px solid #E2E6EA',
                 backgroundColor: '#FFFFFF',
                 transition: 'all 0.15s ease',
-                '&:hover': { backgroundColor: '#F3F5F2', borderColor: '#496A57' },
+                '&:hover': { backgroundColor: '#F4F1EA', borderColor: '#0F4C5C' },
               }}
             >
               <Avatar
                 sx={{
                   width: 28,
                   height: 28,
-                  backgroundColor: '#496A57',
+                  backgroundColor: '#0F4C5C',
                   color: '#FFFFFF',
                   fontSize: '0.8rem',
-                  fontWeight: 600,
+                  fontWeight: 700,
                 }}
               >
                 {user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'}
@@ -165,8 +165,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onMobileMenuToggle }) => {
               <Typography
                 variant="body2"
                 sx={{
-                  fontWeight: 500,
-                  color: '#202522',
+                  fontWeight: 600,
+                  color: '#1A232A',
                   display: { xs: 'none', sm: 'block' },
                   fontSize: '0.85rem',
                 }}
@@ -184,8 +184,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onMobileMenuToggle }) => {
                   elevation: 0,
                   sx: {
                     mt: 1,
-                    borderRadius: '8px',
-                    border: '1px solid #E5E8E4',
+                    borderRadius: '6px',
+                    border: '1px solid #E2E6EA',
                     minWidth: 200,
                     p: 0.5,
                   },
@@ -194,11 +194,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onMobileMenuToggle }) => {
               transformOrigin={{ horizontal: 'right', vertical: 'top' }}
               anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
             >
-              <Box sx={{ px: 2, py: 1, borderBottom: '1px solid #E5E8E4', mb: 0.5 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#202522', fontSize: '0.85rem' }}>
+              <Box sx={{ px: 2, py: 1, borderBottom: '1px solid #E2E6EA', mb: 0.5 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1A232A', fontSize: '0.85rem' }}>
                   {user.fullName}
                 </Typography>
-                <Typography variant="caption" sx={{ color: '#68706B', display: 'block', fontSize: '0.75rem' }}>
+                <Typography variant="caption" sx={{ color: '#5A6672', display: 'block', fontSize: '0.75rem' }}>
                   {user.email}
                 </Typography>
               </Box>
@@ -208,16 +208,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onMobileMenuToggle }) => {
                   handleCloseUserMenu();
                   navigate('/citizen/profile');
                 }}
-                sx={{ py: 1, gap: 1.5, color: '#202522', fontSize: '0.85rem' }}
+                sx={{ py: 1, gap: 1.5, color: '#1A232A', fontSize: '0.85rem', fontWeight: 500 }}
               >
-                <PersonOutlinedIcon sx={{ fontSize: 18, color: '#68706B' }} /> Account Settings
+                <PersonOutlinedIcon sx={{ fontSize: 18, color: '#5A6672' }} /> Account Settings
               </MenuItem>
 
               <MenuItem
                 onClick={handleLogout}
-                sx={{ py: 1, gap: 1.5, color: '#B45D59', fontSize: '0.85rem', fontWeight: 500 }}
+                sx={{ py: 1, gap: 1.5, color: '#C0392B', fontSize: '0.85rem', fontWeight: 600 }}
               >
-                <LogoutOutlinedIcon sx={{ fontSize: 18, color: '#B45D59' }} /> Sign Out
+                <LogoutOutlinedIcon sx={{ fontSize: 18, color: '#C0392B' }} /> Sign Out
               </MenuItem>
             </Menu>
           </>

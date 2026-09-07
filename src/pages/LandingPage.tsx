@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Container,
@@ -16,13 +17,13 @@ import SecurityOutlinedIcon from '@mui/icons-material/SecurityOutlined';
 import GavelOutlinedIcon from '@mui/icons-material/GavelOutlined';
 import PeopleOutlinedIcon from '@mui/icons-material/PeopleOutlined';
 import AssignmentTurnedInOutlinedIcon from '@mui/icons-material/AssignmentTurnedInOutlined';
-import { useNavigate } from 'react-router-dom';
+import Civic3DHero from '../components/landing/Civic3DHero';
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#FFFFFF', color: '#202522', fontFamily: "'Inter', sans-serif" }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#FAF8F5', color: '#1A232A', fontFamily: '"Plus Jakarta Sans", sans-serif' }}>
       {/* 1. TOP NAVBAR */}
       <Box
         component="header"
@@ -31,7 +32,7 @@ export const LandingPage: React.FC = () => {
           top: 0,
           zIndex: 1100,
           backgroundColor: '#FFFFFF',
-          borderBottom: '1px solid #E5E8E4',
+          borderBottom: '1px solid #E2E6EA',
           py: 2,
         }}
       >
@@ -44,37 +45,37 @@ export const LandingPage: React.FC = () => {
             >
               <Box
                 sx={{
-                  width: 36,
-                  height: 36,
+                  width: 38,
+                  height: 38,
                   borderRadius: '6px',
-                  backgroundColor: '#496A57',
+                  backgroundColor: '#0F4C5C',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: '#FFFFFF',
                 }}
               >
-                <AccountBalanceOutlinedIcon sx={{ fontSize: 20 }} />
+                <AccountBalanceOutlinedIcon sx={{ fontSize: 22 }} />
               </Box>
               <Box>
-                <Typography variant="h6" sx={{ fontWeight: 600, color: '#202522', fontSize: '1rem', lineHeight: 1.2 }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1A232A', fontSize: '1.05rem', lineHeight: 1.2 }}>
                   SGCS
                 </Typography>
-                <Typography variant="caption" sx={{ color: '#68706B', fontSize: '0.7rem', display: 'block', letterSpacing: '0.04em' }}>
-                  MUNICIPAL PORTAL
+                <Typography variant="caption" sx={{ color: '#5A6672', fontSize: '0.7rem', display: 'block', letterSpacing: '0.05em', fontWeight: 600 }}>
+                  MUNICIPAL CIVIC PORTAL
                 </Typography>
               </Box>
             </Box>
 
             {/* Nav Links */}
             <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 4 }}>
-              <Typography variant="body2" onClick={() => navigate('/login')} sx={{ color: '#68706B', cursor: 'pointer', '&:hover': { color: '#496A57' } }}>
+              <Typography variant="body2" onClick={() => navigate('/login')} sx={{ color: '#5A6672', fontWeight: 600, cursor: 'pointer', '&:hover': { color: '#0F4C5C' } }}>
                 Citizen Services
               </Typography>
-              <Typography variant="body2" onClick={() => navigate('/login')} sx={{ color: '#68706B', cursor: 'pointer', '&:hover': { color: '#496A57' } }}>
+              <Typography variant="body2" onClick={() => navigate('/login')} sx={{ color: '#5A6672', fontWeight: 600, cursor: 'pointer', '&:hover': { color: '#0F4C5C' } }}>
                 Ward Jurisdiction
               </Typography>
-              <Typography variant="body2" onClick={() => navigate('/citizen/track')} sx={{ color: '#68706B', cursor: 'pointer', '&:hover': { color: '#496A57' } }}>
+              <Typography variant="body2" onClick={() => navigate('/citizen/track')} sx={{ color: '#5A6672', fontWeight: 600, cursor: 'pointer', '&:hover': { color: '#0F4C5C' } }}>
                 Track Grievance
               </Typography>
             </Box>
@@ -84,8 +85,8 @@ export const LandingPage: React.FC = () => {
               <Button
                 onClick={() => navigate('/login')}
                 sx={{
-                  color: '#202522',
-                  fontWeight: 500,
+                  color: '#1A232A',
+                  fontWeight: 600,
                   fontSize: '0.875rem',
                   textTransform: 'none',
                   px: 2,
@@ -97,15 +98,15 @@ export const LandingPage: React.FC = () => {
                 onClick={() => navigate('/register')}
                 variant="contained"
                 sx={{
-                  borderRadius: '8px',
-                  backgroundColor: '#496A57',
+                  borderRadius: '6px',
+                  backgroundColor: '#0F4C5C',
                   color: '#FFFFFF',
-                  fontWeight: 500,
+                  fontWeight: 600,
                   fontSize: '0.875rem',
                   textTransform: 'none',
                   px: 2.5,
-                  py: 0.8,
-                  '&:hover': { backgroundColor: '#304B3A' },
+                  py: 0.9,
+                  '&:hover': { backgroundColor: '#0A343F' },
                 }}
               >
                 Register Account
@@ -115,171 +116,178 @@ export const LandingPage: React.FC = () => {
         </Container>
       </Box>
 
-      {/* 2. HERO SECTION - Editorial White-First */}
-      <Box sx={{ pt: { xs: 8, md: 12 }, pb: { xs: 8, md: 10 } }}>
-        <Container maxWidth="md" sx={{ textAlign: 'center' }}>
-          <Chip
-            label="OFFICIAL MUNICIPAL CIVIC SERVICE SYSTEM"
-            size="small"
-            sx={{
-              backgroundColor: '#E8EFE9',
-              color: '#304B3A',
-              fontWeight: 600,
-              fontSize: '0.725rem',
-              letterSpacing: '0.06em',
-              py: 0.5,
-              px: 1.5,
-              mb: 3,
-              borderRadius: '4px',
-            }}
-          />
+      {/* 2. HERO SECTION WITH PURPOSEFUL 3D VISUAL */}
+      <Box sx={{ pt: { xs: 6, md: 9 }, pb: { xs: 6, md: 9 }, backgroundColor: '#FAF8F5' }}>
+        <Container maxWidth="lg">
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1.1fr 0.9fr' }, gap: 5, alignItems: 'center' }}>
+            {/* Left Content Column */}
+            <Box>
+              <Chip
+                label="OFFICIAL MUNICIPAL CIVIC SERVICE SYSTEM"
+                size="small"
+                sx={{
+                  backgroundColor: '#E0F2F1',
+                  color: '#0F4C5C',
+                  fontWeight: 700,
+                  fontSize: '0.725rem',
+                  letterSpacing: '0.06em',
+                  py: 0.5,
+                  px: 1.5,
+                  mb: 2.5,
+                  borderRadius: '4px',
+                }}
+              />
 
-          <Typography
-            variant="h1"
-            sx={{
-              fontSize: { xs: '2.25rem', sm: '3.25rem', md: '3.75rem' },
-              fontWeight: 600,
-              color: '#202522',
-              letterSpacing: '-0.02em',
-              lineHeight: 1.15,
-              mb: 3,
-              fontFamily: "'DM Sans', sans-serif",
-            }}
-          >
-            Smart Governance & Civic Corporation System
-          </Typography>
+              <Typography
+                variant="h1"
+                sx={{
+                  fontSize: { xs: '2.25rem', sm: '2.85rem', md: '3.25rem' },
+                  fontWeight: 800,
+                  color: '#1A232A',
+                  letterSpacing: '-0.025em',
+                  lineHeight: 1.15,
+                  mb: 2.5,
+                }}
+              >
+                Smart Governance & Civic Corporation System
+              </Typography>
 
-          <Typography
-            variant="body1"
-            sx={{
-              color: '#68706B',
-              fontSize: { xs: '1.05rem', md: '1.15rem' },
-              maxWidth: 680,
-              mx: 'auto',
-              lineHeight: 1.65,
-              mb: 5,
-            }}
-          >
-            Directly connect citizens with municipal ward councillors and field work teams. Report public grievances, track repair progress, and inspect official announcements.
-          </Typography>
+              <Typography
+                variant="body1"
+                sx={{
+                  color: '#5A6672',
+                  fontSize: { xs: '1rem', md: '1.1rem' },
+                  lineHeight: 1.65,
+                  mb: 4,
+                }}
+              >
+                Directly connect citizens with municipal ward councillors and field work teams. Report public grievances, track repair progress, and inspect official announcements.
+              </Typography>
 
-          {/* Action Row */}
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 2, flexWrap: 'wrap', mb: 6 }}>
-            <Button
-              onClick={() => navigate('/register')}
-              variant="contained"
-              endIcon={<ArrowForwardOutlinedIcon sx={{ fontSize: 18 }} />}
-              sx={{
-                borderRadius: '8px',
-                backgroundColor: '#496A57',
-                color: '#FFFFFF',
-                fontWeight: 500,
-                fontSize: '0.925rem',
-                textTransform: 'none',
-                px: 3.5,
-                py: 1.2,
-                '&:hover': { backgroundColor: '#304B3A' },
-              }}
-            >
-              Access Citizen Portal
-            </Button>
-            <Button
-              onClick={() => navigate('/citizen/track')}
-              variant="outlined"
-              sx={{
-                borderRadius: '8px',
-                borderColor: '#E5E8E4',
-                color: '#202522',
-                fontWeight: 500,
-                fontSize: '0.925rem',
-                textTransform: 'none',
-                px: 3.5,
-                py: 1.2,
-                backgroundColor: '#FFFFFF',
-                '&:hover': { borderColor: '#496A57', backgroundColor: '#F3F5F2' },
-              }}
-            >
-              Track Grievance Status
-            </Button>
+              {/* Action Row */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap', mb: 4 }}>
+                <Button
+                  onClick={() => navigate('/register')}
+                  variant="contained"
+                  endIcon={<ArrowForwardOutlinedIcon sx={{ fontSize: 18 }} />}
+                  sx={{
+                    borderRadius: '6px',
+                    backgroundColor: '#C85A32',
+                    color: '#FFFFFF',
+                    fontWeight: 700,
+                    fontSize: '0.925rem',
+                    textTransform: 'none',
+                    px: 3.5,
+                    py: 1.2,
+                    '&:hover': { backgroundColor: '#A03F1B' },
+                  }}
+                >
+                  Access Citizen Portal
+                </Button>
+                <Button
+                  onClick={() => navigate('/citizen/track')}
+                  variant="outlined"
+                  sx={{
+                    borderRadius: '6px',
+                    borderColor: '#E2E6EA',
+                    color: '#1A232A',
+                    fontWeight: 600,
+                    fontSize: '0.925rem',
+                    textTransform: 'none',
+                    px: 3.5,
+                    py: 1.2,
+                    backgroundColor: '#FFFFFF',
+                    '&:hover': { borderColor: '#0F4C5C', backgroundColor: '#F4F1EA' },
+                  }}
+                >
+                  Track Grievance Status
+                </Button>
+              </Box>
+
+              <Stack direction="row" spacing={3} sx={{ flexWrap: 'wrap', color: '#5A6672', fontSize: '0.85rem' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                  <CheckOutlinedIcon sx={{ fontSize: 16, color: '#0F4C5C' }} /> Verified Ward Routing
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                  <CheckOutlinedIcon sx={{ fontSize: 16, color: '#0F4C5C' }} /> 100+ Municipal Wards
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                  <CheckOutlinedIcon sx={{ fontSize: 16, color: '#0F4C5C' }} /> High Contrast Accessibility
+                </Box>
+              </Stack>
+            </Box>
+
+            {/* Right Column: 3D Visual Hero */}
+            <Box>
+              <Civic3DHero />
+            </Box>
           </Box>
-
-          <Stack direction="row" spacing={4} sx={{ justifyContent: 'center', flexWrap: 'wrap', color: '#68706B', fontSize: '0.85rem' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-              <CheckOutlinedIcon sx={{ fontSize: 16, color: '#496A57' }} /> Verified Ward Routing
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-              <CheckOutlinedIcon sx={{ fontSize: 16, color: '#496A57' }} /> 100+ Municipal Wards
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-              <CheckOutlinedIcon sx={{ fontSize: 16, color: '#496A57' }} /> ISO 27001 Data Security
-            </Box>
-          </Stack>
         </Container>
       </Box>
 
-      <Divider sx={{ borderColor: '#E5E8E4' }} />
+      <Divider sx={{ borderColor: '#E2E6EA' }} />
 
       {/* 3. CORE ROLES & CAPABILITIES */}
-      <Box sx={{ py: { xs: 8, md: 10 }, backgroundColor: '#F8F9F7' }}>
+      <Box sx={{ py: { xs: 8, md: 10 }, backgroundColor: '#F4F1EA' }}>
         <Container maxWidth="lg">
           <Box sx={{ mb: 6, textAlign: 'center' }}>
-            <Typography variant="overline" sx={{ letterSpacing: '0.08em', color: '#68706B', fontWeight: 600, display: 'block', mb: 1 }}>
+            <Typography variant="overline" sx={{ letterSpacing: '0.08em', color: '#5A6672', fontWeight: 700, display: 'block', mb: 1 }}>
               SYSTEM ARCHITECTURE
             </Typography>
-            <Typography variant="h2" sx={{ fontWeight: 600, color: '#202522', fontSize: { xs: '1.75rem', md: '2.25rem' } }}>
+            <Typography variant="h2" sx={{ fontWeight: 700, color: '#1A232A', fontSize: { xs: '1.75rem', md: '2.25rem' } }}>
               Four Integrated Stakeholder Portals
             </Typography>
           </Box>
 
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', lg: 'repeat(4, 1fr)' }, gap: 3 }}>
             {/* Portal 1 */}
-            <Paper elevation={0} sx={{ p: 3.5, borderRadius: '8px', border: '1px solid #E5E8E4', backgroundColor: '#FFFFFF' }}>
-              <Box sx={{ width: 40, height: 40, borderRadius: '6px', backgroundColor: '#E8EFE9', color: '#304B3A', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
+            <Paper elevation={0} sx={{ p: 3.5, borderRadius: '8px', border: '1px solid #E2E6EA', borderLeft: '4px solid #0F4C5C', backgroundColor: '#FFFFFF' }}>
+              <Box sx={{ width: 42, height: 42, borderRadius: '6px', backgroundColor: '#E0F2F1', color: '#0F4C5C', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
                 <PeopleOutlinedIcon />
               </Box>
-              <Typography variant="h3" sx={{ fontWeight: 600, color: '#202522', fontSize: '1.1rem', mb: 1 }}>
+              <Typography variant="h3" sx={{ fontWeight: 700, color: '#1A232A', fontSize: '1.1rem', mb: 1 }}>
                 Citizen Portal
               </Typography>
-              <Typography variant="body2" sx={{ color: '#68706B', lineHeight: 1.6 }}>
+              <Typography variant="body2" sx={{ color: '#5A6672', lineHeight: 1.6 }}>
                 Submit civic complaints, attach photos, track real-time resolution status, and participate in ward proposals.
               </Typography>
             </Paper>
 
             {/* Portal 2 */}
-            <Paper elevation={0} sx={{ p: 3.5, borderRadius: '8px', border: '1px solid #E5E8E4', backgroundColor: '#FFFFFF' }}>
-              <Box sx={{ width: 40, height: 40, borderRadius: '6px', backgroundColor: '#E8EFE9', color: '#304B3A', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
+            <Paper elevation={0} sx={{ p: 3.5, borderRadius: '8px', border: '1px solid #E2E6EA', borderLeft: '4px solid #C85A32', backgroundColor: '#FFFFFF' }}>
+              <Box sx={{ width: 42, height: 42, borderRadius: '6px', backgroundColor: '#FDF2EE', color: '#C85A32', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
                 <GavelOutlinedIcon />
               </Box>
-              <Typography variant="h3" sx={{ fontWeight: 600, color: '#202522', fontSize: '1.1rem', mb: 1 }}>
+              <Typography variant="h3" sx={{ fontWeight: 700, color: '#1A232A', fontSize: '1.1rem', mb: 1 }}>
                 Councillor Hub
               </Typography>
-              <Typography variant="body2" sx={{ color: '#68706B', lineHeight: 1.6 }}>
+              <Typography variant="body2" sx={{ color: '#5A6672', lineHeight: 1.6 }}>
                 Review incoming ward complaints, assign tasks to department field teams, publish official notices, and manage budget allocations.
               </Typography>
             </Paper>
 
             {/* Portal 3 */}
-            <Paper elevation={0} sx={{ p: 3.5, borderRadius: '8px', border: '1px solid #E5E8E4', backgroundColor: '#FFFFFF' }}>
-              <Box sx={{ width: 40, height: 40, borderRadius: '6px', backgroundColor: '#E8EFE9', color: '#304B3A', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
+            <Paper elevation={0} sx={{ p: 3.5, borderRadius: '8px', border: '1px solid #E2E6EA', borderLeft: '4px solid #0F4C5C', backgroundColor: '#FFFFFF' }}>
+              <Box sx={{ width: 42, height: 42, borderRadius: '6px', backgroundColor: '#E0F2F1', color: '#0F4C5C', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
                 <AssignmentTurnedInOutlinedIcon />
               </Box>
-              <Typography variant="h3" sx={{ fontWeight: 600, color: '#202522', fontSize: '1.1rem', mb: 1 }}>
+              <Typography variant="h3" sx={{ fontWeight: 700, color: '#1A232A', fontSize: '1.1rem', mb: 1 }}>
                 Field Worker App
               </Typography>
-              <Typography variant="body2" sx={{ color: '#68706B', lineHeight: 1.6 }}>
+              <Typography variant="body2" sx={{ color: '#5A6672', lineHeight: 1.6 }}>
                 Receive assigned work orders, update repair progress on-site, upload completion photos, and mark tasks resolved.
               </Typography>
             </Paper>
 
             {/* Portal 4 */}
-            <Paper elevation={0} sx={{ p: 3.5, borderRadius: '8px', border: '1px solid #E5E8E4', backgroundColor: '#FFFFFF' }}>
-              <Box sx={{ width: 40, height: 40, borderRadius: '6px', backgroundColor: '#E8EFE9', color: '#304B3A', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
+            <Paper elevation={0} sx={{ p: 3.5, borderRadius: '8px', border: '1px solid #E2E6EA', borderLeft: '4px solid #C85A32', backgroundColor: '#FFFFFF' }}>
+              <Box sx={{ width: 42, height: 42, borderRadius: '6px', backgroundColor: '#FDF2EE', color: '#C85A32', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
                 <SecurityOutlinedIcon />
               </Box>
-              <Typography variant="h3" sx={{ fontWeight: 600, color: '#202522', fontSize: '1.1rem', mb: 1 }}>
+              <Typography variant="h3" sx={{ fontWeight: 700, color: '#1A232A', fontSize: '1.1rem', mb: 1 }}>
                 Corporation Admin
               </Typography>
-              <Typography variant="body2" sx={{ color: '#68706B', lineHeight: 1.6 }}>
+              <Typography variant="body2" sx={{ color: '#5A6672', lineHeight: 1.6 }}>
                 Monitor municipal-wide SLA metrics, manage ward boundaries, audit department efficiency, and oversee system settings.
               </Typography>
             </Paper>
@@ -288,14 +296,14 @@ export const LandingPage: React.FC = () => {
       </Box>
 
       {/* 4. FOOTER */}
-      <Box component="footer" sx={{ backgroundColor: '#202522', color: '#A0A8A3', py: 5 }}>
+      <Box component="footer" sx={{ backgroundColor: '#1A232A', color: '#A0A8A3', py: 5 }}>
         <Container maxWidth="lg">
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Box sx={{ width: 28, height: 28, borderRadius: '4px', backgroundColor: '#496A57', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <AccountBalanceOutlinedIcon sx={{ fontSize: 16 }} />
+              <Box sx={{ width: 30, height: 30, borderRadius: '4px', backgroundColor: '#0F4C5C', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <AccountBalanceOutlinedIcon sx={{ fontSize: 18 }} />
               </Box>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#FFFFFF' }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#FFFFFF' }}>
                 SGCS Municipal Corporation System
               </Typography>
             </Box>

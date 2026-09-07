@@ -5,7 +5,7 @@ export const INITIAL_NOTIFICATIONS: NotificationItem[] = [
   {
     id: 'notif_001',
     title: 'Complaint Status Updated',
-    message: 'Your complaint SGCS-2026-8941 ("Major Pothole Cluster") is now In Progress. Field worker Amit Kumar has been assigned.',
+    message: 'Your complaint SGCS-2026-8941 ("Major Pothole Cluster") is now In Progress. Field technician has been assigned.',
     type: 'COMPLAINT',
     read: false,
     createdAt: '2026-08-02T10:05:00Z',
@@ -14,7 +14,7 @@ export const INITIAL_NOTIFICATIONS: NotificationItem[] = [
   {
     id: 'notif_002',
     title: 'New Ward Notice Issued',
-    message: 'Hon. Priya Verma published a new notice: "Scheduled Water Supply Interruption" for Ward 1 - Central Town.',
+    message: 'Ward Councillor published a new notice: "Scheduled Water Supply Interruption" for Ward 1 - Central Town.',
     type: 'NOTICE',
     read: false,
     createdAt: '2026-08-04T12:00:00Z',

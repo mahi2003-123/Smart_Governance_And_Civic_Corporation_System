@@ -18,7 +18,7 @@ export const WelcomeCard: React.FC<WelcomeCardProps> = ({
   actionText,
   actionIcon,
   onAction,
-  gradientBackground = 'linear-gradient(135deg, #496A57 0%, #304B3A 100%)',
+  gradientBackground = '#0F4C5C',
 }) => {
   return (
     <Card
@@ -26,10 +26,10 @@ export const WelcomeCard: React.FC<WelcomeCardProps> = ({
       sx={{
         mb: 4,
         p: { xs: 3, md: 3.5 },
-        background: gradientBackground,
+        backgroundColor: gradientBackground,
         color: '#FFFFFF',
-        borderRadius: '12px',
-        border: '1px solid #304B3A',
+        borderRadius: '6px',
+        border: '1px solid #0A343F',
         boxShadow: 'none',
       }}
     >
@@ -39,14 +39,14 @@ export const WelcomeCard: React.FC<WelcomeCardProps> = ({
             <Avatar
               src={avatarUrl}
               alt={title}
-              sx={{ width: 56, height: 56, border: '2px solid #E8EFE9' }}
+              sx={{ width: 56, height: 56, border: '2px solid #E0F2F1' }}
             />
           )}
           <Box>
-            <Typography variant="h4" sx={{ fontWeight: 600, color: '#FFFFFF', letterSpacing: '-0.015em', fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#FFFFFF', letterSpacing: '-0.015em', fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
               {title}
             </Typography>
-            <Typography variant="body2" sx={{ opacity: 0.9, color: '#E8EFE9', fontWeight: 400, mt: 0.5 }}>
+            <Typography variant="body2" sx={{ opacity: 0.9, color: '#E0F2F1', fontWeight: 500, mt: 0.5 }}>
               {subtitle}
             </Typography>
           </Box>
@@ -59,16 +59,16 @@ export const WelcomeCard: React.FC<WelcomeCardProps> = ({
             startIcon={actionIcon}
             onClick={onAction}
             sx={{
-              bgcolor: '#FFFFFF',
-              color: '#304B3A',
-              fontWeight: 600,
+              bgcolor: '#C85A32',
+              color: '#FFFFFF',
+              fontWeight: 700,
               px: 2.5,
               py: 1,
-              borderRadius: '8px',
+              borderRadius: '6px',
               textTransform: 'none',
               fontSize: '0.85rem',
               boxShadow: 'none',
-              '&:hover': { bgcolor: '#E8EFE9', color: '#202522' },
+              '&:hover': { bgcolor: '#A03F1B' },
             }}
           >
             {actionText}

@@ -16,9 +16,9 @@ export const AdminDashboard: React.FC = () => {
   const [analytics, setAnalytics] = useState<CivicAnalytics | null>(null);
   const [activities, setActivities] = useState<SystemActivityLog[]>([]);
   const [wards, setWards] = useState<Ward[]>([]);
-  const [totalCitizens, setTotalCitizens] = useState(1250);
-  const [totalCouncillors, setTotalCouncillors] = useState(18);
-  const [totalWorkers, setTotalWorkers] = useState(64);
+  const [totalCitizens, setTotalCitizens] = useState(0);
+  const [totalCouncillors, setTotalCouncillors] = useState(0);
+  const [totalWorkers, setTotalWorkers] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -34,11 +34,9 @@ export const AdminDashboard: React.FC = () => {
         setActivities(activityData);
         setWards(wardData);
 
-        if (userData.length > 0) {
-          setTotalCitizens(userData.filter((u) => u.role === 'CITIZEN').length || 1250);
-          setTotalCouncillors(userData.filter((u) => u.role === 'COUNCILLOR').length || 18);
-          setTotalWorkers(userData.filter((u) => u.role === 'WORKER').length || 64);
-        }
+        setTotalCitizens(userData.filter((u) => u.role === 'CITIZEN').length);
+        setTotalCouncillors(userData.filter((u) => u.role === 'COUNCILLOR').length);
+        setTotalWorkers(userData.filter((u) => u.role === 'WORKER').length);
       } catch (e) {
         console.error(e);
       } finally {
@@ -52,6 +50,10 @@ export const AdminDashboard: React.FC = () => {
     return <LoadingSpinner message="Loading Super Admin System Overview..." />;
   }
 
+  const pendingPct = analytics.totalComplaints > 0 ? Math.round((analytics.pendingComplaints / analytics.totalComplaints) * 100) : 0;
+  const inProgressPct = analytics.totalComplaints > 0 ? Math.round((analytics.inProgressComplaints / analytics.totalComplaints) * 100) : 0;
+  const resolvedPct = analytics.totalComplaints > 0 ? Math.round((analytics.resolvedComplaints / analytics.totalComplaints) * 100) : 0;
+
   return (
     <Box sx={{ pb: 8, maxWidth: 1200, mx: 'auto' }}>
       {/* 1. Page Header Standard */}
@@ -63,7 +65,7 @@ export const AdminDashboard: React.FC = () => {
         onActionClick={() => navigate('/admin/users')}
       />
 
-      {/* 2. System Summary (Restrained Information Hierarchy) */}
+      {/* 2. System Summary */}
       <Box sx={{ mb: 5 }}>
         <Typography variant="overline" sx={{ letterSpacing: '0.08em', color: '#68706B', fontWeight: 600, display: 'block', mb: 1 }}>
           SYSTEM SUMMARY
@@ -122,7 +124,7 @@ export const AdminDashboard: React.FC = () => {
         </Box>
       </Box>
 
-      {/* 3. Complaint Overview (Clean Visual Representation) */}
+      {/* 3. Complaint Overview */}
       <Box sx={{ mb: 6 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
           <Typography variant="overline" sx={{ letterSpacing: '0.08em', color: '#68706B', fontWeight: 600 }}>
@@ -164,13 +166,13 @@ export const AdminDashboard: React.FC = () => {
               <Box
                 sx={{
                   height: '100%',
-                  width: `${Math.min(100, Math.round((analytics.pendingComplaints / analytics.totalComplaints) * 100))}%`,
+                  width: `${pendingPct}%`,
                   backgroundColor: '#B58A45',
                 }}
               />
             </Box>
             <Typography variant="caption" sx={{ color: '#68706B', mt: 1, display: 'block' }}>
-              {Math.round((analytics.pendingComplaints / analytics.totalComplaints) * 100)}% of total system volume
+              {pendingPct}% of total system volume
             </Typography>
           </Box>
 
@@ -193,13 +195,13 @@ export const AdminDashboard: React.FC = () => {
               <Box
                 sx={{
                   height: '100%',
-                  width: `${Math.min(100, Math.round((analytics.inProgressComplaints / analytics.totalComplaints) * 100))}%`,
+                  width: `${inProgressPct}%`,
                   backgroundColor: '#496A57',
                 }}
               />
             </Box>
             <Typography variant="caption" sx={{ color: '#68706B', mt: 1, display: 'block' }}>
-              {Math.round((analytics.inProgressComplaints / analytics.totalComplaints) * 100)}% active in repair stage
+              {inProgressPct}% active in repair stage
             </Typography>
           </Box>
 
@@ -222,13 +224,13 @@ export const AdminDashboard: React.FC = () => {
               <Box
                 sx={{
                   height: '100%',
-                  width: `${Math.min(100, Math.round((analytics.resolvedComplaints / analytics.totalComplaints) * 100))}%`,
+                  width: `${resolvedPct}%`,
                   backgroundColor: '#527A5E',
                 }}
               />
             </Box>
             <Typography variant="caption" sx={{ color: '#68706B', mt: 1, display: 'block' }}>
-              {Math.round((analytics.resolvedComplaints / analytics.totalComplaints) * 100)}% resolution rate
+              {resolvedPct}% resolution rate
             </Typography>
           </Box>
         </Box>
@@ -295,15 +297,15 @@ export const AdminDashboard: React.FC = () => {
                     {w.name}
                   </Typography>
                   <Typography variant="caption" sx={{ color: '#68706B' }}>
-                    Councillor: {w.councillorName}
+                    Councillor: {w.councillorName || 'Unassigned'}
                   </Typography>
                 </Box>
                 <Box sx={{ textAlign: 'right' }}>
                   <Typography variant="body2" sx={{ fontWeight: 600, color: '#496A57' }}>
-                    {w.activeComplaints} active
+                    {w.activeComplaints || 0} active
                   </Typography>
                   <Typography variant="caption" sx={{ color: '#68706B' }}>
-                    {w.resolvedComplaints} resolved
+                    {w.resolvedComplaints || 0} resolved
                   </Typography>
                 </Box>
               </Box>

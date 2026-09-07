@@ -19,11 +19,11 @@ export const AuthHeroCard: React.FC<AuthHeroCardProps> = ({
       sx={{
         p: { xs: 4, sm: 6 },
         height: '100%',
-        borderRadius: 3,
-        background: 'linear-gradient(135deg, #202522 0%, #304B3A 50%, #496A57 100%)',
+        borderRadius: '6px',
+        backgroundColor: '#0F4C5C',
         color: '#FFFFFF',
         boxShadow: 'none',
-        border: '1px solid #304B3A',
+        border: '1px solid #0A343F',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -40,7 +40,7 @@ export const AuthHeroCard: React.FC<AuthHeroCardProps> = ({
           width: 240,
           height: 240,
           borderRadius: '50%',
-          bgcolor: 'rgba(232, 239, 233, 0.1)',
+          bgcolor: 'rgba(255, 255, 255, 0.05)',
           filter: 'blur(50px)',
           pointerEvents: 'none',
         }}
@@ -53,7 +53,7 @@ export const AuthHeroCard: React.FC<AuthHeroCardProps> = ({
           width: 200,
           height: 200,
           borderRadius: '50%',
-          bgcolor: 'rgba(73, 106, 87, 0.2)',
+          bgcolor: 'rgba(200, 90, 50, 0.15)',
           filter: 'blur(50px)',
           pointerEvents: 'none',
         }}
@@ -66,7 +66,7 @@ export const AuthHeroCard: React.FC<AuthHeroCardProps> = ({
             sx={{
               width: 48,
               height: 48,
-              borderRadius: 2,
+              borderRadius: '6px',
               bgcolor: 'rgba(255, 255, 255, 0.12)',
               backdropFilter: 'blur(12px)',
               border: '1px solid rgba(255, 255, 255, 0.2)',
@@ -82,15 +82,14 @@ export const AuthHeroCard: React.FC<AuthHeroCardProps> = ({
             <Typography
               variant="h6"
               sx={{
-                fontWeight: 600,
+                fontWeight: 700,
                 color: '#FFFFFF',
                 lineHeight: 1.1,
-                fontFamily: "'DM Sans', sans-serif",
               }}
             >
               SGCS Civic Portal
             </Typography>
-            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)', fontWeight: 600, letterSpacing: '0.05em' }}>
+            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.75)', fontWeight: 600, letterSpacing: '0.05em' }}>
               SMART GOVERNANCE DIGITAL PORTAL
             </Typography>
           </Box>
@@ -100,9 +99,8 @@ export const AuthHeroCard: React.FC<AuthHeroCardProps> = ({
           variant="h2"
           gutterBottom
           sx={{
-            fontWeight: 600,
+            fontWeight: 700,
             color: '#FFFFFF',
-            fontFamily: "'DM Sans', sans-serif",
             fontSize: { xs: '2rem', sm: '2.3rem', md: '2.5rem' },
             lineHeight: 1.2,
             letterSpacing: '-0.015em',
@@ -115,15 +113,14 @@ export const AuthHeroCard: React.FC<AuthHeroCardProps> = ({
           {subtitle}
         </Typography>
 
-        {/* Glassmorphic Feature Badges */}
+        {/* Civic Feature Badges */}
         <Stack spacing={2} sx={{ mb: 4 }}>
           <Paper
             elevation={0}
             sx={{
               p: 2.5,
-              borderRadius: 3,
+              borderRadius: '6px',
               bgcolor: 'rgba(255, 255, 255, 0.08)',
-              backdropFilter: 'blur(12px)',
               border: '1px solid rgba(255, 255, 255, 0.15)',
               display: 'flex',
               alignItems: 'center',
@@ -131,11 +128,11 @@ export const AuthHeroCard: React.FC<AuthHeroCardProps> = ({
               color: '#FFFFFF',
             }}
           >
-            <Avatar sx={{ bgcolor: 'rgba(73, 106, 87, 0.4)', color: '#E8EFE9', width: 44, height: 44 }}>
+            <Avatar sx={{ bgcolor: 'rgba(200, 90, 50, 0.3)', color: '#FFFFFF', width: 44, height: 44, borderRadius: '6px' }}>
               <SpeedIcon />
             </Avatar>
             <Box>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#FFFFFF' }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#FFFFFF' }}>
                 Structured Grievance Engine
               </Typography>
               <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.75)' }}>
@@ -148,9 +145,8 @@ export const AuthHeroCard: React.FC<AuthHeroCardProps> = ({
             elevation={0}
             sx={{
               p: 2.5,
-              borderRadius: 3,
+              borderRadius: '6px',
               bgcolor: 'rgba(255, 255, 255, 0.08)',
-              backdropFilter: 'blur(12px)',
               border: '1px solid rgba(255, 255, 255, 0.15)',
               display: 'flex',
               alignItems: 'center',
@@ -158,11 +154,11 @@ export const AuthHeroCard: React.FC<AuthHeroCardProps> = ({
               color: '#FFFFFF',
             }}
           >
-            <Avatar sx={{ bgcolor: 'rgba(73, 106, 87, 0.4)', color: '#E8EFE9', width: 44, height: 44 }}>
+            <Avatar sx={{ bgcolor: 'rgba(200, 90, 50, 0.3)', color: '#FFFFFF', width: 44, height: 44, borderRadius: '6px' }}>
               <SecurityIcon />
             </Avatar>
             <Box>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#FFFFFF' }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#FFFFFF' }}>
                 Transparent Ward Resolution
               </Typography>
               <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.75)' }}>
@@ -175,9 +171,8 @@ export const AuthHeroCard: React.FC<AuthHeroCardProps> = ({
             elevation={0}
             sx={{
               p: 2.5,
-              borderRadius: 3,
+              borderRadius: '6px',
               bgcolor: 'rgba(255, 255, 255, 0.08)',
-              backdropFilter: 'blur(12px)',
               border: '1px solid rgba(255, 255, 255, 0.15)',
               display: 'flex',
               alignItems: 'center',
@@ -185,11 +180,11 @@ export const AuthHeroCard: React.FC<AuthHeroCardProps> = ({
               color: '#FFFFFF',
             }}
           >
-            <Avatar sx={{ bgcolor: 'rgba(73, 106, 87, 0.4)', color: '#E8EFE9', width: 44, height: 44 }}>
+            <Avatar sx={{ bgcolor: 'rgba(200, 90, 50, 0.3)', color: '#FFFFFF', width: 44, height: 44, borderRadius: '6px' }}>
               <HowToVoteIcon />
             </Avatar>
             <Box>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#FFFFFF' }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#FFFFFF' }}>
                 Citizen Proposal Voting
               </Typography>
               <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.75)' }}>

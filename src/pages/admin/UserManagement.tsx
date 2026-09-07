@@ -57,9 +57,9 @@ export const UserManagement: React.FC = () => {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
-    password: 'password123',
+    password: '',
     phone: '',
-    role: 'CITIZEN' as UserRole,
+    role: 'COUNCILLOR' as UserRole,
     ward: 'Ward 1 - Central Town',
   });
 
@@ -99,8 +99,8 @@ export const UserManagement: React.FC = () => {
     setModalError('');
     setModalSuccess('');
 
-    if (!formData.fullName || !formData.email) {
-      setModalError('Please enter full name and email address.');
+    if (!formData.fullName || !formData.email || !formData.password) {
+      setModalError('Please enter full name, email address, and initial password.');
       return;
     }
 
@@ -132,9 +132,9 @@ export const UserManagement: React.FC = () => {
       setFormData({
         fullName: '',
         email: '',
-        password: 'password123',
+        password: '',
         phone: '',
-        role: 'CITIZEN',
+        role: 'COUNCILLOR',
         ward: wards.length > 0 ? `Ward ${wards[0].wardNumber} - ${wards[0].name}` : 'Ward 1 - Central Town',
       });
 
@@ -380,10 +380,8 @@ export const UserManagement: React.FC = () => {
                     label="Account Role"
                     onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
                   >
-                    <MenuItem value="CITIZEN">Citizen</MenuItem>
                     <MenuItem value="COUNCILLOR">Ward Councillor</MenuItem>
-                    <MenuItem value="WORKER">Local Worker</MenuItem>
-                    <MenuItem value="ADMIN">Super Admin</MenuItem>
+                    <MenuItem value="WORKER">Local Field Worker / Staff</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -429,6 +427,17 @@ export const UserManagement: React.FC = () => {
               </Grid>
 
               <Grid item xs={12} sm={6}>
+                <CustomTextField
+                  label="Account Password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  required
+                />
+              </Grid>
+
+              <Grid item xs={12}>
                 <CustomTextField
                   label="Phone Number"
                   placeholder="+91 98765 43210"

@@ -143,13 +143,13 @@ export const WorkerDashboard: React.FC = () => {
 
       {/* Field Worker Header */}
       <WelcomeCard
-        title={user?.fullName || 'Amit Kumar'}
+        title={user?.fullName || 'Field Technician'}
         subtitle="Senior Field Technician • Public Works Department"
         avatarUrl={user?.avatarUrl}
         actionText={`Assigned Tasks Queue (${pendingTasks.length})`}
         actionIcon={<BuildIcon />}
         onAction={() => navigate('/worker/tasks')}
-        gradientBackground="linear-gradient(135deg, #496A57 0%, #304B3A 100%)"
+        gradientBackground="#0F4C5C"
       />
 
       {/* 3-Column Metrics Grid */}

@@ -122,7 +122,7 @@ export const Announcements: React.FC = () => {
     if (!title || !content) return;
     setPublishing(true);
     try {
-      const councillorName = user?.fullName || 'Councillor Rajesh Kumar';
+      const councillorName = user?.fullName || 'Ward Councillor';
 
       const newNotice = await noticeService.createNotice({
         title,
@@ -389,7 +389,7 @@ export const Announcements: React.FC = () => {
                       ISSUING COUNCILLOR SIGNATURE
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600, color: '#202522' }}>
-                      Published by: {user?.fullName || 'Councillor Rajesh Kumar'}
+                      Published by: {user?.fullName || 'Ward Councillor'}
                     </Typography>
                     <Typography variant="caption" sx={{ color: '#496A57' }}>
                       {user?.ward || 'Ward 1 - Central Town'} Councillor Desk

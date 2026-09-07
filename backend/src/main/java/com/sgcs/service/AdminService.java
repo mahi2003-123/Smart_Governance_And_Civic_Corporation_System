@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 @Service
 public class AdminService {
 
@@ -30,6 +32,9 @@ public class AdminService {
 
     @Autowired
     private NoticeRepository noticeRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
@@ -54,9 +59,11 @@ public class AdminService {
         user.setId("usr_" + System.currentTimeMillis());
         user.setEmail(email);
         user.setCreatedAt(LocalDateTime.now());
-        if (user.getPassword() == null || user.getPassword().isEmpty()) {
-            user.setPassword("password123");
-        }
+        
+        String rawPassword = (user.getPassword() != null && !user.getPassword().trim().isEmpty()) 
+            ? user.getPassword().trim() 
+            : "password123";
+        user.setPassword(passwordEncoder.encode(rawPassword));
 
         User saved = userRepository.save(user);
 

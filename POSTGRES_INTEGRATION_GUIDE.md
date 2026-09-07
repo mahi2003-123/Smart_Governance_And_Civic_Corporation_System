@@ -1,6 +1,6 @@
 # PostgreSQL Integration Guide for SGCS (Smart Governance & Civic Corporation System)
 
-This guide provides step-by-step instructions to set up, connect, initialize, and test PostgreSQL database integration for the SGCS application.
+This guide provides step-by-step instructions to set up, connect, initialize, and test PostgreSQL database integration for the SGCS Spring Boot application.
 
 ---
 
@@ -11,18 +11,17 @@ This guide provides step-by-step instructions to set up, connect, initialize, an
  │                React 19 Frontend (Vite)                     │
  │   - Citizen Dashboard, Grievances, Proposals, Notices       │
  └──────────────────────────────┬──────────────────────────────┘
-                                │ HTTP / REST API (Axios)
+                                │ HTTP / REST API (Axios + JWT)
                                 ▼
  ┌─────────────────────────────────────────────────────────────┐
- │                Express Backend Server                       │
- │   - Port 5000 (routes: auth, complaints, proposals, etc.)   │
+ │                Spring Boot Backend Server                   │
+ │   - Port 5000 (routes: /api/auth, /api/complaints, etc.)    │
  └──────────────────────────────┬──────────────────────────────┘
-                                │ PostgreSQL Client Driver (pg)
+                                │ Spring Data JPA / Hibernate
                                 ▼
  ┌─────────────────────────────────────────────────────────────┐
  │                PostgreSQL Database (sgcs_db)                │
- │   - Tables: users, wards, complaints, timeline, comments,   │
- │     proposals, proposal_votes, notices, notifications       │
+ │   - Tables: users, wards, complaints, proposals, notices    │
  └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -31,44 +30,27 @@ This guide provides step-by-step instructions to set up, connect, initialize, an
 ## 🛠 Step 1: PostgreSQL Prerequisites & Credentials
 
 1. Install PostgreSQL from [https://www.postgresql.org/download/](https://www.postgresql.org/download/) if not already installed.
-2. Verify PostgreSQL service is running on your machine (Default port: `5432`).
-3. Open `server/.env` and update your PostgreSQL username and password:
+2. Create the target database `sgcs_db`:
+   ```sql
+   CREATE DATABASE sgcs_db;
+   ```
+3. Open `backend/src/main/resources/application.properties` and update your PostgreSQL username and password:
 
 ```ini
-PGHOST=localhost
-PGPORT=5432
-PGUSER=postgres
-PGPASSWORD=your_postgres_password_here
-PGDATABASE=sgcs_db
-PORT=5000
+spring.datasource.url=jdbc:postgresql://localhost:5432/sgcs_db
+spring.datasource.username=postgres
+spring.datasource.password=1102003
 ```
 
 ---
 
-## ⚡ Step 2: Initialize Database Schema & Seed Data
+## 🚀 Step 2: Run the Spring Boot API Server & React Client
 
-Run the database initialization script using Node.js:
-
-```bash
-cd server
-npm run db:init
-```
-
-This command will:
-1. Connect to PostgreSQL server.
-2. Automatically create database `sgcs_db` if it doesn't already exist.
-3. Run `server/db/schema.sql` to build 9 relational tables and indexes.
-4. Run `server/db/seed.sql` to populate sample complaints, proposals, notices, wards, and users.
-
----
-
-## 🚀 Step 3: Run the Live Server & Client
-
-### 1. Start Backend Express API Server
+### 1. Start Backend Spring Boot API Server
 In terminal 1:
 ```bash
-cd server
-npm run dev
+cd backend
+mvn spring-boot:run
 ```
 - Server running at: `http://localhost:5000`
 - API Health Check: `http://localhost:5000/api/health`
@@ -84,10 +66,8 @@ npm run dev
 
 ## 📁 Key File Locations
 
-- **Database DDL Schema**: `server/db/schema.sql`
-- **Initial Data Seeds**: `server/db/seed.sql`
-- **PostgreSQL Pool Connection**: `server/db/index.js`
-- **Database Init Script**: `server/db/init.js`
-- **Express Server**: `server/index.js`
-- **API Routers**: `server/routes/` (`auth.js`, `complaints.js`, `proposals.js`, `notices.js`, `notifications.js`, `admin.js`)
+- **Spring Boot Application**: `backend/src/main/java/com/sgcs/SgcsApplication.java`
+- **Application Properties**: `backend/src/main/resources/application.properties`
+- **Security & JWT Configuration**: `backend/src/main/java/com/sgcs/config/SecurityConfig.java`
+- **Seed Cleanup Script**: `backend/src/main/resources/cleanup.sql`
 - **Frontend Axios Client**: `src/services/api.ts`

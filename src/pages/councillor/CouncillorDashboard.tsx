@@ -110,7 +110,7 @@ export const CouncillorDashboard: React.FC = () => {
     <Box sx={{ pb: 8, maxWidth: 1120, mx: 'auto' }}>
       {/* Header Banner */}
       <WelcomeCard
-        title={user?.fullName || 'Hon. Priya Verma'}
+        title={user?.fullName || 'Councillor'}
         subtitle={`Ward Councillor • ${user?.ward || 'Ward 1 - Central Town'} Operations`}
         actionText="Publish Ward Notice"
         actionIcon={<CampaignOutlinedIcon sx={{ fontSize: 18 }} />}

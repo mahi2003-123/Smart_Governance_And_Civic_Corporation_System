@@ -22,9 +22,9 @@ interface AssignWorkerModalProps {
 }
 
 const DEFAULT_WORKERS = [
-  { id: 'usr_worker_01', name: 'Amit Kumar (Public Works Dept)' },
-  { id: 'usr_worker_02', name: 'Suresh Patil (Water & Drainage Dept)' },
-  { id: 'usr_worker_03', name: 'Vikas Singh (Electrical Maintenance)' },
+  { id: 'usr_worker_01', name: 'Field Worker (Public Works Dept)' },
+  { id: 'usr_worker_02', name: 'Field Worker (Water & Drainage Dept)' },
+  { id: 'usr_worker_03', name: 'Field Worker (Electrical Maintenance)' },
 ];
 
 export const AssignWorkerModal: React.FC<AssignWorkerModalProps> = ({

@@ -159,7 +159,7 @@ export const SidebarContent: React.FC<{ onItemClick?: () => void }> = ({ onItemC
         display: 'flex',
         flexDirection: 'column',
         backgroundColor: '#FFFFFF',
-        borderRight: '1px solid #E5E8E4',
+        borderRight: '1px solid #E2E6EA',
       }}
     >
       {/* Brand Header */}
@@ -168,8 +168,8 @@ export const SidebarContent: React.FC<{ onItemClick?: () => void }> = ({ onItemC
           <Typography
             variant="h6"
             sx={{
-              fontWeight: 600,
-              color: '#202522',
+              fontWeight: 700,
+              color: '#1A232A',
               letterSpacing: '-0.01em',
               fontSize: '1.05rem',
               display: 'flex',
@@ -183,33 +183,33 @@ export const SidebarContent: React.FC<{ onItemClick?: () => void }> = ({ onItemC
                 width: 8,
                 height: 8,
                 borderRadius: '50%',
-                backgroundColor: '#496A57',
+                backgroundColor: '#0F4C5C',
                 display: 'inline-block',
               }}
             />
             SGCS Civic System
           </Typography>
-          <Typography variant="caption" sx={{ color: '#68706B', fontSize: '0.75rem', display: 'block', pl: 2 }}>
+          <Typography variant="caption" sx={{ color: '#5A6672', fontSize: '0.75rem', display: 'block', pl: 2, fontWeight: 500 }}>
             Public Governance Portal
           </Typography>
         </Box>
 
         {user && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2, pt: 1.5, borderTop: '1px solid #E5E8E4' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2, pt: 1.5, borderTop: '1px solid #E2E6EA' }}>
             <Chip
               label={roleLabelMap[user.role] || user.role}
               size="small"
               sx={{
-                backgroundColor: '#E8EFE9',
-                color: '#304B3A',
-                fontWeight: 500,
+                backgroundColor: '#E0F2F1',
+                color: '#0F4C5C',
+                fontWeight: 700,
                 fontSize: '0.725rem',
                 height: '22px',
                 borderRadius: '4px',
               }}
             />
             {user.ward && (
-              <Typography variant="caption" sx={{ color: '#68706B', fontSize: '0.75rem' }} noWrap>
+              <Typography variant="caption" sx={{ color: '#5A6672', fontSize: '0.75rem', fontWeight: 500 }} noWrap>
                 {user.ward.split('-')[0]}
               </Typography>
             )}
@@ -226,8 +226,8 @@ export const SidebarContent: React.FC<{ onItemClick?: () => void }> = ({ onItemC
                 variant="caption"
                 sx={{
                   letterSpacing: '0.08em',
-                  color: '#68706B',
-                  fontWeight: 600,
+                  color: '#5A6672',
+                  fontWeight: 700,
                   fontSize: '0.675rem',
                   px: 3,
                   pt: 1.5,
@@ -252,12 +252,12 @@ export const SidebarContent: React.FC<{ onItemClick?: () => void }> = ({ onItemC
                         px: 3,
                         mb: 0.2,
                         position: 'relative',
-                        backgroundColor: isSelected ? '#E8EFE9' : 'transparent',
-                        color: isSelected ? '#304B3A' : '#68706B',
+                        backgroundColor: isSelected ? '#E0F2F1' : 'transparent',
+                        color: isSelected ? '#0F4C5C' : '#5A6672',
                         transition: 'all 0.15s ease',
                         '&:hover': {
-                          backgroundColor: isSelected ? '#E8EFE9' : '#F3F5F2',
-                          color: '#202522',
+                          backgroundColor: isSelected ? '#E0F2F1' : '#F4F1EA',
+                          color: '#1A232A',
                         },
                         '&::before': isSelected
                           ? {
@@ -267,7 +267,7 @@ export const SidebarContent: React.FC<{ onItemClick?: () => void }> = ({ onItemC
                               top: '15%',
                               height: '70%',
                               width: '3px',
-                              backgroundColor: '#496A57',
+                              backgroundColor: '#0F4C5C',
                               borderRadius: '0 2px 2px 0',
                             }
                           : undefined,
@@ -276,7 +276,7 @@ export const SidebarContent: React.FC<{ onItemClick?: () => void }> = ({ onItemC
                       <ListItemIcon
                         sx={{
                           minWidth: 30,
-                          color: isSelected ? '#496A57' : '#68706B',
+                          color: isSelected ? '#0F4C5C' : '#5A6672',
                         }}
                       >
                         {item.icon}
@@ -286,9 +286,9 @@ export const SidebarContent: React.FC<{ onItemClick?: () => void }> = ({ onItemC
                           <Typography
                             variant="body2"
                             sx={{
-                              fontWeight: isSelected ? 600 : 400,
+                              fontWeight: isSelected ? 700 : 500,
                               fontSize: '0.825rem',
-                              color: isSelected ? '#304B3A' : 'inherit',
+                              color: isSelected ? '#0F4C5C' : 'inherit',
                             }}
                           >
                             {item.label}
@@ -305,8 +305,8 @@ export const SidebarContent: React.FC<{ onItemClick?: () => void }> = ({ onItemC
       </Box>
 
       {/* Footer Info */}
-      <Box sx={{ p: 2.5, borderTop: '1px solid #E5E8E4', textAlign: 'left' }}>
-        <Typography variant="caption" sx={{ color: '#68706B', fontSize: '0.725rem', display: 'block' }}>
+      <Box sx={{ p: 2.5, borderTop: '1px solid #E2E6EA', textAlign: 'left' }}>
+        <Typography variant="caption" sx={{ color: '#5A6672', fontSize: '0.725rem', display: 'block', fontWeight: 500 }}>
           Municipal Helpline: 1800-11-2024
         </Typography>
         <Typography variant="caption" sx={{ color: '#8E9691', fontSize: '0.7rem', display: 'block', mt: 0.3 }}>
@@ -328,7 +328,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileCl
         ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: 'block', md: 'none' },
-          '& .MuiDrawer-paper': { width: 260, boxSizing: 'border-box', borderRight: '1px solid #E5E8E4' },
+          '& .MuiDrawer-paper': { width: 260, boxSizing: 'border-box', borderRight: '1px solid #E2E6EA' },
         }}
       >
         <SidebarContent onItemClick={onMobileClose} />

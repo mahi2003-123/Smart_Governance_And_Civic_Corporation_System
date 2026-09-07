@@ -41,34 +41,43 @@ export const authService = {
         };
       }
     } catch (err: any) {
-      if (err.response && err.response.data && err.response.data.error) {
-        // If server explicitly responded with an error (e.g. incorrect password)
-        throw new Error(err.response.data.error);
-      }
-
-      // Offline / fallback lookup in locally stored users
-      const localUsers = getStoredUsers();
-      const found = localUsers.find((u) => u.email.toLowerCase() === cleanEmail);
-      if (found) {
-        if (found.password && found.password !== cleanPassword) {
-          throw new Error('Incorrect password.');
+      // 1. If backend server responded (HTTP 4xx/5xx), strictly enforce database response
+      if (err.response) {
+        if (err.response.data && err.response.data.error) {
+          throw new Error(err.response.data.error);
         }
-        return {
-          user: found,
-          token: `sgcs_token_${found.id}`,
-        };
+        if (err.response.status === 401 || err.response.status === 400 || err.response.status === 404) {
+          throw new Error('Invalid email or password. Account not registered in SGCS database.');
+        }
       }
 
-      // Super Admin demo fallback
-      if (cleanEmail === 'admin@gnail.com' || cleanEmail === 'admin@gmail.com') {
-        if (cleanPassword === 'admin12345' || cleanPassword === 'admin123') {
+      // 2. Only if backend is completely offline/unreachable, attempt offline local lookup
+      if (err.code === 'ERR_NETWORK' || err.message === 'Network Error' || !err.response) {
+        const localUsers = getStoredUsers();
+        const found = localUsers.find((u) => u.email.toLowerCase() === cleanEmail);
+        if (found) {
+          if (found.password && found.password !== cleanPassword) {
+            throw new Error('Incorrect password.');
+          }
           return {
-            user: { ...SUPER_ADMIN_USER, email: cleanEmail },
-            token: 'sgcs_jwt_token_usr_super_admin',
+            user: found,
+            token: `sgcs_token_${found.id}`,
           };
-        } else {
-          throw new Error('Incorrect password. Password is admin12345');
         }
+
+        // Default Super Admin credentials fallback check
+        if (cleanEmail === 'admin@gnail.com' || cleanEmail === 'admin@gmail.com') {
+          if (cleanPassword === 'admin12345' || cleanPassword === 'admin123') {
+            return {
+              user: { ...SUPER_ADMIN_USER, email: cleanEmail },
+              token: 'sgcs_jwt_token_usr_super_admin',
+            };
+          } else {
+            throw new Error('Incorrect password. Default Super Admin password is admin12345');
+          }
+        }
+
+        throw new Error('Backend API server unreachable (Network Error). Please check connection to http://localhost:5000');
       }
 
       throw new Error(err.message || 'Invalid email or password. Please check your credentials.');
@@ -111,8 +120,11 @@ export const authService = {
         return registeredUser;
       }
     } catch (err: any) {
-      if (err.response && err.response.data && err.response.data.error) {
-        throw new Error(err.response.data.error);
+      if (err.response) {
+        if (err.response.data && err.response.data.error) {
+          throw new Error(err.response.data.error);
+        }
+        throw new Error('Registration failed. Please check your details.');
       }
       console.warn('[authService] Backend API registration offline. Storing account locally.');
     }

@@ -79,7 +79,7 @@ export const SubmitComplaint: React.FC = () => {
         priority,
         images,
         citizenId: user?.id || 'usr_citizen_01',
-        citizenName: user?.fullName || 'Rahul Sharma',
+        citizenName: user?.fullName || 'Citizen Resident',
         citizenPhone: user?.phone || '+91 98765 43210',
       });
 
