@@ -87,7 +87,25 @@ export const adminService = {
     throw new Error('Unable to create user in database.');
   },
 
+  deleteUser: async (userId: string): Promise<boolean> => {
+    try {
+      await api.delete(`/admin/users/${userId}`);
+      return true;
+    } catch (err: any) {
+      if (err.response && err.response.data && err.response.data.error) {
+        throw new Error(err.response.data.error);
+      }
+      throw new Error('Failed to delete user from PostgreSQL database.');
+    }
+  },
+
   updateUserStatus: async (userId: string, newStatus: 'ACTIVE' | 'INACTIVE'): Promise<boolean> => {
+    try {
+      await api.put(`/admin/users/${userId}/status`, { status: newStatus });
+      return true;
+    } catch (err: any) {
+      console.warn('[adminService] Backend status update error:', err);
+    }
     const users = getLocalUsers();
     const idx = users.findIndex((u) => u.id === userId);
     if (idx !== -1) {

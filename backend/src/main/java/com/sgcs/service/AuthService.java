@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -24,7 +25,7 @@ public class AuthService {
     private JwtUtils jwtUtils;
 
     public AuthDto.AuthResponse login(AuthDto.LoginRequest request) {
-        String email = request.getEmail().trim();
+        String email = request.getEmail().trim().toLowerCase();
         String password = request.getPassword().trim();
 
         Optional<User> userOpt = userRepository.findByEmailIgnoreCase(email);
@@ -48,19 +49,48 @@ public class AuthService {
             throw new RuntimeException("Email address is already registered in SGCS database.");
         }
 
+        String role = request.getRole() != null ? request.getRole() : "CITIZEN";
+        String ward = request.getWard() != null ? request.getWard() : "Ward 1 - Central Town";
+
+        // Enforce 1 Councillor per ward constraint
+        if ("COUNCILLOR".equalsIgnoreCase(role) && ward != null && !ward.equalsIgnoreCase("All Wards")) {
+            List<User> allCouncillors = userRepository.findByRoleIgnoreCase("COUNCILLOR");
+            for (User c : allCouncillors) {
+                if (c.getWard() != null && isSameWard(c.getWard(), ward)) {
+                    throw new RuntimeException("Ward \"" + ward + "\" already has an assigned Ward Councillor (" + c.getFullName() + " - " + c.getEmail() + "). Only 1 Councillor is permitted per municipal ward.");
+                }
+            }
+        }
+
         User user = new User();
         user.setId("usr_" + System.currentTimeMillis());
         user.setFullName(request.getFullName().trim());
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(request.getPassword().trim()));
         user.setPhone(request.getPhone() != null ? request.getPhone().trim() : "");
-        user.setRole(request.getRole() != null ? request.getRole() : "CITIZEN");
-        user.setWard(request.getWard() != null ? request.getWard() : "Ward 1 - Central Town");
+        user.setRole(role);
+        user.setWard(ward);
         user.setCreatedAt(LocalDateTime.now());
 
         User saved = userRepository.save(user);
         String token = jwtUtils.generateToken(saved);
 
         return new AuthDto.AuthResponse(true, saved, token);
+    }
+
+    private boolean isSameWard(String wardA, String wardB) {
+        if (wardA == null || wardB == null) return false;
+        String a = wardA.trim().toLowerCase();
+        String b = wardB.trim().toLowerCase();
+        if (a.equals(b)) return true;
+
+        if (a.contains("ward ") && b.contains("ward ")) {
+            String numA = a.substring(a.indexOf("ward ") + 5).split(" ")[0].split("-")[0].trim();
+            String numB = b.substring(b.indexOf("ward ") + 5).split(" ")[0].split("-")[0].trim();
+            if (!numA.isEmpty() && numA.equals(numB)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

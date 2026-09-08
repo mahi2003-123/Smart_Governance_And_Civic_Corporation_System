@@ -26,11 +26,15 @@ public class User {
 
     private String ward;
 
+    @Column(name = "status")
+    private String status = "ACTIVE"; // ACTIVE, INACTIVE
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     public User() {
         this.createdAt = LocalDateTime.now();
+        this.status = "ACTIVE";
     }
 
     public User(String id, String fullName, String email, String password, String phone, String role, String ward) {
@@ -41,6 +45,7 @@ public class User {
         this.phone = phone;
         this.role = role;
         this.ward = ward;
+        this.status = "ACTIVE";
         this.createdAt = LocalDateTime.now();
     }
 
@@ -64,6 +69,9 @@ public class User {
 
     public String getWard() { return ward; }
     public void setWard(String ward) { this.ward = ward; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

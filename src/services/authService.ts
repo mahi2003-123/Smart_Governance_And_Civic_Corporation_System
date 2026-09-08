@@ -34,6 +34,9 @@ export const authService = {
     try {
       const res = await api.post('/auth/login', { email: cleanEmail, password: cleanPassword });
       if (res.data && res.data.user) {
+        if (res.data.token) {
+          localStorage.setItem('sgcs_auth_token', res.data.token);
+        }
         saveUserToLocalStorage(res.data.user);
         return {
           user: res.data.user,
@@ -90,49 +93,42 @@ export const authService = {
     const cleanEmail = (userData.email || '').trim().toLowerCase();
     const cleanPassword = (userData.password || '').trim();
 
-    const newLocalUser: User & { password?: string } = {
-      id: `usr_${Date.now()}`,
-      fullName: userData.fullName || 'New Resident',
-      email: userData.email || cleanEmail,
-      phone: userData.phone || '',
-      role: userData.role || 'CITIZEN',
-      ward: userData.ward || 'Ward 1 - Central Town',
-      createdAt: new Date().toISOString(),
-      password: cleanPassword,
-    };
-
     try {
       const res = await api.post('/auth/register', {
         fullName: userData.fullName,
         email: cleanEmail,
         password: cleanPassword,
-        phone: userData.phone,
-        ward: userData.ward,
+        phone: userData.phone || '',
+        ward: userData.ward || 'Ward 1 - Central Town',
         role: userData.role || 'CITIZEN',
       });
 
       if (res.data && res.data.user) {
-        const registeredUser = { ...res.data.user, password: cleanPassword };
+        const registeredUser = res.data.user;
         if (res.data.token) {
           localStorage.setItem('sgcs_auth_token', res.data.token);
         }
+        // Save current active user session
         saveUserToLocalStorage(registeredUser);
         return registeredUser;
       }
+
+      throw new Error('Backend registration failed. Server returned an invalid response.');
     } catch (err: any) {
       if (err.response) {
         if (err.response.data && err.response.data.error) {
           throw new Error(err.response.data.error);
         }
-        throw new Error('Registration failed. Please check your details.');
+        if (err.response.data && err.response.data.message) {
+          throw new Error(err.response.data.message);
+        }
+        throw new Error(`Registration failed (${err.response.status}). Please verify input details.`);
       }
-      console.warn('[authService] Backend API registration offline. Storing account locally.');
+      if (err.code === 'ERR_NETWORK' || err.message === 'Network Error') {
+        throw new Error('Unable to connect to SGCS PostgreSQL backend server at http://localhost:5000. Please ensure the backend server is running.');
+      }
+      throw err;
     }
-
-    // Save locally if offline or fallback needed
-    saveUserToLocalStorage(newLocalUser);
-    localStorage.setItem('sgcs_auth_token', `sgcs_token_${newLocalUser.id}`);
-    return newLocalUser;
   },
 
   logout: async (): Promise<void> => {

@@ -21,20 +21,14 @@ interface AssignWorkerModalProps {
   onConfirm: (workerId: string, workerName: string, priority: ComplaintPriority) => Promise<void>;
 }
 
-const DEFAULT_WORKERS = [
-  { id: 'usr_worker_01', name: 'Field Worker (Public Works Dept)' },
-  { id: 'usr_worker_02', name: 'Field Worker (Water & Drainage Dept)' },
-  { id: 'usr_worker_03', name: 'Field Worker (Electrical Maintenance)' },
-];
-
 export const AssignWorkerModal: React.FC<AssignWorkerModalProps> = ({
   open,
   complaint,
   onClose,
   onConfirm,
 }) => {
-  const [workersList, setWorkersList] = useState<{ id: string; name: string }[]>(DEFAULT_WORKERS);
-  const [selectedWorkerId, setSelectedWorkerId] = useState(DEFAULT_WORKERS[0].id);
+  const [workersList, setWorkersList] = useState<{ id: string; name: string }[]>([]);
+  const [selectedWorkerId, setSelectedWorkerId] = useState<string>('');
   const [selectedPriority, setSelectedPriority] = useState<ComplaintPriority>('MEDIUM');
   const [loading, setLoading] = useState(false);
 
@@ -42,43 +36,37 @@ export const AssignWorkerModal: React.FC<AssignWorkerModalProps> = ({
     const loadRegisteredWorkers = async () => {
       try {
         const users = await adminService.getUsers();
-        const registered = users.filter((u) => u.role === 'WORKER');
+        const registered = users.filter((u) => u.role === 'WORKER' && (u.status || 'ACTIVE') === 'ACTIVE');
         
         if (registered.length > 0) {
-          const map = new Map<string, { id: string; name: string }>();
+          const list = registered.map((w) => ({
+            id: w.id,
+            name: `${w.fullName} (${w.ward || 'Field Technician'})`,
+          }));
           
-          // Add registered workers
-          registered.forEach((w) => {
-            map.set(w.id, {
-              id: w.id,
-              name: `${w.fullName} (${w.ward || 'Field Technician'})`,
-            });
-          });
-          
-          // Fallback defaults if map is missing any
-          DEFAULT_WORKERS.forEach((dw) => {
-            if (!map.has(dw.id)) {
-              map.set(dw.id, dw);
-            }
-          });
-          
-          const combined = Array.from(map.values());
-          setWorkersList(combined);
+          setWorkersList(list);
+          setSelectedWorkerId(list[0].id);
 
           // Auto-select match if complaint has category
           if (complaint) {
             const cat = complaint.category?.toLowerCase() || '';
-            if (cat.includes('water') || cat.includes('drainage') || cat.includes('sewage')) {
-              const matched = combined.find((w) => w.name.toLowerCase().includes('suresh') || w.name.toLowerCase().includes('water'));
-              if (matched) setSelectedWorkerId(matched.id);
-            } else if (cat.includes('electric') || cat.includes('light')) {
-              const matched = combined.find((w) => w.name.toLowerCase().includes('vikas') || w.name.toLowerCase().includes('electric'));
-              if (matched) setSelectedWorkerId(matched.id);
-            }
+            const matched = list.find((w) => {
+              const nameLower = w.name.toLowerCase();
+              if ((cat.includes('water') || cat.includes('drainage') || cat.includes('sewage')) && nameLower.includes('water')) return true;
+              if ((cat.includes('electric') || cat.includes('light') || cat.includes('power')) && nameLower.includes('electric')) return true;
+              if ((cat.includes('waste') || cat.includes('sanitation') || cat.includes('garbage')) && nameLower.includes('sanitation')) return true;
+              return false;
+            });
+            if (matched) setSelectedWorkerId(matched.id);
           }
+        } else {
+          setWorkersList([]);
+          setSelectedWorkerId('');
         }
       } catch (e) {
         console.error('Failed to load registered workers:', e);
+        setWorkersList([]);
+        setSelectedWorkerId('');
       }
     };
 
@@ -90,14 +78,19 @@ export const AssignWorkerModal: React.FC<AssignWorkerModalProps> = ({
   useEffect(() => {
     if (complaint) {
       setSelectedPriority(complaint.priority || 'MEDIUM');
-      if (complaint.assignedWorkerId) {
+      if (complaint.assignedWorkerId && workersList.some((w) => w.id === complaint.assignedWorkerId)) {
         setSelectedWorkerId(complaint.assignedWorkerId);
       }
     }
-  }, [complaint]);
+  }, [complaint, workersList]);
 
   const handleConfirm = async () => {
-    const worker = workersList.find((w) => w.id === selectedWorkerId) || DEFAULT_WORKERS[0];
+    if (!selectedWorkerId) {
+      alert('Please select an active registered technician to assign.');
+      return;
+    }
+
+    const worker = workersList.find((w) => w.id === selectedWorkerId);
     if (!worker) return;
 
     setLoading(true);
@@ -164,11 +157,17 @@ export const AssignWorkerModal: React.FC<AssignWorkerModalProps> = ({
                   },
                 } as any}
               >
-                {workersList.map((w) => (
-                  <MenuItem key={w.id} value={w.id} sx={{ py: 1, fontWeight: 500, fontSize: '0.85rem' }}>
-                    {w.name}
+                {workersList.length === 0 ? (
+                  <MenuItem disabled value="">
+                    No registered technicians available
                   </MenuItem>
-                ))}
+                ) : (
+                  workersList.map((w) => (
+                    <MenuItem key={w.id} value={w.id} sx={{ py: 1, fontWeight: 500, fontSize: '0.85rem' }}>
+                      {w.name}
+                    </MenuItem>
+                  ))
+                )}
               </CustomTextField>
             </Box>
           </Box>
@@ -178,7 +177,12 @@ export const AssignWorkerModal: React.FC<AssignWorkerModalProps> = ({
         <Button onClick={onClose} sx={{ borderRadius: '8px', textTransform: 'none', color: '#68706B', fontWeight: 500 }}>
           Cancel
         </Button>
-        <CustomButton loading={loading} onClick={handleConfirm} sx={{ backgroundColor: '#496A57', '&:hover': { backgroundColor: '#304B3A' } }}>
+        <CustomButton
+          loading={loading}
+          disabled={workersList.length === 0 || !selectedWorkerId}
+          onClick={handleConfirm}
+          sx={{ backgroundColor: '#496A57', '&:hover': { backgroundColor: '#304B3A' } }}
+        >
           Confirm Triage & Assign
         </CustomButton>
       </DialogActions>

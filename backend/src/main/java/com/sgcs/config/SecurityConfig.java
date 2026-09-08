@@ -51,6 +51,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/admin/users", "/api/admin/wards").hasAnyAuthority("ADMIN", "ROLE_ADMIN", "COUNCILLOR", "ROLE_COUNCILLOR")
                 .requestMatchers("/api/admin/**").hasAnyAuthority("ADMIN", "ROLE_ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/complaints").hasAnyAuthority("CITIZEN", "ROLE_CITIZEN", "COUNCILLOR", "ROLE_COUNCILLOR", "WORKER", "ROLE_WORKER", "ADMIN", "ROLE_ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/proposals/*/vote").hasAnyAuthority("CITIZEN", "ROLE_CITIZEN", "COUNCILLOR", "ROLE_COUNCILLOR", "WORKER", "ROLE_WORKER", "ADMIN", "ROLE_ADMIN")

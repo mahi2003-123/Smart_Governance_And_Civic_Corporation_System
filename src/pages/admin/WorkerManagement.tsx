@@ -28,23 +28,32 @@ import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
-import SwapHorizOutlinedIcon from '@mui/icons-material/SwapHorizOutlined';
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import { adminService } from '../../services/adminService';
-import { User, Ward } from '../../types';
+import { User } from '../../types';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader';
 import { FilterBar, FilterOption } from '../../components/admin/FilterBar';
 import { ActionMenu, ActionMenuItem } from '../../components/admin/ActionMenu';
 import { CustomTextField } from '../../components/common/CustomTextField';
 
+export const WORKER_SPECIALIZATIONS = [
+  'Public Works Dept',
+  'Water & Drainage Dept',
+  'Electrical Maintenance',
+  'Sanitation & Waste Management',
+  'Roads & Civil Infrastructure',
+  'Public Lighting & Power',
+  'Parks & Environment',
+];
+
 export const WorkerManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [workers, setWorkers] = useState<User[]>([]);
-  const [wards, setWards] = useState<Ward[]>([]);
 
   // Filters
   const [search, setSearch] = useState('');
-  const [wardFilter, setWardFilter] = useState('ALL');
+  const [deptFilter, setDeptFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
 
   // Modal State
@@ -57,21 +66,14 @@ export const WorkerManagement: React.FC = () => {
     fullName: '',
     email: '',
     phone: '',
-    ward: 'Ward 1 - Central Town',
+    specialization: WORKER_SPECIALIZATIONS[0],
   });
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [uData, wData] = await Promise.all([
-        adminService.getUsers(),
-        adminService.getWards(),
-      ]);
+      const uData = await adminService.getUsers();
       setWorkers(uData.filter((u) => u.role === 'WORKER'));
-      setWards(wData);
-      if (wData.length > 0) {
-        setFormData((prev) => ({ ...prev, ward: `Ward ${wData[0].wardNumber} - ${wData[0].name}` }));
-      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -85,10 +87,26 @@ export const WorkerManagement: React.FC = () => {
 
   const handleToggleStatus = async (user: User) => {
     const nextStatus = user.status === 'INACTIVE' ? 'ACTIVE' : 'INACTIVE';
-    await adminService.updateUserStatus(user.id, nextStatus);
-    setWorkers((prev) =>
-      prev.map((u) => (u.id === user.id ? { ...u, status: nextStatus } : u))
-    );
+    try {
+      await adminService.updateUserStatus(user.id, nextStatus);
+      setWorkers((prev) =>
+        prev.map((u) => (u.id === user.id ? { ...u, status: nextStatus } : u))
+      );
+    } catch (err: any) {
+      alert(err.message || 'Failed to update worker status.');
+    }
+  };
+
+  const handleDeleteWorker = async (user: User) => {
+    if (!window.confirm(`Are you sure you want to permanently delete technician "${user.fullName}" (${user.email}) from the database?`)) {
+      return;
+    }
+    try {
+      await adminService.deleteUser(user.id);
+      setWorkers((prev) => prev.filter((u) => u.id !== user.id));
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete worker from database.');
+    }
   };
 
   const handleCreateWorker = async (e: React.FormEvent) => {
@@ -97,7 +115,7 @@ export const WorkerManagement: React.FC = () => {
     setModalSuccess('');
 
     if (!formData.fullName || !formData.email) {
-      setModalError('Please fill in name and email address.');
+      setModalError('Please fill in worker name and email address.');
       return;
     }
 
@@ -108,16 +126,16 @@ export const WorkerManagement: React.FC = () => {
         email: formData.email,
         phone: formData.phone,
         role: 'WORKER',
-        ward: formData.ward,
+        ward: formData.specialization, // Specialization area stored in ward column
       });
 
-      setModalSuccess(`Successfully registered Local Worker "${created.fullName}"!`);
+      setModalSuccess(`Successfully registered Technician "${created.fullName}" (${formData.specialization})!`);
       setWorkers([{ ...created, assignedTasks: 0 }, ...workers]);
       setFormData({
         fullName: '',
         email: '',
         phone: '',
-        ward: wards.length > 0 ? `Ward ${wards[0].wardNumber} - ${wards[0].name}` : 'Ward 1 - Central Town',
+        specialization: WORKER_SPECIALIZATIONS[0],
       });
 
       setTimeout(() => setOpenModal(false), 1200);
@@ -134,22 +152,22 @@ export const WorkerManagement: React.FC = () => {
       w.email.toLowerCase().includes(search.toLowerCase()) ||
       (w.ward && w.ward.toLowerCase().includes(search.toLowerCase()));
 
-    const matchesWard = wardFilter === 'ALL' || (w.ward && w.ward.includes(wardFilter));
+    const matchesDept = deptFilter === 'ALL' || (w.ward && w.ward.toLowerCase() === deptFilter.toLowerCase());
     const matchesStatus = statusFilter === 'ALL' || (w.status || 'ACTIVE') === statusFilter;
 
-    return matchesSearch && matchesWard && matchesStatus;
+    return matchesSearch && matchesDept && matchesStatus;
   });
 
   const filterOptions: FilterOption[] = [
     {
-      id: 'ward',
-      label: 'Ward',
-      value: wardFilter,
+      id: 'dept',
+      label: 'Specialization',
+      value: deptFilter,
       options: [
-        { label: 'All Wards', value: 'ALL' },
-        ...wards.map((w) => ({ label: `Ward ${w.wardNumber}`, value: `Ward ${w.wardNumber}` })),
+        { label: 'All Specializations', value: 'ALL' },
+        ...WORKER_SPECIALIZATIONS.map((spec) => ({ label: spec, value: spec })),
       ],
-      onChange: setWardFilter,
+      onChange: setDeptFilter,
     },
     {
       id: 'status',
@@ -169,9 +187,9 @@ export const WorkerManagement: React.FC = () => {
   return (
     <Box sx={{ pb: 6 }}>
       <AdminPageHeader
-        title="Local Workers"
-        description="Manage field maintenance workers and service tasks."
-        actionLabel="Add Worker"
+        title="Field Technicians & Local Workers"
+        description="Manage municipal maintenance staff, technicians, and specialized field workers."
+        actionLabel="Add Technician"
         actionIcon={<AddOutlinedIcon sx={{ fontSize: 18 }} />}
         onActionClick={() => {
           setModalError('');
@@ -183,7 +201,7 @@ export const WorkerManagement: React.FC = () => {
       <FilterBar
         searchQuery={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Search workers by name, email or ward..."
+        searchPlaceholder="Search workers by name, email or technician area..."
         filters={filterOptions}
       />
 
@@ -198,9 +216,9 @@ export const WorkerManagement: React.FC = () => {
         <Table>
           <TableHead sx={{ backgroundColor: '#F8F9F7' }}>
             <TableRow>
-              <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Name</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Technician Name</TableCell>
               <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Email</TableCell>
-              <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Assigned Ward</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Area / Specialization</TableCell>
               <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Active Tasks</TableCell>
               <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Status</TableCell>
               <TableCell align="right" sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Actions</TableCell>
@@ -210,7 +228,7 @@ export const WorkerManagement: React.FC = () => {
             {filtered.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} align="center" sx={{ py: 6, color: '#68706B' }}>
-                  No field workers found matching filter criteria.
+                  No field technicians found matching filter criteria.
                 </TableCell>
               </TableRow>
             ) : (
@@ -224,11 +242,6 @@ export const WorkerManagement: React.FC = () => {
                     onClick: () => alert(`Worker Details: ${w.fullName}`),
                   },
                   {
-                    label: 'Assign Ward',
-                    icon: <SwapHorizOutlinedIcon fontSize="small" />,
-                    onClick: () => alert(`Assign Ward for ${w.fullName}`),
-                  },
-                  {
                     label: 'Edit Details',
                     icon: <EditOutlinedIcon fontSize="small" />,
                     onClick: () => alert(`Edit Worker ${w.fullName}`),
@@ -236,8 +249,14 @@ export const WorkerManagement: React.FC = () => {
                   {
                     label: isActive ? 'Deactivate' : 'Activate',
                     icon: isActive ? <BlockOutlinedIcon fontSize="small" /> : <CheckCircleOutlinedIcon fontSize="small" />,
-                    color: isActive ? 'error' : 'primary',
+                    color: isActive ? 'warning' : 'primary',
                     onClick: () => handleToggleStatus(w),
+                  },
+                  {
+                    label: 'Delete Worker',
+                    icon: <DeleteOutlinedIcon fontSize="small" />,
+                    color: 'error',
+                    onClick: () => handleDeleteWorker(w),
                   },
                 ];
 
@@ -252,8 +271,8 @@ export const WorkerManagement: React.FC = () => {
                       </Typography>
                     </TableCell>
                     <TableCell sx={{ fontSize: '0.85rem', color: '#68706B' }}>{w.email}</TableCell>
-                    <TableCell sx={{ fontSize: '0.85rem', color: '#68706B' }}>
-                      {w.ward ? w.ward.split(' - ')[0] : 'Unassigned'}
+                    <TableCell sx={{ fontSize: '0.85rem', fontWeight: 500, color: '#304B3A' }}>
+                      {w.ward || 'General Maintenance'}
                     </TableCell>
                     <TableCell>
                       <Chip
@@ -300,11 +319,11 @@ export const WorkerManagement: React.FC = () => {
         onClose={() => setOpenModal(false)}
         maxWidth="sm"
         fullWidth
-        PaperProps={{ sx: { borderRadius: '8px', p: 1 } }}
+        slotProps={{ paper: { sx: { borderRadius: '8px', p: 1 } } }}
       >
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
           <Typography variant="h6" sx={{ fontWeight: 600, color: '#202522' }}>
-            Register Local Worker
+            Register Field Technician
           </Typography>
           <IconButton size="small" onClick={() => setOpenModal(false)}>
             <CloseOutlinedIcon fontSize="small" />
@@ -317,26 +336,24 @@ export const WorkerManagement: React.FC = () => {
 
             <Grid container spacing={2}>
               <Grid item xs={12}>
-                <FormControl fullWidth size="small">
-                  <InputLabel id="worker-ward-label">Assigned Ward</InputLabel>
-                  <Select
-                    labelId="worker-ward-label"
-                    value={formData.ward}
-                    label="Assigned Ward"
-                    onChange={(e) => setFormData({ ...formData, ward: e.target.value })}
-                  >
-                    {wards.map((w) => (
-                      <MenuItem key={w.id} value={`Ward ${w.wardNumber} - ${w.name}`}>
-                        Ward {w.wardNumber} - {w.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <CustomTextField
+                  select
+                  label="Technician Specialization / Area"
+                  value={formData.specialization}
+                  onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
+                  fullWidth
+                >
+                  {WORKER_SPECIALIZATIONS.map((spec) => (
+                    <MenuItem key={spec} value={spec}>
+                      {spec}
+                    </MenuItem>
+                  ))}
+                </CustomTextField>
               </Grid>
 
               <Grid item xs={12}>
                 <CustomTextField
-                  label="Worker Full Name"
+                  label="Technician Full Name"
                   placeholder="e.g. Suresh Kumar"
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
@@ -348,7 +365,7 @@ export const WorkerManagement: React.FC = () => {
                 <CustomTextField
                   label="Email Address"
                   type="email"
-                  placeholder="worker@sgcs.gov.in"
+                  placeholder="technician@sgcs.gov.in"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
@@ -381,7 +398,7 @@ export const WorkerManagement: React.FC = () => {
                 '&:hover': { backgroundColor: '#304B3A' },
               }}
             >
-              {modalLoading ? 'Registering...' : 'Register Worker'}
+              {modalLoading ? 'Registering...' : 'Register Technician'}
             </Button>
           </DialogActions>
         </Box>

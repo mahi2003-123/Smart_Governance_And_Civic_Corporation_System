@@ -33,6 +33,27 @@ public class AdminController {
         }
     }
 
+    @PutMapping("/users/{id}/status")
+    public ResponseEntity<?> updateUserStatus(@PathVariable String id, @RequestBody Map<String, String> body) {
+        try {
+            String status = body.getOrDefault("status", "INACTIVE");
+            User updated = adminService.updateUserStatus(id, status);
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable String id) {
+        try {
+            adminService.deleteUser(id);
+            return ResponseEntity.ok(Map.of("message", "Single user successfully deleted from PostgreSQL database.", "id", id));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @GetMapping("/wards")
     public ResponseEntity<List<Ward>> getAllWards() {
         return ResponseEntity.ok(adminService.getAllWards());

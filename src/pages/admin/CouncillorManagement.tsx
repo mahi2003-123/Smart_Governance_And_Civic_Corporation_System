@@ -28,6 +28,7 @@ import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import SwapHorizOutlinedIcon from '@mui/icons-material/SwapHorizOutlined';
 import { adminService } from '../../services/adminService';
 import { User, Ward } from '../../types';
@@ -87,10 +88,30 @@ export const CouncillorManagement: React.FC = () => {
 
   const handleToggleStatus = async (user: User) => {
     const nextStatus = user.status === 'INACTIVE' ? 'ACTIVE' : 'INACTIVE';
-    await adminService.updateUserStatus(user.id, nextStatus);
-    setCouncillors((prev) =>
-      prev.map((u) => (u.id === user.id ? { ...u, status: nextStatus } : u))
-    );
+    try {
+      await adminService.updateUserStatus(user.id, nextStatus);
+      setCouncillors((prev) =>
+        prev.map((u) => (u.id === user.id ? { ...u, status: nextStatus } : u))
+      );
+      setAllUsers((prev) =>
+        prev.map((u) => (u.id === user.id ? { ...u, status: nextStatus } : u))
+      );
+    } catch (err: any) {
+      alert(err.message || 'Failed to update councillor status.');
+    }
+  };
+
+  const handleDeleteUser = async (user: User) => {
+    if (!window.confirm(`Are you sure you want to permanently delete councillor "${user.fullName}" (${user.email}) from the database?`)) {
+      return;
+    }
+    try {
+      await adminService.deleteUser(user.id);
+      setCouncillors((prev) => prev.filter((u) => u.id !== user.id));
+      setAllUsers((prev) => prev.filter((u) => u.id !== user.id));
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete councillor from database.');
+    }
   };
 
   const handleCreateCouncillor = async (e: React.FormEvent) => {
@@ -104,13 +125,18 @@ export const CouncillorManagement: React.FC = () => {
     }
 
     // Check 1 Councillor per ward constraint
+    const targetWardNum = formData.ward.split('-')[0].trim().toLowerCase();
     const existing = allUsers.find(
-      (u) => u.role === 'COUNCILLOR' && u.ward?.toLowerCase() === formData.ward.toLowerCase()
+      (u) =>
+        u.role === 'COUNCILLOR' &&
+        u.ward &&
+        (u.ward.toLowerCase() === formData.ward.toLowerCase() ||
+         u.ward.toLowerCase().includes(targetWardNum))
     );
 
     if (existing) {
       setModalError(
-        `Ward "${formData.ward}" already has an assigned Councillor (${existing.fullName} - ${existing.email}). Only 1 Councillor permitted per ward.`
+        `Ward "${formData.ward}" already has an assigned Councillor (${existing.fullName} - ${existing.email}). Only 1 Councillor is permitted per municipal ward.`
       );
       return;
     }

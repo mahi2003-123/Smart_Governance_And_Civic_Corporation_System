@@ -47,17 +47,21 @@ public class AdminService {
             throw new RuntimeException("User email already exists in database.");
         }
 
-        // Enforce 1 Councillor per ward constraint
-        if ("COUNCILLOR".equalsIgnoreCase(user.getRole()) && user.getWard() != null && !user.getWard().equals("All Wards")) {
-            Optional<User> existingC = userRepository.findByRoleAndWardIgnoreCase("COUNCILLOR", user.getWard());
-            if (existingC.isPresent()) {
-                User c = existingC.get();
-                throw new RuntimeException("Ward \"" + user.getWard() + "\" already has an assigned Councillor (" + c.getFullName() + " - " + c.getEmail() + "). Only 1 Councillor is permitted per ward.");
+        // Enforce strict 1 Councillor per ward constraint
+        if ("COUNCILLOR".equalsIgnoreCase(user.getRole()) && user.getWard() != null && !user.getWard().equalsIgnoreCase("All Wards")) {
+            String targetWard = user.getWard().trim();
+            List<User> allCouncillors = userRepository.findByRoleIgnoreCase("COUNCILLOR");
+            
+            for (User c : allCouncillors) {
+                if (c.getWard() != null && isSameWard(c.getWard(), targetWard)) {
+                    throw new RuntimeException("Ward \"" + targetWard + "\" already has an assigned Ward Councillor (" + c.getFullName() + " - " + c.getEmail() + "). Only 1 Councillor is permitted per municipal ward.");
+                }
             }
         }
 
         user.setId("usr_" + System.currentTimeMillis());
         user.setEmail(email);
+        user.setStatus("ACTIVE");
         user.setCreatedAt(LocalDateTime.now());
         
         String rawPassword = (user.getPassword() != null && !user.getPassword().trim().isEmpty()) 
@@ -79,6 +83,57 @@ public class AdminService {
         }
 
         return saved;
+    }
+
+    public User updateUserStatus(String userId, String status) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            user.setStatus(status);
+            return userRepository.save(user);
+        } else {
+            throw new RuntimeException("User not found with ID: " + userId);
+        }
+    }
+
+    public void deleteUser(String userId) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+
+            // Clear ward assignment ONLY if the ward's councillor matches this exact user
+            if ("COUNCILLOR".equalsIgnoreCase(user.getRole()) && user.getWard() != null) {
+                List<Ward> wards = wardRepository.findAll();
+                for (Ward w : wards) {
+                    if (w.getCouncillorEmail() != null && w.getCouncillorEmail().equalsIgnoreCase(user.getEmail())) {
+                        w.setCouncillorName("Unassigned");
+                        w.setCouncillorEmail("");
+                        wardRepository.save(w);
+                    }
+                }
+            }
+
+            // Strictly delete ONLY the targeted single user by primary key ID
+            userRepository.deleteById(userId);
+        } else {
+            throw new RuntimeException("User not found with ID: " + userId);
+        }
+    }
+
+    private boolean isSameWard(String wardA, String wardB) {
+        if (wardA == null || wardB == null) return false;
+        String a = wardA.trim().toLowerCase();
+        String b = wardB.trim().toLowerCase();
+        if (a.equals(b)) return true;
+
+        if (a.contains("ward ") && b.contains("ward ")) {
+            String numA = a.substring(a.indexOf("ward ") + 5).split(" ")[0].split("-")[0].trim();
+            String numB = b.substring(b.indexOf("ward ") + 5).split(" ")[0].split("-")[0].trim();
+            if (!numA.isEmpty() && numA.equals(numB)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public List<Ward> getAllWards() {

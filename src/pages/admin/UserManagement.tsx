@@ -28,6 +28,7 @@ import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import { adminService } from '../../services/adminService';
 import { User, UserRole, Ward } from '../../types';
 import { ROLE_LABELS } from '../../utils/constants';
@@ -88,10 +89,26 @@ export const UserManagement: React.FC = () => {
 
   const handleToggleStatus = async (user: User) => {
     const nextStatus = user.status === 'INACTIVE' ? 'ACTIVE' : 'INACTIVE';
-    await adminService.updateUserStatus(user.id, nextStatus);
-    setUsers((prev) =>
-      prev.map((u) => (u.id === user.id ? { ...u, status: nextStatus } : u))
-    );
+    try {
+      await adminService.updateUserStatus(user.id, nextStatus);
+      setUsers((prev) =>
+        prev.map((u) => (u.id === user.id ? { ...u, status: nextStatus } : u))
+      );
+    } catch (err: any) {
+      alert(err.message || 'Failed to update user status.');
+    }
+  };
+
+  const handleDeleteUser = async (user: User) => {
+    if (!window.confirm(`Are you sure you want to permanently delete user "${user.fullName}" (${user.email}) from the database?`)) {
+      return;
+    }
+    try {
+      await adminService.deleteUser(user.id);
+      setUsers((prev) => prev.filter((u) => u.id !== user.id));
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete user from database.');
+    }
   };
 
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -105,12 +122,17 @@ export const UserManagement: React.FC = () => {
     }
 
     if (formData.role === 'COUNCILLOR' && formData.ward && formData.ward !== 'All Wards') {
+      const targetWardNum = formData.ward.split('-')[0].trim().toLowerCase();
       const existingCouncillor = users.find(
-        (u) => u.role === 'COUNCILLOR' && u.ward?.toLowerCase() === formData.ward.toLowerCase()
+        (u) =>
+          u.role === 'COUNCILLOR' &&
+          u.ward &&
+          (u.ward.toLowerCase() === formData.ward.toLowerCase() ||
+           u.ward.toLowerCase().includes(targetWardNum))
       );
       if (existingCouncillor) {
         setModalError(
-          `Ward "${formData.ward}" already has an assigned Councillor (${existingCouncillor.fullName} - ${existingCouncillor.email}). Only 1 Councillor permitted per ward.`
+          `Ward "${formData.ward}" already has an assigned Ward Councillor (${existingCouncillor.fullName} - ${existingCouncillor.email}). Only 1 Councillor is permitted per municipal ward.`
         );
         return;
       }
@@ -269,8 +291,14 @@ export const UserManagement: React.FC = () => {
                   {
                     label: isActive ? 'Deactivate User' : 'Activate User',
                     icon: isActive ? <BlockOutlinedIcon fontSize="small" /> : <CheckCircleOutlinedIcon fontSize="small" />,
-                    color: isActive ? 'error' : 'primary',
+                    color: isActive ? 'warning' : 'primary',
                     onClick: () => handleToggleStatus(user),
+                  },
+                  {
+                    label: 'Delete User',
+                    icon: <DeleteOutlinedIcon fontSize="small" />,
+                    color: 'error',
+                    onClick: () => handleDeleteUser(user),
                   },
                 ];
 
@@ -387,22 +415,46 @@ export const UserManagement: React.FC = () => {
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <FormControl fullWidth size="small">
-                  <InputLabel id="ward-select-label">Ward Jurisdiction</InputLabel>
-                  <Select
-                    labelId="ward-select-label"
+                {formData.role === 'WORKER' ? (
+                  <CustomTextField
+                    select
+                    label="Technician Specialization"
                     value={formData.ward}
-                    label="Ward Jurisdiction"
                     onChange={(e) => setFormData({ ...formData, ward: e.target.value })}
+                    fullWidth
                   >
-                    {wards.map((w) => (
-                      <MenuItem key={w.id} value={`Ward ${w.wardNumber} - ${w.name}`}>
-                        Ward {w.wardNumber} - {w.name}
+                    {[
+                      'Public Works Dept',
+                      'Water & Drainage Dept',
+                      'Electrical Maintenance',
+                      'Sanitation & Waste Management',
+                      'Roads & Civil Infrastructure',
+                      'Public Lighting & Power',
+                      'Parks & Environment',
+                    ].map((spec) => (
+                      <MenuItem key={spec} value={spec}>
+                        {spec}
                       </MenuItem>
                     ))}
-                    <MenuItem value="System Wide">System Wide</MenuItem>
-                  </Select>
-                </FormControl>
+                  </CustomTextField>
+                ) : (
+                  <FormControl fullWidth size="small">
+                    <InputLabel id="ward-select-label">Ward Jurisdiction</InputLabel>
+                    <Select
+                      labelId="ward-select-label"
+                      value={formData.ward}
+                      label="Ward Jurisdiction"
+                      onChange={(e) => setFormData({ ...formData, ward: e.target.value })}
+                    >
+                      {wards.map((w) => (
+                        <MenuItem key={w.id} value={`Ward ${w.wardNumber} - ${w.name}`}>
+                          Ward {w.wardNumber} - {w.name}
+                        </MenuItem>
+                      ))}
+                      <MenuItem value="System Wide">System Wide</MenuItem>
+                    </Select>
+                  </FormControl>
+                )}
               </Grid>
 
               <Grid item xs={12}>
