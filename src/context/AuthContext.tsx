@@ -5,7 +5,7 @@ import { authService } from '../services/authService';
 export const SUPER_ADMIN_USER: User = {
   id: 'usr_super_admin',
   fullName: 'Super Admin',
-  email: 'admin@gnail.com',
+  email: 'admin@gmail.com',
   phone: '+91 99000 11223',
   role: 'ADMIN',
   ward: 'All Wards',

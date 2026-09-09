@@ -390,19 +390,11 @@ export const CitizenDashboard: React.FC = () => {
           {/* Municipal Emergency Line */}
           <Box sx={{ mt: 4, pt: 3, borderTop: '1px solid #E5E8E4', backgroundColor: '#F8F9F7', p: 2.5, borderRadius: '8px' }}>
             <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#202522', mb: 0.5 }}>
-              Municipal Support Line
+              SGCS Public Governance System
             </Typography>
             <Typography variant="caption" sx={{ color: '#68706B', display: 'block', mb: 1.5 }}>
-              24/7 Helpline: 1800-11-2024 for urgent public emergencies.
+              Smart Governance & Civic Corporation Academic Platform. All rights reserved.
             </Typography>
-            <Button
-              size="small"
-              variant="outlined"
-              onClick={() => alert('Dialing Helpline: 1800-11-2024')}
-              sx={{ borderColor: '#E5E8E4', color: '#202522', textTransform: 'none', fontSize: '0.8rem' }}
-            >
-              Call 1800-11-2024
-            </Button>
           </Box>
         </Box>
       </Box>

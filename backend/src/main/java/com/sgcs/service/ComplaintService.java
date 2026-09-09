@@ -23,7 +23,7 @@ public class ComplaintService {
     }
 
     public Optional<Complaint> getComplaintById(String id) {
-        return complaintRepository.findById(id);
+        return complaintRepository.findByIdOrTrackingNumber(id, id);
     }
 
     public List<Complaint> getComplaintsByCitizen(String citizenId) {

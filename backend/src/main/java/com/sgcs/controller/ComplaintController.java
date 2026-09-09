@@ -86,17 +86,10 @@ public class ComplaintController {
         Complaint complaint = opt.get();
         String role = principal.getRole();
 
-        if ("CITIZEN".equalsIgnoreCase(role) && !principal.getId().equals(complaint.getCitizenId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "Access denied: You can only view your own complaints"));
-        }
-
-        if (("COUNCILLOR".equalsIgnoreCase(role) || "WORKER".equalsIgnoreCase(role)) && !"ADMIN".equalsIgnoreCase(role)) {
-            boolean isAssigned = principal.getId().equals(complaint.getAssignedWorkerId());
-            boolean isSameWard = principal.getWard() != null && principal.getWard().equalsIgnoreCase(complaint.getWard());
-            if (!isAssigned && !isSameWard) {
+        if ("CITIZEN".equalsIgnoreCase(role)) {
+            if (!principal.getId().equals(complaint.getCitizenId()) && !id.equalsIgnoreCase(complaint.getTrackingNumber())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Map.of("error", "Access denied: Complaint outside your assigned ward or duties"));
+                        .body(Map.of("error", "Access denied: You can only view your own complaints"));
             }
         }
 

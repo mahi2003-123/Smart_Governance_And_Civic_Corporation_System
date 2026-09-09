@@ -18,6 +18,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined';
 import VerifiedUserOutlinedIcon from '@mui/icons-material/VerifiedUserOutlined';
 import AccountBalanceOutlinedIcon from '@mui/icons-material/AccountBalanceOutlined';
+import AddIcon from '@mui/icons-material/Add';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -60,39 +61,32 @@ export const Login: React.FC = () => {
     }
   };
 
-  const handleFillRole = (roleEmail: string, rolePass: string) => {
-    setEmail(roleEmail);
-    setPassword(rolePass);
-    setError('');
-  };
-
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#FFFDFB', display: 'flex', flexDirection: 'column', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       {/* Top Header */}
-      <Box sx={{ borderBottom: '1px solid #E5E8E4', py: 2, px: { xs: 2, md: 6 }, backgroundColor: '#FFFFFF' }}>
+      <Box sx={{ borderBottom: '1px solid #E2E8F0', py: 2, px: { xs: 2, md: 6 }, backgroundColor: '#FFFFFF' }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1280, mx: 'auto', width: '100%' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer' }} onClick={() => navigate('/')}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, cursor: 'pointer' }} onClick={() => navigate('/')}>
             <Box
               sx={{
                 width: 32,
                 height: 32,
-                borderRadius: '6px',
-                backgroundColor: '#496A57',
+                borderRadius: '9px',
+                background: 'linear-gradient(135deg, #FF9A52 0%, #FF7A30 100%)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: '#FFFFFF',
-                fontWeight: 700,
-                fontSize: '0.85rem',
+                boxShadow: '0 4px 12px rgba(255, 140, 56, 0.32)',
               }}
             >
-              SG
+              <AddIcon sx={{ fontSize: 22, fontWeight: 900 }} />
             </Box>
             <Box>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#202522', lineHeight: 1.1 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 900, color: '#1E1B4B', lineHeight: 1.1 }}>
                 SGCS Civic Portal
               </Typography>
-              <Typography variant="caption" sx={{ color: '#68706B', fontSize: '0.75rem', fontWeight: 500 }}>
+              <Typography variant="caption" sx={{ color: '#64748B', fontSize: '0.75rem', fontWeight: 500 }}>
                 Smart Governance & Civic Corporation System
               </Typography>
             </Box>
@@ -101,7 +95,7 @@ export const Login: React.FC = () => {
           <Button
             startIcon={<ArrowBackOutlinedIcon sx={{ fontSize: 16 }} />}
             onClick={() => navigate('/')}
-            sx={{ color: '#68706B', fontWeight: 600, textTransform: 'none', '&:hover': { color: '#202522' } }}
+            sx={{ color: '#64748B', fontWeight: 600, textTransform: 'none', '&:hover': { color: '#1E1B4B' } }}
           >
             Back to Home
           </Button>
@@ -115,8 +109,8 @@ export const Login: React.FC = () => {
         <Box
           sx={{
             flex: { md: 1 },
-            backgroundColor: '#F8F9F7',
-            borderRight: { md: '1px solid #E5E8E4' },
+            backgroundColor: '#FFF8F2',
+            borderRight: { md: '1px solid #FFE6D5' },
             p: { xs: 4, md: 7 },
             display: 'flex',
             flexDirection: 'column',
@@ -124,42 +118,42 @@ export const Login: React.FC = () => {
           }}
         >
           <Box sx={{ maxWidth: 460 }}>
-            <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, px: 1.5, py: 0.5, borderRadius: '4px', backgroundColor: '#E8EFE9', color: '#496A57', mb: 3 }}>
+            <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, px: 1.8, py: 0.6, borderRadius: '20px', backgroundColor: '#FFE6D5', color: '#FF8C38', mb: 3 }}>
               <AccountBalanceOutlinedIcon sx={{ fontSize: 16 }} />
-              <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                Municipal Public Digital Service
+              <Typography variant="caption" sx={{ fontWeight: 700 }}>
+                Municipal Digital Platform
               </Typography>
             </Box>
 
-            <Typography variant="h2" component="h1" sx={{ fontWeight: 700, color: '#202522', mb: 2, letterSpacing: '-0.015em' }}>
+            <Typography variant="h2" component="h1" sx={{ fontWeight: 900, color: '#1E1B4B', mb: 2, letterSpacing: '-0.025em' }}>
               Public governance designed for human clarity.
             </Typography>
 
-            <Typography variant="body1" sx={{ color: '#68706B', mb: 4, lineHeight: 1.65 }}>
+            <Typography variant="body1" sx={{ color: '#64748B', mb: 4, lineHeight: 1.65 }}>
               A unified civic platform enabling citizens, ward councillors, and municipal field teams to report, triage, and resolve local infrastructure grievances.
             </Typography>
 
-            <Box sx={{ pt: 3, borderTop: '1px solid #E5E8E4' }}>
+            <Box sx={{ pt: 3, borderTop: '1px solid #FFE6D5' }}>
               <Stack spacing={2}>
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-                  <VerifiedUserOutlinedIcon sx={{ color: '#496A57', fontSize: 18, mt: 0.3 }} />
+                  <VerifiedUserOutlinedIcon sx={{ color: '#FF8C38', fontSize: 18, mt: 0.3 }} />
                   <Box>
-                    <Typography variant="subtitle2" sx={{ color: '#202522', fontWeight: 600 }}>
+                    <Typography variant="subtitle2" sx={{ color: '#1E1B4B', fontWeight: 700 }}>
                       Direct Ward Jurisdiction Routing
                     </Typography>
-                    <Typography variant="caption" sx={{ color: '#68706B' }}>
+                    <Typography variant="caption" sx={{ color: '#64748B' }}>
                       Complaints automatically reach your assigned municipal ward councillor.
                     </Typography>
                   </Box>
                 </Box>
 
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-                  <VerifiedUserOutlinedIcon sx={{ color: '#496A57', fontSize: 18, mt: 0.3 }} />
+                  <VerifiedUserOutlinedIcon sx={{ color: '#FF8C38', fontSize: 18, mt: 0.3 }} />
                   <Box>
-                    <Typography variant="subtitle2" sx={{ color: '#202522', fontWeight: 600 }}>
+                    <Typography variant="subtitle2" sx={{ color: '#1E1B4B', fontWeight: 700 }}>
                       Transparent Resolution Timelines
                     </Typography>
-                    <Typography variant="caption" sx={{ color: '#68706B' }}>
+                    <Typography variant="caption" sx={{ color: '#64748B' }}>
                       Track worker assignments, status updates, and repair evidence in real time.
                     </Typography>
                   </Box>
@@ -184,11 +178,11 @@ export const Login: React.FC = () => {
             
             {/* If user is already authenticated */}
             {isAuthenticated && user && (
-              <Box sx={{ mb: 3, p: 2.5, borderRadius: '6px', border: '1px solid #496A57', backgroundColor: '#E8EFE9' }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#304B3A', mb: 0.5 }}>
+              <Box sx={{ mb: 3, p: 2.5, borderRadius: '16px', border: '1px solid #FFE6D5', backgroundColor: '#FFF8F2' }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#FF8C38', mb: 0.5 }}>
                   Currently Logged In Session
                 </Typography>
-                <Typography variant="body2" sx={{ color: '#202522', mb: 2 }}>
+                <Typography variant="body2" sx={{ color: '#1E1B4B', mb: 2 }}>
                   Signed in as <strong>{user.fullName}</strong> ({user.role})
                 </Typography>
                 <Stack direction="row" spacing={1.5}>
@@ -196,7 +190,11 @@ export const Login: React.FC = () => {
                     size="small"
                     variant="contained"
                     onClick={() => navigate(getDashboardPath(user.role))}
-                    sx={{ backgroundColor: '#496A57', color: '#FFFFFF', textTransform: 'none', '&:hover': { backgroundColor: '#304B3A' } }}
+                    sx={{
+                      background: 'linear-gradient(135deg, #FF9A52 0%, #FF7A30 100%)',
+                      color: '#FFFFFF',
+                      textTransform: 'none',
+                    }}
                   >
                     Go to Dashboard
                   </Button>
@@ -204,7 +202,7 @@ export const Login: React.FC = () => {
                     size="small"
                     variant="outlined"
                     onClick={() => logout()}
-                    sx={{ borderColor: '#496A57', color: '#496A57', textTransform: 'none', '&:hover': { backgroundColor: '#FFFFFF' } }}
+                    sx={{ borderColor: '#FF8C38', color: '#FF8C38', textTransform: 'none' }}
                   >
                     Sign Out & Switch User
                   </Button>
@@ -213,16 +211,16 @@ export const Login: React.FC = () => {
             )}
 
             <Box sx={{ mb: 3.5 }}>
-              <Typography variant="h3" sx={{ fontWeight: 700, color: '#202522', mb: 0.5 }}>
+              <Typography variant="h3" sx={{ fontWeight: 900, color: '#1E1B4B', mb: 0.5 }}>
                 Portal Sign In
               </Typography>
-              <Typography variant="body2" sx={{ color: '#68706B' }}>
+              <Typography variant="body2" sx={{ color: '#64748B' }}>
                 Enter your credentials to access your civic account
               </Typography>
             </Box>
 
             {error && (
-              <Alert severity="error" onClose={() => setError('')} sx={{ mb: 3, borderRadius: '6px', fontSize: '0.85rem' }}>
+              <Alert severity="error" onClose={() => setError('')} sx={{ mb: 3, borderRadius: '12px', fontSize: '0.85rem' }}>
                 {error}
               </Alert>
             )}
@@ -240,7 +238,7 @@ export const Login: React.FC = () => {
                     required
                     startAdornment={
                       <InputAdornment position="start">
-                        <EmailOutlinedIcon sx={{ color: '#68706B', fontSize: 18 }} />
+                        <EmailOutlinedIcon sx={{ color: '#64748B', fontSize: 18 }} />
                       </InputAdornment>
                     }
                   />
@@ -258,12 +256,12 @@ export const Login: React.FC = () => {
                     required
                     startAdornment={
                       <InputAdornment position="start">
-                        <LockOutlinedIcon sx={{ color: '#68706B', fontSize: 18 }} />
+                        <LockOutlinedIcon sx={{ color: '#64748B', fontSize: 18 }} />
                       </InputAdornment>
                     }
                     endAdornment={
                       <InputAdornment position="end">
-                        <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" size="small" sx={{ color: '#68706B' }}>
+                        <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" size="small" sx={{ color: '#64748B' }}>
                           {showPassword ? <VisibilityOffOutlinedIcon sx={{ fontSize: 18 }} /> : <VisibilityOutlinedIcon sx={{ fontSize: 18 }} />}
                         </IconButton>
                       </InputAdornment>
@@ -277,13 +275,17 @@ export const Login: React.FC = () => {
                   variant="contained"
                   fullWidth
                   sx={{
-                    py: 1.2,
-                    borderRadius: '6px',
-                    backgroundColor: '#496A57',
+                    py: 1.4,
+                    borderRadius: '50px',
+                    background: 'linear-gradient(135deg, #FF9A52 0%, #FF7A30 100%)',
                     color: '#FFFFFF',
                     fontWeight: 700,
-                    fontSize: '0.9rem',
-                    '&:hover': { backgroundColor: '#304B3A' },
+                    fontSize: '0.95rem',
+                    boxShadow: '0 6px 18px rgba(255, 140, 56, 0.35)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #F8883B 0%, #EB6A20 100%)',
+                      boxShadow: '0 8px 22px rgba(255, 140, 56, 0.45)',
+                    },
                   }}
                 >
                   {loading ? 'Authenticating...' : 'Sign In to Account'}
@@ -291,51 +293,10 @@ export const Login: React.FC = () => {
               </Stack>
             </Box>
 
-            {/* Quick Fill Box */}
-            <Box sx={{ mt: 3.5, pt: 2.5, borderTop: '1px solid #E5E8E4', backgroundColor: '#F8F9F7', p: 2, borderRadius: '6px' }}>
-              <Typography variant="caption" sx={{ color: '#202522', fontWeight: 600, display: 'block', mb: 1.5 }}>
-                DEMO LOGIN CREDENTIALS
-              </Typography>
-              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => handleFillRole('admin@gnail.com', 'admin12345')}
-                  sx={{ justifyContent: 'center', color: '#202522', borderColor: '#E5E8E4', textTransform: 'none', fontSize: '0.775rem' }}
-                >
-                  Super Admin
-                </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => handleFillRole('rajesh_ward4@sgcs.gov.in', 'password123')}
-                  sx={{ justifyContent: 'center', color: '#202522', borderColor: '#E5E8E4', textTransform: 'none', fontSize: '0.775rem' }}
-                >
-                  Councillor
-                </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => handleFillRole('ramesh_worker@sgcs.gov.in', 'password123')}
-                  sx={{ justifyContent: 'center', color: '#202522', borderColor: '#E5E8E4', textTransform: 'none', fontSize: '0.775rem' }}
-                >
-                  Field Worker
-                </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => handleFillRole('citizen@example.com', 'password123')}
-                  sx={{ justifyContent: 'center', color: '#202522', borderColor: '#E5E8E4', textTransform: 'none', fontSize: '0.775rem' }}
-                >
-                  Citizen
-                </Button>
-              </Box>
-            </Box>
-
-            <Box sx={{ mt: 3, textAlign: 'center' }}>
-              <Typography variant="body2" sx={{ color: '#68706B' }}>
+            <Box sx={{ mt: 4, textAlign: 'center' }}>
+              <Typography variant="body2" sx={{ color: '#64748B' }}>
                 First-time citizen?{' '}
-                <Link to="/register" style={{ color: '#496A57', fontWeight: 600 }}>
+                <Link to="/register" style={{ color: '#FF8C38', fontWeight: 700, textDecoration: 'none' }}>
                   Register Citizen Account
                 </Link>
               </Typography>
@@ -345,9 +306,9 @@ export const Login: React.FC = () => {
       </Box>
 
       {/* Footer */}
-      <Box sx={{ py: 2, borderTop: '1px solid #E5E8E4', backgroundColor: '#FFFFFF', textAlign: 'center' }}>
-        <Typography variant="caption" sx={{ color: '#68706B' }}>
-          Toll-Free Municipal Helpline: 1800-11-2024 • Smart Governance & Civic Corporation System
+      <Box sx={{ py: 2, borderTop: '1px solid #E2E8F0', backgroundColor: '#FFFFFF', textAlign: 'center' }}>
+        <Typography variant="caption" sx={{ color: '#64748B' }}>
+          Smart Governance & Civic Corporation System (SGCS) Platform
         </Typography>
       </Box>
     </Box>

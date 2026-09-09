@@ -6,9 +6,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ComplaintRepository extends JpaRepository<Complaint, String> {
+    Optional<Complaint> findByIdOrTrackingNumber(String id, String trackingNumber);
     List<Complaint> findAllByOrderByCreatedAtDesc();
     List<Complaint> findByCitizenIdOrderByCreatedAtDesc(String citizenId);
     List<Complaint> findByWardOrderByCreatedAtDesc(String ward);

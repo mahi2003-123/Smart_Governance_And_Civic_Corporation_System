@@ -44,7 +44,9 @@ export const complaintService = {
           ...item,
           images: Array.isArray(item.images)
             ? item.images
-            : (item.images ? item.images.split(',') : [])
+            : (item.images ? item.images.split(',') : []),
+          comments: Array.isArray(item.comments) ? item.comments : [],
+          timeline: Array.isArray(item.timeline) ? item.timeline : [],
         }));
       }
     } catch (err) {
@@ -59,6 +61,13 @@ export const complaintService = {
       const missingFromApi = complaintsMemory.filter((c) => !apiIds.has(c.id));
       resultList = [...missingFromApi, ...resultList];
     }
+
+    resultList = resultList.map(c => ({
+      ...c,
+      images: Array.isArray(c.images) ? c.images : (c.images ? String(c.images).split(',') : []),
+      comments: Array.isArray(c.comments) ? c.comments : [],
+      timeline: Array.isArray(c.timeline) ? c.timeline : [],
+    }));
 
     if (filters) {
       if (filters.status) {
@@ -99,14 +108,23 @@ export const complaintService = {
           ...res.data,
           images: Array.isArray(res.data.images)
             ? res.data.images
-            : (res.data.images ? res.data.images.split(',') : [])
+            : (res.data.images ? res.data.images.split(',') : []),
+          comments: Array.isArray(res.data.comments) ? res.data.comments : [],
+          timeline: Array.isArray(res.data.timeline) ? res.data.timeline : [],
         };
       }
     } catch (err) {
       // Fallback to local memory
     }
 
-    return complaintsMemory.find((c) => c.id === id || c.trackingNumber === id) || null;
+    const found = complaintsMemory.find((c) => c.id === id || c.trackingNumber === id);
+    if (!found) return null;
+    return {
+      ...found,
+      images: Array.isArray(found.images) ? found.images : (found.images ? String(found.images).split(',') : []),
+      comments: Array.isArray(found.comments) ? found.comments : [],
+      timeline: Array.isArray(found.timeline) ? found.timeline : [],
+    };
   },
 
   createComplaint: async (payload: {

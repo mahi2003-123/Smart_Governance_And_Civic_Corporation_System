@@ -307,10 +307,10 @@ export const SidebarContent: React.FC<{ onItemClick?: () => void }> = ({ onItemC
       {/* Footer Info */}
       <Box sx={{ p: 2.5, borderTop: '1px solid #E2E6EA', textAlign: 'left' }}>
         <Typography variant="caption" sx={{ color: '#5A6672', fontSize: '0.725rem', display: 'block', fontWeight: 500 }}>
-          Municipal Helpline: 1800-11-2024
+          SGCS Civic Corporation Portal
         </Typography>
         <Typography variant="caption" sx={{ color: '#8E9691', fontSize: '0.7rem', display: 'block', mt: 0.3 }}>
-          © {new Date().getFullYear()} State Civic Services
+          © {new Date().getFullYear()} Academic Platform
         </Typography>
       </Box>
     </Box>

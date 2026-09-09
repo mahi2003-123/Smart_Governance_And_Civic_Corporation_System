@@ -1,31 +1,92 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Box,
-  Container,
   Typography,
   Button,
-  Chip,
   Paper,
   Stack,
-  Divider,
+  IconButton,
+  Drawer,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemButton,
+  InputBase,
 } from '@mui/material';
-import ArrowForwardOutlinedIcon from '@mui/icons-material/ArrowForwardOutlined';
-import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
+import MenuIcon from '@mui/icons-material/Menu';
+import CloseIcon from '@mui/icons-material/Close';
+import SearchIcon from '@mui/icons-material/Search';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+
+// Lucide / Feather Style Minimalist Thin Line Icons (1.5px stroke aesthetic)
 import AccountBalanceOutlinedIcon from '@mui/icons-material/AccountBalanceOutlined';
+import GppGoodOutlinedIcon from '@mui/icons-material/GppGoodOutlined';
+import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
+import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
+import ParkOutlinedIcon from '@mui/icons-material/ParkOutlined';
 import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined';
-import TrackChangesOutlinedIcon from '@mui/icons-material/TrackChangesOutlined';
 import HowToVoteOutlinedIcon from '@mui/icons-material/HowToVoteOutlined';
+import EngineeringOutlinedIcon from '@mui/icons-material/EngineeringOutlined';
 import CampaignOutlinedIcon from '@mui/icons-material/CampaignOutlined';
-import ConstructionOutlinedIcon from '@mui/icons-material/ConstructionOutlined';
-import CivicEditorialHeroVisual from '../components/landing/Civic3DHero';
+
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+
+// SGCS Brand Palette Tokens (as specified)
+const BRAND_GREEN = '#1F4D3A'; // Primary Dark Forest Green accent
+const BRAND_GREEN_HOVER = '#16382A';
+const BRAND_GREEN_LIGHT = '#E8F3EE'; // Soft light green for badges
+const BRAND_GREEN_BORDER = '#C3E0D2';
+const BRAND_ORANGE = '#E67E22'; // Soft orange secondary accent
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [searchActive, setSearchActive] = useState(false);
+
+  const scrollToSection = (id: string) => {
+    setMobileDrawerOpen(false);
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const fadeInUp = {
+    hidden: { opacity: 0, y: 25 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
+    },
+  };
+
+  const cardContainerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.12, delayChildren: 0.05 },
+    },
+  };
+
+  const singleCardVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] },
+    },
+  };
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#FFFFFF', color: '#202522', fontFamily: '"Inter", sans-serif' }}>
-      
+    <Box
+      sx={{
+        minHeight: '100vh',
+        backgroundColor: '#FBFDFB',
+        color: '#1C2A24',
+        fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+        overflowX: 'hidden',
+        width: '100%',
+      }}
+    >
       {/* 1. HEADER */}
       <Box
         component="header"
@@ -33,655 +94,751 @@ export const LandingPage: React.FC = () => {
           position: 'sticky',
           top: 0,
           zIndex: 1100,
-          backgroundColor: '#FFFFFF',
-          borderBottom: '1px solid #E5E8E4',
-          py: 2,
+          backgroundColor: 'rgba(255, 255, 255, 0.96)',
+          backdropFilter: 'blur(14px)',
+          borderBottom: '1px solid #E2EAF0',
+          py: 1.8,
+          width: '100%',
         }}
       >
-        <Container maxWidth="lg">
+        <Box sx={{ px: { xs: 2.5, sm: 4, md: 6, lg: 8 }, width: '100%', boxSizing: 'border-box' }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            {/* Left: SGCS Identity / Logo */}
+            {/* Left: Square logo icon in dark green + SGCS title + subtitle */}
             <Box
               sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer' }}
               onClick={() => navigate('/')}
             >
               <Box
                 sx={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: '6px',
-                  backgroundColor: '#496A57',
+                  width: 42,
+                  height: 42,
+                  borderRadius: '10px',
+                  backgroundColor: BRAND_GREEN,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#FFFFFF',
+                  boxShadow: '0 4px 12px rgba(31, 77, 58, 0.25)',
+                }}
+              >
+                <AccountBalanceOutlinedIcon sx={{ fontSize: 24 }} />
+              </Box>
+              <Box>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 900,
+                    color: '#1C2A24',
+                    letterSpacing: '-0.02em',
+                    lineHeight: 1.1,
+                    fontSize: '1.25rem',
+                  }}
+                >
+                  SGCS
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: '#64748B',
+                    fontSize: '0.625rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.08em',
+                    display: 'block',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  MUNICIPAL CORPORATION SYSTEM
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Center Nav: Home, Civic Services, Community, How It Works, About */}
+            <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 4.5 }}>
+              <Typography
+                onClick={() => navigate('/')}
+                variant="body2"
+                sx={{
+                  fontWeight: 700,
+                  color: BRAND_GREEN,
+                  cursor: 'pointer',
+                  position: 'relative',
+                  pb: 0.5,
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: '2.5px',
+                    backgroundColor: BRAND_GREEN,
+                    borderRadius: '2px',
+                  },
+                }}
+              >
+                Home
+              </Typography>
+              <Typography
+                onClick={() => scrollToSection('complaints')}
+                variant="body2"
+                sx={{
+                  fontWeight: 600,
+                  color: '#475569',
+                  cursor: 'pointer',
+                  '&:hover': { color: BRAND_GREEN },
+                }}
+              >
+                Civic Services
+              </Typography>
+              <Typography
+                onClick={() => scrollToSection('proposals')}
+                variant="body2"
+                sx={{
+                  fontWeight: 600,
+                  color: '#475569',
+                  cursor: 'pointer',
+                  '&:hover': { color: BRAND_GREEN },
+                }}
+              >
+                Community
+              </Typography>
+              <Typography
+                onClick={() => scrollToSection('notices')}
+                variant="body2"
+                sx={{
+                  fontWeight: 600,
+                  color: '#475569',
+                  cursor: 'pointer',
+                  '&:hover': { color: BRAND_GREEN },
+                }}
+              >
+                How It Works
+              </Typography>
+              <Typography
+                onClick={() => scrollToSection('analytics')}
+                variant="body2"
+                sx={{
+                  fontWeight: 600,
+                  color: '#475569',
+                  cursor: 'pointer',
+                  '&:hover': { color: BRAND_GREEN },
+                }}
+              >
+                About
+              </Typography>
+            </Box>
+
+            {/* Right: Search icon, Sign In link, Create Account button */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              {searchActive ? (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    backgroundColor: '#F1F5F9',
+                    borderRadius: '20px',
+                    px: 1.8,
+                    py: 0.4,
+                  }}
+                >
+                  <SearchIcon sx={{ color: '#64748B', fontSize: 18, mr: 0.8 }} />
+                  <InputBase
+                    autoFocus
+                    placeholder="Search civic services..."
+                    sx={{ fontSize: '0.85rem', width: 160 }}
+                    onBlur={() => setSearchActive(false)}
+                  />
+                </Box>
+              ) : (
+                <IconButton
+                  size="small"
+                  onClick={() => setSearchActive(true)}
+                  sx={{ color: '#475569', '&:hover': { color: BRAND_GREEN } }}
+                >
+                  <SearchIcon sx={{ fontSize: 22 }} />
+                </IconButton>
+              )}
+
+              <Button
+                onClick={() => navigate('/login')}
+                sx={{
+                  display: { xs: 'none', sm: 'inline-flex' },
+                  color: '#1C2A24',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  textTransform: 'none',
+                  px: 2.2,
+                  '&:hover': { backgroundColor: 'transparent', color: BRAND_GREEN },
+                }}
+              >
+                Sign In
+              </Button>
+
+              <Button
+                onClick={() => navigate('/register')}
+                variant="contained"
+                disableElevation
+                sx={{
+                  borderRadius: '8px',
+                  backgroundColor: BRAND_GREEN,
+                  color: '#FFFFFF',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  textTransform: 'none',
+                  px: 3,
+                  py: 1.1,
+                  '&:hover': {
+                    backgroundColor: BRAND_GREEN_HOVER,
+                  },
+                }}
+              >
+                Create Account
+              </Button>
+
+              <IconButton
+                onClick={() => setMobileDrawerOpen(true)}
+                sx={{ display: { xs: 'flex', md: 'none' }, color: '#1C2A24' }}
+              >
+                <MenuIcon />
+              </IconButton>
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+
+      {/* 2. HERO SECTION WITH EXACT BACKGROUND IMAGE & COLOR-GRADED HARMONY */}
+      <Box
+        sx={{
+          width: '100%',
+          position: 'relative',
+          backgroundImage:
+            'linear-gradient(to right, #FAFCFA 0%, rgba(250, 252, 250, 0.85) 30%, rgba(250, 252, 250, 0.2) 55%, rgba(250, 252, 250, 0) 75%), url(/sgcs_hero_bg.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: { xs: 'top center', md: 'calc(50% - 110px) 70%' },
+          backgroundRepeat: 'no-repeat',
+          py: { xs: 6, sm: 8, md: 9, lg: 10 },
+          display: 'flex',
+          alignItems: 'center',
+          boxSizing: 'border-box',
+        }}
+      >
+        <Box sx={{ width: '100%', px: { xs: 2.5, sm: 4, md: 6, lg: 8 } }}>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', lg: '48% 52%' },
+              gap: { xs: 4, lg: '24px' },
+              alignItems: 'center',
+            }}
+          >
+            {/* Left Half: Text Content Overlay */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <Box sx={{ pr: { lg: 2 } }}>
+                {/* Pill/Badge */}
+                <Box
+                  sx={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    backgroundColor: '#E8F3ED',
+                    border: '1px solid #D1E5DA',
+                    borderRadius: '50px',
+                    px: 2.2,
+                    py: 0.7,
+                    mb: 3,
+                  }}
+                >
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontWeight: 800,
+                      color: '#2C5E48',
+                      letterSpacing: '0.08em',
+                      fontSize: '0.725rem',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    CITIZEN • COUNCILLOR • CLEANER • A BETTER CITY
+                  </Typography>
+                </Box>
+
+                {/* Large 3-line Headline */}
+                <Typography
+                  variant="h1"
+                  sx={{
+                    fontSize: { xs: '2.5rem', sm: '3.4rem', md: '4rem' },
+                    fontWeight: 900,
+                    color: '#18231E',
+                    letterSpacing: '-0.035em',
+                    lineHeight: 1.08,
+                    mb: 2.5,
+                  }}
+                >
+                  Your City.<br />
+                  <Box component="span" sx={{ color: '#18231E' }}>
+                    Your Voice.<br />
+                  </Box>
+                  <Box component="span" sx={{ color: '#236B4E' }}>
+                    Better Governance.
+                  </Box>
+                </Typography>
+
+                {/* Supporting Paragraph */}
+                <Typography
+                  variant="body1"
+                  sx={{
+                    color: '#000000',
+                    fontWeight: 600,
+                    fontSize: { xs: '0.98rem', md: '1.1rem' },
+                    lineHeight: 1.6,
+                    maxWidth: 500,
+                    mb: 4,
+                  }}
+                >
+                  Report civic issues, track resolution progress, participate in community proposals, and stay informed — together for a cleaner, safer and brighter city.
+                </Typography>
+
+                {/* Two CTA Buttons Side by Side */}
+                <Stack direction="row" spacing={2} sx={{ mb: 4.5, flexWrap: 'wrap', gap: 1.5 }}>
+                  <Button
+                    onClick={() => navigate('/register')}
+                    variant="contained"
+                    disableElevation
+                    endIcon={<ArrowForwardIcon />}
+                    sx={{
+                      borderRadius: '8px',
+                      backgroundColor: '#236B4E',
+                      color: '#FFFFFF',
+                      fontWeight: 700,
+                      fontSize: '0.95rem',
+                      textTransform: 'none',
+                      px: 3.6,
+                      py: 1.5,
+                      '&:hover': {
+                        backgroundColor: '#1C563E',
+                      },
+                    }}
+                  >
+                    Report an Issue
+                  </Button>
+
+                  <Button
+                    onClick={() => scrollToSection('complaints')}
+                    variant="outlined"
+                    sx={{
+                      borderRadius: '8px',
+                      borderColor: '#D1DCD6',
+                      color: '#18231E',
+                      backgroundColor: '#FFFFFF',
+                      fontWeight: 700,
+                      fontSize: '0.95rem',
+                      textTransform: 'none',
+                      px: 3.2,
+                      py: 1.5,
+                      '&:hover': {
+                        borderColor: '#236B4E',
+                        backgroundColor: '#E8F3ED',
+                        color: '#236B4E',
+                      },
+                    }}
+                  >
+                    Explore Civic Services
+                  </Button>
+                </Stack>
+
+                {/* Row of 4 Thin Line Feature Icons with Labels */}
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(4, 1fr)',
+                    gap: 2,
+                    pt: 3,
+                    borderTop: '1px solid #D1DCD6',
+                    maxWidth: 520,
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <GppGoodOutlinedIcon sx={{ color: '#236B4E', fontSize: 20 }} />
+                    <Typography variant="caption" sx={{ fontWeight: 700, color: '#52665B', fontSize: '0.75rem', lineHeight: 1.2 }}>
+                      Verified Citizens
+                    </Typography>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <GroupsOutlinedIcon sx={{ color: '#236B4E', fontSize: 20 }} />
+                    <Typography variant="caption" sx={{ fontWeight: 700, color: '#52665B', fontSize: '0.75rem', lineHeight: 1.2 }}>
+                      Direct Field Dispatch
+                    </Typography>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <DescriptionOutlinedIcon sx={{ color: '#236B4E', fontSize: 20 }} />
+                    <Typography variant="caption" sx={{ fontWeight: 700, color: '#52665B', fontSize: '0.75rem', lineHeight: 1.2 }}>
+                      Transparent Tracking
+                    </Typography>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <ParkOutlinedIcon sx={{ color: '#236B4E', fontSize: 20 }} />
+                    <Typography variant="caption" sx={{ fontWeight: 700, color: '#52665B', fontSize: '0.75rem', lineHeight: 1.2 }}>
+                      Stronger Communities
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            </motion.div>
+          </Box>
+        </Box>
+      </Box>
+
+      {/* 3. CIVIC MODULE CARDS */}
+      <Box id="complaints" sx={{ py: { xs: 8, md: 12 }, backgroundColor: '#FFFFFF', position: 'relative', borderTop: '1px solid #E2EAF0' }}>
+        <Box sx={{ px: { xs: 2.5, sm: 4, md: 6, lg: 8 }, width: '100%', boxSizing: 'border-box' }}>
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-60px' }}
+            variants={fadeInUp}
+          >
+            <Box sx={{ textAlign: 'center', maxWidth: 660, mx: 'auto', mb: 7 }}>
+              <Typography variant="caption" sx={{ fontWeight: 800, color: BRAND_GREEN, letterSpacing: '0.1em', display: 'block', mb: 1.5, textTransform: 'uppercase' }}>
+                CIVIC SERVICES & CAPABILITIES
+              </Typography>
+              <Typography variant="h2" sx={{ fontWeight: 900, color: '#1C2A24', fontSize: { xs: '2rem', md: '2.6rem' }, letterSpacing: '-0.03em', mb: 2 }}>
+                End-to-End Municipal Infrastructure Triage
+              </Typography>
+              <Typography variant="body1" sx={{ color: '#5F7367', fontSize: '1.05rem', lineHeight: 1.65 }}>
+                Engineered to handle citizen issue reporting, councillor ward assignments, field worker task completion, and public notice publishing.
+              </Typography>
+            </Box>
+          </motion.div>
+
+          <Box
+            component={motion.div}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-40px' }}
+            variants={cardContainerVariants}
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(2, 1fr)',
+                md: 'repeat(4, 1fr)',
+              },
+              gap: 3.5,
+              width: '100%',
+            }}
+          >
+            {[
+              {
+                icon: <ReportProblemOutlinedIcon sx={{ fontSize: 26 }} />,
+                title: 'Grievance Reporting',
+                desc: 'Citizens upload photo evidence with automatic GPS location tagging and precise ward mapping.',
+                bg: BRAND_GREEN_LIGHT,
+                badgeBg: BRAND_GREEN,
+              },
+              {
+                icon: <HowToVoteOutlinedIcon sx={{ fontSize: 26 }} />,
+                title: 'Councillor Triage',
+                desc: 'Ward councillors inspect incoming complaints, set priority SLAs, and assign local workers.',
+                bg: '#FDF2E9',
+                badgeBg: BRAND_ORANGE,
+              },
+              {
+                icon: <EngineeringOutlinedIcon sx={{ fontSize: 26 }} />,
+                title: 'Worker Verification',
+                desc: 'Field workers execute repairs and submit mandatory completion photos before ticket closure.',
+                bg: '#F5F3FF',
+                badgeBg: '#8B5CF6',
+              },
+              {
+                icon: <CampaignOutlinedIcon sx={{ fontSize: 26 }} />,
+                title: 'Public Bulletins',
+                desc: 'Councillors publish ward notices, maintenance schedules, and budget proposals transparently.',
+                bg: '#EBF5FB',
+                badgeBg: '#2980B9',
+              },
+            ].map((card, idx) => (
+              <Box
+                key={idx}
+                component={motion.div}
+                variants={singleCardVariants}
+                whileHover={{ y: -6, transition: { duration: 0.2 } }}
+                sx={{ width: '100%', display: 'flex', flexDirection: 'column' }}
+              >
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 3.5,
+                    borderRadius: '16px',
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #E2EAF0',
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    boxSizing: 'border-box',
+                    transition: 'all 0.25s ease',
+                    '&:hover': {
+                      boxShadow: '0 14px 32px rgba(0, 0, 0, 0.06)',
+                      borderColor: card.badgeBg,
+                    },
+                  }}
+                >
+                  <Box>
+                    <Box
+                      sx={{
+                        width: 52,
+                        height: 52,
+                        borderRadius: '12px',
+                        backgroundColor: card.bg,
+                        color: card.badgeBg,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        mb: 2.5,
+                      }}
+                    >
+                      {card.icon}
+                    </Box>
+
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontWeight: 800,
+                        color: '#1C2A24',
+                        mb: 1,
+                        fontSize: '1.15rem',
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      {card.title}
+                    </Typography>
+
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: '#5F7367',
+                        fontSize: '0.9rem',
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      {card.desc}
+                    </Typography>
+                  </Box>
+
+                  <Button
+                    onClick={() => navigate('/register')}
+                    endIcon={<ArrowForwardIcon sx={{ fontSize: 16 }} />}
+                    sx={{
+                      mt: 3,
+                      justifyContent: 'flex-start',
+                      px: 0,
+                      color: card.badgeBg,
+                      fontWeight: 700,
+                      fontSize: '0.85rem',
+                      '&:hover': { backgroundColor: 'transparent', opacity: 0.8 },
+                    }}
+                  >
+                    Explore Service
+                  </Button>
+                </Paper>
+              </Box>
+            ))}
+          </Box>
+        </Box>
+      </Box>
+
+      {/* 4. CIVIC PROPOSALS & NOTICES SECTION */}
+      <Box id="proposals" sx={{ py: { xs: 8, md: 12 }, backgroundColor: '#F2F7F4', borderTop: '1px solid #E2EAF0' }}>
+        <Box sx={{ px: { xs: 2.5, sm: 4, md: 6, lg: 8 }, width: '100%', boxSizing: 'border-box' }}>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+              gap: 6,
+              alignItems: 'center',
+            }}
+          >
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: '-60px' }}
+              variants={fadeInUp}
+            >
+              <Typography variant="caption" sx={{ fontWeight: 800, color: BRAND_GREEN, letterSpacing: '0.1em', display: 'block', mb: 1.5, textTransform: 'uppercase' }}>
+                COMMUNITY VOTING & PROPOSALS
+              </Typography>
+              <Typography variant="h2" sx={{ fontWeight: 900, color: '#1C2A24', fontSize: { xs: '2rem', md: '2.5rem' }, mb: 2.5, letterSpacing: '-0.03em' }}>
+                Vote on Local Ward Development Projects
+              </Typography>
+              <Typography variant="body1" sx={{ color: '#5F7367', fontSize: '1.05rem', lineHeight: 1.65, mb: 4 }}>
+                SGCS enables citizens to participate directly in municipal planning. Review proposed road repairs, park renovations, and streetlighting upgrades, and cast your vote.
+              </Typography>
+              <Button
+                onClick={() => navigate('/register')}
+                variant="contained"
+                disableElevation
+                sx={{
+                  borderRadius: '8px',
+                  backgroundColor: BRAND_GREEN,
+                  color: '#FFFFFF',
+                  fontWeight: 700,
+                  px: 3.8,
+                  py: 1.4,
+                  textTransform: 'none',
+                  '&:hover': { backgroundColor: BRAND_GREEN_HOVER },
+                }}
+              >
+                Explore Active Proposals
+              </Button>
+            </motion.div>
+
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: '-60px' }}
+              variants={fadeInUp}
+            >
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 4,
+                  borderRadius: '20px',
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid #E2EAF0',
+                  boxShadow: '0 12px 32px rgba(0, 0, 0, 0.04)',
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2.5 }}>
+                  <Box
+                    sx={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: '12px',
+                      backgroundColor: BRAND_GREEN_LIGHT,
+                      color: BRAND_GREEN,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <HowToVoteOutlinedIcon sx={{ fontSize: 26 }} />
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#1C2A24', fontSize: '1.05rem' }}>
+                      Ward 12 Solar Streetlight Installation
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#5F7367' }}>
+                      Proposed by Councillor Rajesh Kumar • 420 Votes
+                    </Typography>
+                  </Box>
+                </Box>
+                <Typography variant="body2" sx={{ color: '#475569', mb: 3, lineHeight: 1.6 }}>
+                  Installation of 85 solar LED streetlights along MG Road main thoroughfare to improve night security and energy efficiency.
+                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F8FAFC', p: 2, borderRadius: '12px' }}>
+                  <Typography variant="caption" sx={{ fontWeight: 800, color: BRAND_GREEN }}>
+                    STATUS: COMMUNITY REVIEW (84% APPROVAL)
+                  </Typography>
+                  <Button size="small" variant="outlined" onClick={() => navigate('/login')} sx={{ textTransform: 'none', borderRadius: '6px', borderColor: BRAND_GREEN, color: BRAND_GREEN }}>
+                    Cast Vote
+                  </Button>
+                </Box>
+              </Paper>
+            </motion.div>
+          </Box>
+        </Box>
+      </Box>
+
+      {/* 5. FOOTER */}
+      <Box component="footer" sx={{ backgroundColor: '#1C2A24', color: '#94A3B8', py: 6 }}>
+        <Box sx={{ px: { xs: 2.5, sm: 4, md: 6, lg: 8 }, width: '100%', boxSizing: 'border-box' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
+              <Box
+                sx={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: '7px',
+                  backgroundColor: BRAND_GREEN,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: '#FFFFFF',
                 }}
               >
-                <AccountBalanceOutlinedIcon sx={{ fontSize: 20 }} />
+                <AccountBalanceOutlinedIcon sx={{ fontSize: 21 }} />
               </Box>
-              <Box>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#202522', fontSize: '1.05rem', lineHeight: 1.1 }}>
-                  SGCS
-                </Typography>
-                <Typography variant="caption" sx={{ color: '#68706B', fontSize: '0.7rem', display: 'block', letterSpacing: '0.04em', fontWeight: 600 }}>
-                  MUNICIPAL CORPORATION SYSTEM
-                </Typography>
-              </Box>
+              <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#FFFFFF' }}>
+                SGCS Municipal Corporation System
+              </Typography>
             </Box>
 
-            {/* Center/Right Navigation */}
-            <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 3.5 }}>
-              <Typography
-                variant="body2"
-                onClick={() => {
-                  const el = document.getElementById('how-it-works');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }}
-                sx={{ color: '#68706B', fontWeight: 500, cursor: 'pointer', '&:hover': { color: '#496A57' } }}
-              >
-                How It Works
-              </Typography>
-              <Typography
-                variant="body2"
-                onClick={() => {
-                  const el = document.getElementById('civic-services');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }}
-                sx={{ color: '#68706B', fontWeight: 500, cursor: 'pointer', '&:hover': { color: '#496A57' } }}
-              >
+            <Stack direction="row" spacing={4} sx={{ flexWrap: 'wrap' }}>
+              <Typography variant="body2" sx={{ cursor: 'pointer', '&:hover': { color: '#FFFFFF' } }} onClick={() => scrollToSection('complaints')}>
                 Civic Services
               </Typography>
-              <Typography
-                variant="body2"
-                onClick={() => {
-                  const el = document.getElementById('community');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }}
-                sx={{ color: '#68706B', fontWeight: 500, cursor: 'pointer', '&:hover': { color: '#496A57' } }}
-              >
-                Community
+              <Typography variant="body2" sx={{ cursor: 'pointer', '&:hover': { color: '#FFFFFF' } }} onClick={() => scrollToSection('proposals')}>
+                Community Proposals
               </Typography>
-              <Typography
-                variant="body2"
-                onClick={() => {
-                  const el = document.getElementById('transparency');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }}
-                sx={{ color: '#68706B', fontWeight: 500, cursor: 'pointer', '&:hover': { color: '#496A57' } }}
-              >
-                About
+              <Typography variant="body2" sx={{ cursor: 'pointer', '&:hover': { color: '#FFFFFF' } }} onClick={() => navigate('/login')}>
+                Portal Login
               </Typography>
-            </Box>
+              <Typography variant="body2" sx={{ cursor: 'pointer', '&:hover': { color: '#FFFFFF' } }} onClick={() => navigate('/register')}>
+                Citizen Registration
+              </Typography>
+            </Stack>
 
-            {/* Right CTAs */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <Button
-                onClick={() => navigate('/login')}
-                sx={{
-                  color: '#202522',
-                  fontWeight: 600,
-                  fontSize: '0.875rem',
-                  textTransform: 'none',
-                  px: 2,
-                }}
-              >
-                Sign In
-              </Button>
-              <Button
-                onClick={() => navigate('/register')}
-                variant="contained"
-                sx={{
-                  borderRadius: '6px',
-                  backgroundColor: '#496A57',
-                  color: '#FFFFFF',
-                  fontWeight: 600,
-                  fontSize: '0.875rem',
-                  textTransform: 'none',
-                  px: 2.5,
-                  py: 0.85,
-                  '&:hover': { backgroundColor: '#304B3A' },
-                }}
-              >
-                Create Account
-              </Button>
-            </Box>
+            <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>
+              © 2026 Smart Governance & Civic Corporation System. All rights reserved.
+            </Typography>
           </Box>
-        </Container>
+        </Box>
       </Box>
 
-      {/* 2. HERO SECTION */}
-      <Box sx={{ pt: { xs: 6, md: 9 }, pb: { xs: 6, md: 9 }, backgroundColor: '#FFFFFF' }}>
-        <Container maxWidth="lg">
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1.1fr 0.9fr' }, gap: 6, alignItems: 'center' }}>
-            
-            {/* Left Content */}
-            <Box>
-              <Chip
-                label="MUNICIPAL DIGITAL CIVIC SERVICE"
-                size="small"
-                sx={{
-                  backgroundColor: '#E8EFE9',
-                  color: '#304B3A',
-                  fontWeight: 700,
-                  fontSize: '0.725rem',
-                  letterSpacing: '0.05em',
-                  py: 0.5,
-                  px: 1.5,
-                  mb: 2.5,
-                  borderRadius: '4px',
-                }}
-              />
-
-              <Typography
-                variant="h1"
-                sx={{
-                  fontSize: { xs: '2.3rem', sm: '3rem', md: '3.4rem' },
-                  fontWeight: 800,
-                  color: '#202522',
-                  letterSpacing: '-0.03em',
-                  lineHeight: 1.15,
-                  mb: 2.5,
-                }}
-              >
-                Your City.<br />
-                Your Voice.<br />
-                <span style={{ color: '#496A57' }}>Better Governance.</span>
-              </Typography>
-
-              <Typography
-                variant="body1"
-                sx={{
-                  color: '#68706B',
-                  fontSize: { xs: '1rem', md: '1.1rem' },
-                  lineHeight: 1.65,
-                  mb: 4,
-                  maxWidth: 520,
-                }}
-              >
-                Report public grievances, track ward resolution progress, participate in community proposals, and receive verified announcements from your local councillor.
-              </Typography>
-
-              {/* CTAs */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap', mb: 4 }}>
-                <Button
-                  onClick={() => navigate('/register')}
-                  variant="contained"
-                  endIcon={<ArrowForwardOutlinedIcon sx={{ fontSize: 18 }} />}
-                  sx={{
-                    borderRadius: '6px',
-                    backgroundColor: '#496A57',
-                    color: '#FFFFFF',
-                    fontWeight: 700,
-                    fontSize: '0.925rem',
-                    textTransform: 'none',
-                    px: 3.5,
-                    py: 1.2,
-                    '&:hover': { backgroundColor: '#304B3A' },
-                  }}
-                >
-                  Report an Issue
-                </Button>
-                <Button
-                  onClick={() => {
-                    const el = document.getElementById('civic-services');
-                    if (el) el.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  variant="outlined"
-                  sx={{
-                    borderRadius: '6px',
-                    borderColor: '#E5E8E4',
-                    color: '#202522',
-                    fontWeight: 600,
-                    fontSize: '0.925rem',
-                    textTransform: 'none',
-                    px: 3.5,
-                    py: 1.2,
-                    backgroundColor: '#FFFFFF',
-                    '&:hover': { borderColor: '#496A57', backgroundColor: '#F8F9F7' },
-                  }}
-                >
-                  Explore Civic Services
-                </Button>
-              </Box>
-
-              <Stack direction="row" spacing={3} sx={{ flexWrap: 'wrap', color: '#68706B', fontSize: '0.85rem' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                  <CheckCircleOutlinedIcon sx={{ fontSize: 16, color: '#496A57' }} /> Verified Ward Routing
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                  <CheckCircleOutlinedIcon sx={{ fontSize: 16, color: '#496A57' }} /> Direct Field Dispatch
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                  <CheckCircleOutlinedIcon sx={{ fontSize: 16, color: '#496A57' }} /> Transparent History
-                </Box>
-              </Stack>
-            </Box>
-
-            {/* Right Content: Editorial Civic Visual */}
-            <Box>
-              <CivicEditorialHeroVisual />
-            </Box>
-          </Box>
-        </Container>
-      </Box>
-
-      {/* 3. TRUST / PURPOSE SECTION */}
-      <Box sx={{ py: { xs: 7, md: 9 }, backgroundColor: '#F8F9F7', borderTop: '1px solid #E5E8E4', borderBottom: '1px solid #E5E8E4' }}>
-        <Container maxWidth="lg">
-          <Box sx={{ mb: 5, textAlign: 'center', maxWidth: 640, mx: 'auto' }}>
-            <Typography variant="overline" sx={{ letterSpacing: '0.08em', color: '#496A57', fontWeight: 700, display: 'block', mb: 1 }}>
-              MUNICIPAL PURPOSE
-            </Typography>
-            <Typography variant="h2" sx={{ fontWeight: 700, color: '#202522', fontSize: { xs: '1.75rem', md: '2.25rem' } }}>
-              One platform for everyday civic participation.
-            </Typography>
-          </Box>
-
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(4, 1fr)' }, gap: 3 }}>
-            
-            {/* Action 1: Report */}
-            <Paper elevation={0} sx={{ p: 3, borderRadius: '6px', border: '1px solid #E5E8E4', backgroundColor: '#FFFFFF' }}>
-              <Box sx={{ width: 36, height: 36, borderRadius: '4px', backgroundColor: '#E8EFE9', color: '#496A57', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
-                <ReportProblemOutlinedIcon sx={{ fontSize: 20 }} />
-              </Box>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#202522', mb: 0.75 }}>
-                Report
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#68706B', lineHeight: 1.55 }}>
-                Submit civic grievances directly with photo evidence and ward specification.
-              </Typography>
-            </Paper>
-
-            {/* Action 2: Track */}
-            <Paper elevation={0} sx={{ p: 3, borderRadius: '6px', border: '1px solid #E5E8E4', backgroundColor: '#FFFFFF' }}>
-              <Box sx={{ width: 36, height: 36, borderRadius: '4px', backgroundColor: '#E8EFE9', color: '#496A57', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
-                <TrackChangesOutlinedIcon sx={{ fontSize: 20 }} />
-              </Box>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#202522', mb: 0.75 }}>
-                Track
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#68706B', lineHeight: 1.55 }}>
-                Monitor work order assignments, status updates, and repair progress step-by-step.
-              </Typography>
-            </Paper>
-
-            {/* Action 3: Participate */}
-            <Paper elevation={0} sx={{ p: 3, borderRadius: '6px', border: '1px solid #E5E8E4', backgroundColor: '#FFFFFF' }}>
-              <Box sx={{ width: 36, height: 36, borderRadius: '4px', backgroundColor: '#E8EFE9', color: '#496A57', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
-                <HowToVoteOutlinedIcon sx={{ fontSize: 20 }} />
-              </Box>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#202522', mb: 0.75 }}>
-                Participate
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#68706B', lineHeight: 1.55 }}>
-                Submit local development proposals and vote on community initiatives in your ward.
-              </Typography>
-            </Paper>
-
-            {/* Action 4: Stay Informed */}
-            <Paper elevation={0} sx={{ p: 3, borderRadius: '6px', border: '1px solid #E5E8E4', backgroundColor: '#FFFFFF' }}>
-              <Box sx={{ width: 36, height: 36, borderRadius: '4px', backgroundColor: '#E8EFE9', color: '#496A57', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
-                <CampaignOutlinedIcon sx={{ fontSize: 20 }} />
-              </Box>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#202522', mb: 0.75 }}>
-                Stay Informed
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#68706B', lineHeight: 1.55 }}>
-                Receive official bulletins, maintenance advisories, and councillor notices directly.
-              </Typography>
-            </Paper>
-          </Box>
-        </Container>
-      </Box>
-
-      {/* 4. HOW IT WORKS */}
-      <Box id="how-it-works" sx={{ py: { xs: 7, md: 10 }, backgroundColor: '#FFFFFF' }}>
-        <Container maxWidth="lg">
-          <Box sx={{ mb: 6, textAlign: 'center', maxWidth: 600, mx: 'auto' }}>
-            <Typography variant="overline" sx={{ letterSpacing: '0.08em', color: '#496A57', fontWeight: 700, display: 'block', mb: 1 }}>
-              SERVICE FLOW
-            </Typography>
-            <Typography variant="h2" sx={{ fontWeight: 700, color: '#202522', fontSize: { xs: '1.75rem', md: '2.25rem' } }}>
-              How Civic Complaints Are Resolved
-            </Typography>
-          </Box>
-
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(4, 1fr)' }, gap: 3 }}>
-            
-            {/* Step 1 */}
-            <Box sx={{ p: 3, borderRadius: '6px', border: '1px solid #E5E8E4', backgroundColor: '#F8F9F7' }}>
-              <Typography variant="h3" sx={{ fontWeight: 800, color: '#496A57', fontSize: '1.5rem', mb: 1.5 }}>
-                01
-              </Typography>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#202522', mb: 1 }}>
-                Report a civic issue
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#68706B', lineHeight: 1.6 }}>
-                Submit a complaint specifying your municipal ward, location details, category, and issue photo.
-              </Typography>
-            </Box>
-
-            {/* Step 2 */}
-            <Box sx={{ p: 3, borderRadius: '6px', border: '1px solid #E5E8E4', backgroundColor: '#F8F9F7' }}>
-              <Typography variant="h3" sx={{ fontWeight: 800, color: '#496A57', fontSize: '1.5rem', mb: 1.5 }}>
-                02
-              </Typography>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#202522', mb: 1 }}>
-                Ward team reviews it
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#68706B', lineHeight: 1.6 }}>
-                Your local ward councillor and administration triage the issue and issue a work order.
-              </Typography>
-            </Box>
-
-            {/* Step 3 */}
-            <Box sx={{ p: 3, borderRadius: '6px', border: '1px solid #E5E8E4', backgroundColor: '#F8F9F7' }}>
-              <Typography variant="h3" sx={{ fontWeight: 800, color: '#496A57', fontSize: '1.5rem', mb: 1.5 }}>
-                03
-              </Typography>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#202522', mb: 1 }}>
-                Local worker handles task
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#68706B', lineHeight: 1.6 }}>
-                Assigned field technicians inspect the location, perform necessary repairs, and upload completion proof.
-              </Typography>
-            </Box>
-
-            {/* Step 4 */}
-            <Box sx={{ p: 3, borderRadius: '6px', border: '1px solid #E5E8E4', backgroundColor: '#F8F9F7' }}>
-              <Typography variant="h3" sx={{ fontWeight: 800, color: '#496A57', fontSize: '1.5rem', mb: 1.5 }}>
-                04
-              </Typography>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#202522', mb: 1 }}>
-                Track the resolution
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#68706B', lineHeight: 1.6 }}>
-                Receive immediate status update notifications and inspect the verified resolution record.
-              </Typography>
-            </Box>
-          </Box>
-        </Container>
-      </Box>
-
-      {/* 5. CIVIC SERVICES */}
-      <Box id="civic-services" sx={{ py: { xs: 7, md: 10 }, backgroundColor: '#F8F9F7', borderTop: '1px solid #E5E8E4', borderBottom: '1px solid #E5E8E4' }}>
-        <Container maxWidth="lg">
-          <Box sx={{ mb: 6, textAlign: 'center', maxWidth: 640, mx: 'auto' }}>
-            <Typography variant="overline" sx={{ letterSpacing: '0.08em', color: '#496A57', fontWeight: 700, display: 'block', mb: 1 }}>
-              DIGITAL PORTAL MODULES
-            </Typography>
-            <Typography variant="h2" sx={{ fontWeight: 700, color: '#202522', fontSize: { xs: '1.75rem', md: '2.25rem' } }}>
-              Comprehensive Municipal Civic Services
-            </Typography>
-          </Box>
-
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3.5 }}>
-            
-            <Paper elevation={0} sx={{ p: 4, borderRadius: '6px', border: '1px solid #E5E8E4', backgroundColor: '#FFFFFF' }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#496A57', fontSize: '1.1rem', mb: 1 }}>
-                Civic Complaints & Grievance Triage
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#68706B', lineHeight: 1.6, mb: 2 }}>
-                Report infrastructure defects including damaged roads, broken street lighting, drainage blockages, or sanitation issues. Every complaint is tracked under a unique reference ID.
-              </Typography>
-              <Button
-                onClick={() => navigate('/register')}
-                size="small"
-                sx={{ color: '#496A57', fontWeight: 700, p: 0, '&:hover': { backgroundColor: 'transparent', textDecoration: 'underline' } }}
-              >
-                Submit New Complaint →
-              </Button>
-            </Paper>
-
-            <Paper elevation={0} sx={{ p: 4, borderRadius: '6px', border: '1px solid #E5E8E4', backgroundColor: '#FFFFFF' }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#496A57', fontSize: '1.1rem', mb: 1 }}>
-                Community Proposals & Budgeting
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#68706B', lineHeight: 1.6, mb: 2 }}>
-                Propose ward improvement projects like public parks, pedestrian walkways, or street lighting extensions. Vote on community proposals submitted by fellow residents.
-              </Typography>
-              <Button
-                onClick={() => navigate('/register')}
-                size="small"
-                sx={{ color: '#496A57', fontWeight: 700, p: 0, '&:hover': { backgroundColor: 'transparent', textDecoration: 'underline' } }}
-              >
-                View Ward Proposals →
-              </Button>
-            </Paper>
-
-            <Paper elevation={0} sx={{ p: 4, borderRadius: '6px', border: '1px solid #E5E8E4', backgroundColor: '#FFFFFF' }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#496A57', fontSize: '1.1rem', mb: 1 }}>
-                Official Ward Bulletins & Notices
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#68706B', lineHeight: 1.6, mb: 2 }}>
-                Stay up to date with official announcements published directly by your elected ward councillor. Access downloadable municipal attachments and public notices.
-              </Typography>
-              <Button
-                onClick={() => navigate('/login')}
-                size="small"
-                sx={{ color: '#496A57', fontWeight: 700, p: 0, '&:hover': { backgroundColor: 'transparent', textDecoration: 'underline' } }}
-              >
-                Browse Ward Notices →
-              </Button>
-            </Paper>
-
-            <Paper elevation={0} sx={{ p: 4, borderRadius: '6px', border: '1px solid #E5E8E4', backgroundColor: '#FFFFFF' }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#496A57', fontSize: '1.1rem', mb: 1 }}>
-                Field Work & Development Tracking
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#68706B', lineHeight: 1.6, mb: 2 }}>
-                Dedicated digital portals for municipal field workers and department supervisors to manage task queues, log completion metrics, and maintain operational transparency.
-              </Typography>
-              <Button
-                onClick={() => navigate('/login')}
-                size="small"
-                sx={{ color: '#496A57', fontWeight: 700, p: 0, '&:hover': { backgroundColor: 'transparent', textDecoration: 'underline' } }}
-              >
-                Staff Portal Sign In →
-              </Button>
-            </Paper>
-          </Box>
-        </Container>
-      </Box>
-
-      {/* 6. COMMUNITY PARTICIPATION */}
-      <Box id="community" sx={{ py: { xs: 7, md: 10 }, backgroundColor: '#FFFFFF' }}>
-        <Container maxWidth="lg">
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 6, alignItems: 'center' }}>
-            <Box>
-              <Chip
-                label="CITIZEN EMPOWERMENT"
-                size="small"
-                sx={{ backgroundColor: '#E8EFE9', color: '#304B3A', fontWeight: 700, fontSize: '0.725rem', mb: 2, borderRadius: '4px' }}
-              />
-              <Typography variant="h2" sx={{ fontWeight: 800, color: '#202522', mb: 2 }}>
-                Help shape what happens in your ward.
-              </Typography>
-              <Typography variant="body1" sx={{ color: '#68706B', lineHeight: 1.65, mb: 3 }}>
-                Democratic ward management requires direct public input. Through SGCS, citizens can submit actionable proposals for local infrastructure projects and endorse initiatives that benefit their neighborhood.
-              </Typography>
-              <Stack spacing={2} sx={{ mb: 4 }}>
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-                  <CheckCircleOutlinedIcon sx={{ color: '#496A57', fontSize: 20, mt: 0.2 }} />
-                  <Typography variant="body2" sx={{ color: '#202522', fontWeight: 500 }}>
-                    Submit detailed proposal descriptions with estimated ward impact
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-                  <CheckCircleOutlinedIcon sx={{ color: '#496A57', fontSize: 20, mt: 0.2 }} />
-                  <Typography variant="body2" sx={{ color: '#202522', fontWeight: 500 }}>
-                    Upvote proposals to demonstrate community support to your councillor
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-                  <CheckCircleOutlinedIcon sx={{ color: '#496A57', fontSize: 20, mt: 0.2 }} />
-                  <Typography variant="body2" sx={{ color: '#202522', fontWeight: 500 }}>
-                    Track approved projects from budget allocation to ground execution
-                  </Typography>
-                </Box>
-              </Stack>
-              <Button
-                onClick={() => navigate('/register')}
-                variant="contained"
-                sx={{ backgroundColor: '#496A57', color: '#FFFFFF', fontWeight: 700, px: 3.5, py: 1.1, '&:hover': { backgroundColor: '#304B3A' } }}
-              >
-                Join Ward Community
-              </Button>
-            </Box>
-
-            <Box sx={{ p: 4, borderRadius: '8px', border: '1px solid #E5E8E4', backgroundColor: '#F8F9F7' }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#202522', mb: 2 }}>
-                Active Ward Proposal Example
-              </Typography>
-              <Box sx={{ backgroundColor: '#FFFFFF', border: '1px solid #E5E8E4', borderRadius: '6px', p: 3, mb: 2 }}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-                  <Chip label="PROPOSAL #PR-104" size="small" sx={{ backgroundColor: '#E8EFE9', color: '#496A57', fontWeight: 700, fontSize: '0.7rem' }} />
-                  <Chip label="148 Community Votes" size="small" sx={{ backgroundColor: '#F3F5F2', color: '#202522', fontWeight: 600, fontSize: '0.7rem' }} />
-                </Stack>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#202522', fontSize: '1rem', mb: 1 }}>
-                  Installation of Solar Street Lights along Riverside Park
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#68706B', mb: 2 }}>
-                  Proposed by Ward 2 Residents Council for improved night safety and energy efficiency.
-                </Typography>
-                <Box sx={{ height: 6, backgroundColor: '#E5E8E4', borderRadius: 3, overflow: 'hidden' }}>
-                  <Box sx={{ width: '75%', height: '100%', backgroundColor: '#496A57' }} />
-                </Box>
-              </Box>
-            </Box>
-          </Box>
-        </Container>
-      </Box>
-
-      {/* 7. TRANSPARENCY / TRACKING */}
-      <Box id="transparency" sx={{ py: { xs: 7, md: 9 }, backgroundColor: '#F8F9F7', borderTop: '1px solid #E5E8E4', borderBottom: '1px solid #E5E8E4' }}>
-        <Container maxWidth="lg">
-          <Box sx={{ textAlign: 'center', maxWidth: 640, mx: 'auto', mb: 5 }}>
-            <Typography variant="overline" sx={{ letterSpacing: '0.08em', color: '#496A57', fontWeight: 700, display: 'block', mb: 1 }}>
-              GOVERNANCE TRANSPARENCY
-            </Typography>
-            <Typography variant="h2" sx={{ fontWeight: 700, color: '#202522', fontSize: { xs: '1.75rem', md: '2.25rem' } }}>
-              Real-Time Grievance Pipeline
-            </Typography>
-          </Box>
-
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(4, 1fr)' }, gap: 2, textAlign: 'center' }}>
-            <Box sx={{ p: 3, backgroundColor: '#FFFFFF', border: '1px solid #E5E8E4', borderRadius: '6px' }}>
-              <Chip label="STEP 1" size="small" sx={{ mb: 1, backgroundColor: '#F3F5F2', color: '#68706B', fontWeight: 700 }} />
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#202522' }}>Submitted</Typography>
-              <Typography variant="caption" sx={{ color: '#68706B' }}>Registered in database</Typography>
-            </Box>
-            <Box sx={{ p: 3, backgroundColor: '#FFFFFF', border: '1px solid #E5E8E4', borderRadius: '6px' }}>
-              <Chip label="STEP 2" size="small" sx={{ mb: 1, backgroundColor: '#F3F5F2', color: '#68706B', fontWeight: 700 }} />
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#202522' }}>Under Review</Typography>
-              <Typography variant="caption" sx={{ color: '#68706B' }}>Councillor triage</Typography>
-            </Box>
-            <Box sx={{ p: 3, backgroundColor: '#FFFFFF', border: '1px solid #E5E8E4', borderRadius: '6px' }}>
-              <Chip label="STEP 3" size="small" sx={{ mb: 1, backgroundColor: '#FFFBF0', color: '#B87A29', fontWeight: 700 }} />
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#202522' }}>In Progress</Typography>
-              <Typography variant="caption" sx={{ color: '#68706B' }}>Worker on site</Typography>
-            </Box>
-            <Box sx={{ p: 3, backgroundColor: '#FFFFFF', border: '1px solid #E5E8E4', borderRadius: '6px' }}>
-              <Chip label="STEP 4" size="small" sx={{ mb: 1, backgroundColor: '#E8EFE9', color: '#304B3A', fontWeight: 700 }} />
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#202522' }}>Resolved</Typography>
-              <Typography variant="caption" sx={{ color: '#68706B' }}>Closed with proof</Typography>
-            </Box>
-          </Box>
-        </Container>
-      </Box>
-
-      {/* 8. FINAL CTA */}
-      <Box sx={{ py: { xs: 8, md: 10 }, backgroundColor: '#FFFFFF', textAlign: 'center' }}>
-        <Container maxWidth="md">
-          <Typography variant="h2" sx={{ fontWeight: 800, color: '#202522', mb: 2, fontSize: { xs: '1.85rem', md: '2.4rem' } }}>
-            Make your voice part of better governance.
+      {/* MOBILE DRAWER */}
+      <Drawer
+        anchor="right"
+        open={mobileDrawerOpen}
+        onClose={() => setMobileDrawerOpen(false)}
+        slotProps={{ paper: { sx: { width: 280, p: 3, backgroundColor: '#FFFFFF' } } }}
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h6" sx={{ fontWeight: 800, color: '#1C2A24' }}>
+            SGCS
           </Typography>
-          <Typography variant="body1" sx={{ color: '#68706B', mb: 4, maxWidth: 540, mx: 'auto', lineHeight: 1.6 }}>
-            Register your citizen account today to connect with your municipal ward team and monitor local civic infrastructure repairs.
-          </Typography>
-          <Stack direction="row" spacing={2} justifyContent="center">
-            <Button
-              onClick={() => navigate('/register')}
-              variant="contained"
-              sx={{ backgroundColor: '#496A57', color: '#FFFFFF', fontWeight: 700, px: 4, py: 1.2, '&:hover': { backgroundColor: '#304B3A' } }}
-            >
-              Report an Issue
-            </Button>
-            <Button
-              onClick={() => navigate('/register')}
-              variant="outlined"
-              sx={{ borderColor: '#E5E8E4', color: '#202522', fontWeight: 600, px: 4, py: 1.2, '&:hover': { borderColor: '#496A57', backgroundColor: '#F8F9F7' } }}
-            >
-              Create Account
-            </Button>
-          </Stack>
-        </Container>
-      </Box>
-
-      {/* 9. FOOTER */}
-      <Box component="footer" sx={{ backgroundColor: '#202522', color: '#E5E8E4', py: 6, borderTop: '1px solid #E5E8E4' }}>
-        <Container maxWidth="lg">
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr 1fr 1fr' }, gap: 4, mb: 4 }}>
-            <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-                <Box sx={{ width: 32, height: 32, borderRadius: '4px', backgroundColor: '#496A57', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <AccountBalanceOutlinedIcon sx={{ fontSize: 18 }} />
-                </Box>
-                <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#FFFFFF' }}>
-                  SGCS Municipal Portal
-                </Typography>
-              </Box>
-              <Typography variant="body2" sx={{ color: '#9DA49F', maxWidth: 320, lineHeight: 1.6 }}>
-                Smart Governance & Civic Corporation System — Official municipal service delivery platform for transparent ward administration.
-              </Typography>
-            </Box>
-
-            <Box>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#FFFFFF', mb: 2 }}>
-                Civic Services
-              </Typography>
-              <Stack spacing={1}>
-                <Typography variant="caption" sx={{ color: '#9DA49F', cursor: 'pointer', '&:hover': { color: '#FFFFFF' } }} onClick={() => navigate('/register')}>Report Grievance</Typography>
-                <Typography variant="caption" sx={{ color: '#9DA49F', cursor: 'pointer', '&:hover': { color: '#FFFFFF' } }} onClick={() => navigate('/login')}>Track Work Order</Typography>
-                <Typography variant="caption" sx={{ color: '#9DA49F', cursor: 'pointer', '&:hover': { color: '#FFFFFF' } }} onClick={() => navigate('/register')}>Ward Proposals</Typography>
-              </Stack>
-            </Box>
-
-            <Box>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#FFFFFF', mb: 2 }}>
-                Community
-              </Typography>
-              <Stack spacing={1}>
-                <Typography variant="caption" sx={{ color: '#9DA49F' }}>Ward Directory</Typography>
-                <Typography variant="caption" sx={{ color: '#9DA49F' }}>Public Bulletins</Typography>
-                <Typography variant="caption" sx={{ color: '#9DA49F' }}>Councillor Portals</Typography>
-              </Stack>
-            </Box>
-
-            <Box>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#FFFFFF', mb: 2 }}>
-                Support & Legal
-              </Typography>
-              <Stack spacing={1}>
-                <Typography variant="caption" sx={{ color: '#9DA49F' }}>Toll-Free: 1800-11-2024</Typography>
-                <Typography variant="caption" sx={{ color: '#9DA49F' }}>Privacy Policy</Typography>
-                <Typography variant="caption" sx={{ color: '#9DA49F' }}>Terms of Public Service</Typography>
-              </Stack>
-            </Box>
-          </Box>
-
-          <Divider sx={{ borderColor: '#353C38', mb: 3 }} />
-
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-            <Typography variant="caption" sx={{ color: '#9DA49F' }}>
-              © 2026 Smart Governance & Civic Corporation System (SGCS). All Rights Reserved.
-            </Typography>
-            <Typography variant="caption" sx={{ color: '#9DA49F' }}>
-              Official Municipal Corporation Digital System
-            </Typography>
-          </Box>
-        </Container>
-      </Box>
+          <IconButton onClick={() => setMobileDrawerOpen(false)} size="small">
+            <CloseIcon />
+          </IconButton>
+        </Box>
+        <List>
+          <ListItem disablePadding>
+            <ListItemButton onClick={() => scrollToSection('complaints')}>
+              <ListItemText primary={<Typography sx={{ fontWeight: 600, color: '#1C2A24' }}>Civic Services</Typography>} />
+            </ListItemButton>
+          </ListItem>
+          <ListItem disablePadding>
+            <ListItemButton onClick={() => scrollToSection('proposals')}>
+              <ListItemText primary={<Typography sx={{ fontWeight: 600, color: '#1C2A24' }}>Community</Typography>} />
+            </ListItemButton>
+          </ListItem>
+          <ListItem disablePadding>
+            <ListItemButton onClick={() => { setMobileDrawerOpen(false); navigate('/login'); }}>
+              <ListItemText primary={<Typography sx={{ fontWeight: 600, color: '#1C2A24' }}>Sign In</Typography>} />
+            </ListItemButton>
+          </ListItem>
+          <ListItem disablePadding>
+            <ListItemButton onClick={() => { setMobileDrawerOpen(false); navigate('/register'); }}>
+              <ListItemText primary={<Typography sx={{ fontWeight: 700, color: BRAND_GREEN }}>Create Account</Typography>} />
+            </ListItemButton>
+          </ListItem>
+        </List>
+      </Drawer>
     </Box>
   );
 };

@@ -83,6 +83,18 @@ export const ComplaintDetails: React.FC = () => {
     setFeedbackSubmitted(true);
   };
 
+  const handleBack = () => {
+    if (user?.role === 'ADMIN') {
+      navigate('/admin/complaints');
+    } else if (user?.role === 'COUNCILLOR') {
+      navigate('/councillor/complaints');
+    } else if (user?.role === 'WORKER') {
+      navigate('/worker/tasks');
+    } else {
+      navigate('/citizen/complaints');
+    }
+  };
+
   if (loading) return <LoadingSpinner message="Loading complaint record..." />;
 
   if (!complaint)
@@ -92,10 +104,10 @@ export const ComplaintDetails: React.FC = () => {
           Complaint record not found.
         </Typography>
         <Button
-          onClick={() => navigate('/citizen/complaints')}
-          sx={{ mt: 2, color: '#496A57', textTransform: 'none' }}
+          onClick={handleBack}
+          sx={{ mt: 2, color: '#FF8C38', fontWeight: 700, textTransform: 'none' }}
         >
-          Return to My Complaints
+          Return to Dashboard / Complaints
         </Button>
       </Box>
     );
@@ -130,10 +142,10 @@ export const ComplaintDetails: React.FC = () => {
       {/* Back Button */}
       <Button
         startIcon={<ArrowBackOutlinedIcon sx={{ fontSize: 16 }} />}
-        onClick={() => navigate('/citizen/complaints')}
-        sx={{ mb: 3, color: '#68706B', fontWeight: 500, textTransform: 'none' }}
+        onClick={handleBack}
+        sx={{ mb: 3, color: '#FF8C38', fontWeight: 700, textTransform: 'none' }}
       >
-        Back to My Complaints
+        Back
       </Button>
 
       {/* Complaint Overview Card */}
@@ -390,7 +402,7 @@ export const ComplaintDetails: React.FC = () => {
           </Typography>
 
           <Stack spacing={1.5} sx={{ mb: 3 }}>
-            {complaint.comments.length === 0 ? (
+            {!complaint.comments || complaint.comments.length === 0 ? (
               <Typography variant="body2" sx={{ color: '#68706B' }}>
                 No updates posted yet.
               </Typography>

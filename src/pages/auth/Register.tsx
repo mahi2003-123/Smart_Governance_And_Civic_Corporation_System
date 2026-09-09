@@ -27,6 +27,7 @@ import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined';
 import AccountBalanceOutlinedIcon from '@mui/icons-material/AccountBalanceOutlined';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
+import AddIcon from '@mui/icons-material/Add';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { WardSelector } from '../../components/common/WardSelector';
@@ -86,40 +87,39 @@ export const Register: React.FC = () => {
       });
       setSuccessDialogOpen(true);
     } catch (err: any) {
-      setError(err.message || 'Registration failed. Please check details or try again later.');
+      setError(err.message || 'Registration failed. Network error or server unavailable.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#FFFDFB', display: 'flex', flexDirection: 'column', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       {/* Header */}
-      <Box sx={{ borderBottom: '1px solid #E5E8E4', py: 2, px: { xs: 2, md: 6 }, backgroundColor: '#FFFFFF' }}>
+      <Box sx={{ borderBottom: '1px solid #E2E8F0', py: 2, px: { xs: 2, md: 6 }, backgroundColor: '#FFFFFF' }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1280, mx: 'auto', width: '100%' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer' }} onClick={() => navigate('/')}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, cursor: 'pointer' }} onClick={() => navigate('/')}>
             <Box
               sx={{
                 width: 32,
                 height: 32,
-                borderRadius: '6px',
-                backgroundColor: '#496A57',
+                borderRadius: '9px',
+                background: 'linear-gradient(135deg, #FF9A52 0%, #FF7A30 100%)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: '#FFFFFF',
-                fontWeight: 700,
-                fontSize: '0.85rem',
+                boxShadow: '0 4px 12px rgba(255, 140, 56, 0.32)',
               }}
             >
-              SG
+              <AddIcon sx={{ fontSize: 22, fontWeight: 900 }} />
             </Box>
             <Box>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#202522', lineHeight: 1.1 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 900, color: '#1E1B4B', lineHeight: 1.1 }}>
                 SGCS Citizen Portal
               </Typography>
-              <Typography variant="caption" sx={{ color: '#68706B', fontSize: '0.75rem', fontWeight: 500 }}>
-                Municipal Government Registration
+              <Typography variant="caption" sx={{ color: '#64748B', fontSize: '0.75rem', fontWeight: 500 }}>
+                Smart Governance & Civic Registration
               </Typography>
             </Box>
           </Box>
@@ -127,7 +127,7 @@ export const Register: React.FC = () => {
           <Button
             startIcon={<ArrowBackOutlinedIcon sx={{ fontSize: 16 }} />}
             onClick={() => navigate('/')}
-            sx={{ color: '#68706B', fontWeight: 600, textTransform: 'none', '&:hover': { color: '#202522' } }}
+            sx={{ color: '#64748B', fontWeight: 600, textTransform: 'none', '&:hover': { color: '#1E1B4B' } }}
           >
             Back to Home
           </Button>
@@ -141,8 +141,8 @@ export const Register: React.FC = () => {
         <Box
           sx={{
             flex: { md: 5 },
-            backgroundColor: '#F8F9F7',
-            borderRight: { md: '1px solid #E5E8E4' },
+            backgroundColor: '#FFF8F2',
+            borderRight: { md: '1px solid #FFE6D5' },
             p: { xs: 4, md: 7 },
             display: 'flex',
             flexDirection: 'column',
@@ -150,23 +150,23 @@ export const Register: React.FC = () => {
           }}
         >
           <Box sx={{ maxWidth: 460 }}>
-            <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, px: 1.5, py: 0.5, borderRadius: '4px', backgroundColor: '#E8EFE9', color: '#496A57', mb: 3 }}>
+            <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, px: 1.8, py: 0.6, borderRadius: '20px', backgroundColor: '#FFE6D5', color: '#FF8C38', mb: 3 }}>
               <AccountBalanceOutlinedIcon sx={{ fontSize: 16 }} />
-              <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                Official Citizen Registration
+              <Typography variant="caption" sx={{ fontWeight: 700 }}>
+                Citizen Account Registration
               </Typography>
             </Box>
 
-            <Typography variant="h2" component="h1" sx={{ fontWeight: 700, color: '#202522', mb: 2, letterSpacing: '-0.015em' }}>
+            <Typography variant="h2" component="h1" sx={{ fontWeight: 900, color: '#1E1B4B', mb: 2, letterSpacing: '-0.025em' }}>
               Register for direct civic representation.
             </Typography>
 
-            <Typography variant="body1" sx={{ color: '#68706B', mb: 4, lineHeight: 1.65 }}>
-              Create an official citizen account to submit local infrastructure grievances, monitor repair progress, and vote on municipal ward project proposals.
+            <Typography variant="body1" sx={{ color: '#64748B', mb: 4, lineHeight: 1.65 }}>
+              Create a citizen account to submit local infrastructure grievances, monitor repair progress, and vote on municipal ward project proposals.
             </Typography>
 
-            <Box sx={{ pt: 3, borderTop: '1px solid #E5E8E4' }}>
-              <Typography variant="caption" sx={{ color: '#68706B', display: 'block' }}>
+            <Box sx={{ pt: 3, borderTop: '1px solid #FFE6D5' }}>
+              <Typography variant="caption" sx={{ color: '#64748B', display: 'block' }}>
                 * Note: Ward Councillor and Field Worker accounts are issued directly by Super Admin.
               </Typography>
             </Box>
@@ -186,16 +186,16 @@ export const Register: React.FC = () => {
         >
           <Box sx={{ maxWidth: 540, mx: 'auto', width: '100%' }}>
             <Box sx={{ mb: 3.5 }}>
-              <Typography variant="h3" sx={{ fontWeight: 700, color: '#202522', mb: 0.5 }}>
+              <Typography variant="h3" sx={{ fontWeight: 900, color: '#1E1B4B', mb: 0.5 }}>
                 Create Citizen Account
               </Typography>
-              <Typography variant="body2" sx={{ color: '#68706B' }}>
+              <Typography variant="body2" sx={{ color: '#64748B' }}>
                 Fill in your personal details to link your municipal ward
               </Typography>
             </Box>
 
             {error && (
-              <Alert severity="error" onClose={() => setError('')} sx={{ mb: 3, borderRadius: '6px', fontSize: '0.85rem' }}>
+              <Alert severity="error" onClose={() => setError('')} sx={{ mb: 3, borderRadius: '12px', fontSize: '0.85rem' }}>
                 {error}
               </Alert>
             )}
@@ -203,17 +203,17 @@ export const Register: React.FC = () => {
             <Box component="form" onSubmit={handleRegister}>
               <Stack spacing={2.5}>
                 <FormControl fullWidth variant="outlined">
-                  <InputLabel id="reg-fn-label">Full Name (As per Govt ID)</InputLabel>
+                  <InputLabel id="reg-fn-label">Full Name</InputLabel>
                   <OutlinedInput
                     id="register-fullname-field"
-                    label="Full Name (As per Govt ID)"
+                    label="Full Name"
                     placeholder="e.g. Rahul Sharma"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
                     startAdornment={
                       <InputAdornment position="start">
-                        <PersonOutlinedIcon sx={{ color: '#68706B', fontSize: 18 }} />
+                        <PersonOutlinedIcon sx={{ color: '#64748B', fontSize: 18 }} />
                       </InputAdornment>
                     }
                   />
@@ -232,24 +232,24 @@ export const Register: React.FC = () => {
                       required
                       startAdornment={
                         <InputAdornment position="start">
-                          <EmailOutlinedIcon sx={{ color: '#68706B', fontSize: 18 }} />
+                          <EmailOutlinedIcon sx={{ color: '#64748B', fontSize: 18 }} />
                         </InputAdornment>
                       }
                     />
                   </FormControl>
 
                   <FormControl fullWidth variant="outlined">
-                    <InputLabel id="reg-phone-label">Mobile Phone (+91)</InputLabel>
+                    <InputLabel id="reg-phone-label">Mobile Phone</InputLabel>
                     <OutlinedInput
                       id="register-phone-field"
-                      label="Mobile Phone (+91)"
+                      label="Mobile Phone"
                       placeholder="9876543210"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       required
                       startAdornment={
                         <InputAdornment position="start">
-                          <PhoneOutlinedIcon sx={{ color: '#68706B', fontSize: 18 }} />
+                          <PhoneOutlinedIcon sx={{ color: '#64748B', fontSize: 18 }} />
                         </InputAdornment>
                       }
                     />
@@ -267,7 +267,7 @@ export const Register: React.FC = () => {
                     required
                     startAdornment={
                       <InputAdornment position="start">
-                        <HomeOutlinedIcon sx={{ color: '#68706B', fontSize: 18 }} />
+                        <HomeOutlinedIcon sx={{ color: '#64748B', fontSize: 18 }} />
                       </InputAdornment>
                     }
                   />
@@ -294,12 +294,12 @@ export const Register: React.FC = () => {
                       required
                       startAdornment={
                         <InputAdornment position="start">
-                          <LockOutlinedIcon sx={{ color: '#68706B', fontSize: 18 }} />
+                          <LockOutlinedIcon sx={{ color: '#64748B', fontSize: 18 }} />
                         </InputAdornment>
                       }
                       endAdornment={
                         <InputAdornment position="end">
-                          <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" size="small" sx={{ color: '#68706B' }}>
+                          <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" size="small" sx={{ color: '#64748B' }}>
                             {showPassword ? <VisibilityOffOutlinedIcon sx={{ fontSize: 18 }} /> : <VisibilityOutlinedIcon sx={{ fontSize: 18 }} />}
                           </IconButton>
                         </InputAdornment>
@@ -319,7 +319,7 @@ export const Register: React.FC = () => {
                       required
                       startAdornment={
                         <InputAdornment position="start">
-                          <LockOutlinedIcon sx={{ color: '#68706B', fontSize: 18 }} />
+                          <LockOutlinedIcon sx={{ color: '#64748B', fontSize: 18 }} />
                         </InputAdornment>
                       }
                     />
@@ -332,13 +332,13 @@ export const Register: React.FC = () => {
                       id="register-agree-checkbox"
                       checked={agreeTerms}
                       onChange={(e) => setAgreeTerms(e.target.checked)}
-                      sx={{ color: '#496A57', '&.Mui-checked': { color: '#496A57' } }}
+                      sx={{ color: '#FF8C38', '&.Mui-checked': { color: '#FF8C38' } }}
                     />
                   }
                   label={
-                    <Typography variant="caption" sx={{ color: '#68706B' }}>
-                      I confirm that the provided information is accurate and agree to the SGCS{' '}
-                      <span style={{ color: '#496A57', fontWeight: 600 }}>Terms of Public Service</span>.
+                    <Typography variant="caption" sx={{ color: '#64748B' }}>
+                      I confirm that the provided details are accurate and agree to the SGCS{' '}
+                      <span style={{ color: '#FF8C38', fontWeight: 700 }}>Terms of Service</span>.
                     </Typography>
                   }
                 />
@@ -349,22 +349,26 @@ export const Register: React.FC = () => {
                   variant="contained"
                   fullWidth
                   sx={{
-                    py: 1.3,
-                    borderRadius: '6px',
-                    backgroundColor: '#496A57',
+                    py: 1.4,
+                    borderRadius: '50px',
+                    background: 'linear-gradient(135deg, #FF9A52 0%, #FF7A30 100%)',
                     color: '#FFFFFF',
                     fontWeight: 700,
-                    fontSize: '0.9rem',
-                    '&:hover': { backgroundColor: '#304B3A' },
+                    fontSize: '0.95rem',
+                    boxShadow: '0 6px 18px rgba(255, 140, 56, 0.35)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #F8883B 0%, #EB6A20 100%)',
+                      boxShadow: '0 8px 22px rgba(255, 140, 56, 0.45)',
+                    },
                   }}
                 >
                   {loading ? 'Registering Account...' : 'Complete Account Registration'}
                 </Button>
 
                 <Box sx={{ textAlign: 'center', mt: 1 }}>
-                  <Typography variant="body2" sx={{ color: '#68706B' }}>
+                  <Typography variant="body2" sx={{ color: '#64748B' }}>
                     Already registered?{' '}
-                    <Link to="/login" style={{ color: '#496A57', fontWeight: 700 }}>
+                    <Link to="/login" style={{ color: '#FF8C38', fontWeight: 700, textDecoration: 'none' }}>
                       Sign in to Portal
                     </Link>
                   </Typography>
@@ -381,16 +385,16 @@ export const Register: React.FC = () => {
         onClose={() => setSuccessDialogOpen(false)}
         slotProps={{
           paper: {
-            sx: { borderRadius: '8px', p: 1, maxWidth: 440 },
+            sx: { borderRadius: '20px', p: 1, maxWidth: 440 },
           },
         }}
       >
-        <DialogTitle sx={{ fontWeight: 700, color: '#202522', pt: 3, textAlign: 'center' }}>
-          <CheckCircleOutlinedIcon sx={{ fontSize: 44, color: '#304B3A', mb: 1, display: 'block', mx: 'auto' }} />
+        <DialogTitle sx={{ fontWeight: 900, color: '#1E1B4B', pt: 3, textAlign: 'center' }}>
+          <CheckCircleOutlinedIcon sx={{ fontSize: 44, color: '#FF8C38', mb: 1, display: 'block', mx: 'auto' }} />
           Registration Completed
         </DialogTitle>
         <DialogContent>
-          <Typography variant="body2" sx={{ color: '#68706B', textAlign: 'center', lineHeight: 1.6 }}>
+          <Typography variant="body2" sx={{ color: '#64748B', textAlign: 'center', lineHeight: 1.6 }}>
             Your citizen account has been successfully created in the SGCS database. You may now log in to access your municipal ward portal.
           </Typography>
         </DialogContent>
@@ -402,10 +406,9 @@ export const Register: React.FC = () => {
               navigate('/login');
             }}
             sx={{
-              borderRadius: '6px',
-              backgroundColor: '#496A57',
+              borderRadius: '50px',
+              background: 'linear-gradient(135deg, #FF9A52 0%, #FF7A30 100%)',
               px: 4,
-              '&:hover': { backgroundColor: '#304B3A' },
             }}
           >
             Proceed to Sign In
