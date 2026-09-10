@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Chip,
   Button,
   Dialog,
   DialogTitle,
@@ -12,18 +11,14 @@ import {
   Stack,
   Alert,
   MenuItem,
-  Divider,
 } from '@mui/material';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
-import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import LocationCityOutlinedIcon from '@mui/icons-material/LocationCityOutlined';
 import { proposalService } from '../../services/proposalService';
 import { CommunityProposal } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { WardSelector } from '../../components/common/WardSelector';
-import { StatusBadge } from '../../components/common/StatusBadge';
+import { ProposalItemCard } from '../../components/proposals/ProposalItemCard';
 
 export const Proposals: React.FC = () => {
   const { user } = useAuth();
@@ -38,6 +33,8 @@ export const Proposals: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  const userIdentifier = user?.email || user?.id || user?.fullName || 'anonymous';
+
   const proposalCategories = [
     'Infrastructure',
     'Park Maintenance',
@@ -50,7 +47,7 @@ export const Proposals: React.FC = () => {
   const loadProposals = async () => {
     setLoading(true);
     try {
-      const data = await proposalService.getProposals();
+      const data = await proposalService.getProposals(undefined, userIdentifier);
       setProposals(data);
     } catch (e) {
       console.error(e);
@@ -61,11 +58,28 @@ export const Proposals: React.FC = () => {
 
   useEffect(() => {
     loadProposals();
-  }, []);
+  }, [userIdentifier]);
 
-  const handleUpvote = async (proposalId: string) => {
+  const handleVote = async (proposalId: string, voteType: 'UP' | 'DOWN') => {
     try {
-      const updated = await proposalService.voteProposal(proposalId, 'UP');
+      const updated = await proposalService.voteProposal(proposalId, voteType, userIdentifier);
+      setProposals((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleComment = async (proposalId: string, commentText: string) => {
+    try {
+      const updated = await proposalService.addComment(
+        proposalId,
+        {
+          content: commentText,
+          authorName: user?.fullName || 'Citizen Resident',
+          authorRole: user?.role || 'CITIZEN',
+        },
+        userIdentifier
+      );
       setProposals((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
     } catch (e) {
       console.error(e);
@@ -88,13 +102,17 @@ export const Proposals: React.FC = () => {
     setError('');
 
     try {
-      const created = await proposalService.createProposal({
-        title: title.trim(),
-        category,
-        description: description.trim(),
-        ward,
-        authorName: user?.fullName || 'Citizen Resident',
-      });
+      const created = await proposalService.createProposal(
+        {
+          title: title.trim(),
+          category,
+          description: description.trim(),
+          ward,
+          authorName: user?.fullName || 'Citizen Resident',
+          authorRole: user?.role || 'CITIZEN',
+        },
+        userIdentifier
+      );
 
       setProposals((prev) => [created, ...prev]);
       setOpenModal(false);
@@ -118,7 +136,7 @@ export const Proposals: React.FC = () => {
             Community Proposals
           </Typography>
           <Typography variant="body1" sx={{ color: '#68706B' }}>
-            Propose local civic improvement projects for your ward and support initiatives submitted by fellow citizens.
+            Propose local civic improvement projects for your ward, vote, and comment on initiatives proposed by fellow citizens and councillors.
           </Typography>
         </Box>
 
@@ -141,88 +159,21 @@ export const Proposals: React.FC = () => {
       </Box>
 
       {/* Proposals List */}
-      <Stack spacing={2.5}>
-        {proposals.map((item) => {
-          const hasVoted = item.userVoted === 'UP';
-
-          return (
-            <Box
+      <Stack spacing={3}>
+        {proposals.length === 0 ? (
+          <Box sx={{ p: 4, color: '#68706B', textAlign: 'center', backgroundColor: '#FFFFFF', borderRadius: '8px', border: '1px solid #E5E8E4' }}>
+            <Typography variant="body1">No community proposals recorded yet. Be the first to submit a proposal!</Typography>
+          </Box>
+        ) : (
+          proposals.map((item) => (
+            <ProposalItemCard
               key={item.id}
-              sx={{
-                p: { xs: 3, sm: 3.5 },
-                borderRadius: '8px',
-                border: '1px solid #E5E8E4',
-                backgroundColor: '#FFFFFF',
-                transition: 'border-color 0.15s ease',
-                '&:hover': { borderColor: '#496A57' },
-              }}
-            >
-              {/* Proposal Header Meta */}
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5, flexWrap: 'wrap', gap: 1 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Chip label={item.category} size="small" sx={{ backgroundColor: '#E8EFE9', color: '#304B3A', height: 22 }} />
-                  <Typography variant="caption" sx={{ color: '#68706B' }}>
-                    Proposed by: {item.authorName}
-                  </Typography>
-                </Box>
-                <StatusBadge status={item.status} />
-              </Box>
-
-              {/* Title */}
-              <Typography variant="h3" sx={{ fontWeight: 600, color: '#202522', mb: 1, fontSize: '1.2rem' }}>
-                {item.title}
-              </Typography>
-
-              {/* Ward Location */}
-              <Typography variant="caption" sx={{ color: '#68706B', display: 'flex', alignItems: 'center', gap: 0.5, mb: 1.5 }}>
-                <LocationCityOutlinedIcon sx={{ fontSize: 16, color: '#496A57' }} /> Jurisdiction: {item.ward}
-              </Typography>
-
-              {/* Description */}
-              <Typography variant="body2" sx={{ color: '#68706B', mb: 2.5, lineHeight: 1.6 }}>
-                {item.description}
-              </Typography>
-
-              <Divider sx={{ mb: 2, borderColor: '#E5E8E4' }} />
-
-              {/* Subtle Support Interaction */}
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Button
-                  size="small"
-                  onClick={() => handleUpvote(item.id)}
-                  startIcon={
-                    hasVoted ? (
-                      <FavoriteIcon sx={{ color: '#B45D59', fontSize: 18 }} />
-                    ) : (
-                      <FavoriteBorderOutlinedIcon sx={{ color: '#68706B', fontSize: 18 }} />
-                    )
-                  }
-                  sx={{
-                    color: hasVoted ? '#304B3A' : '#202522',
-                    backgroundColor: hasVoted ? '#E8EFE9' : '#FFFFFF',
-                    border: '1px solid #E5E8E4',
-                    borderRadius: '6px',
-                    px: 2,
-                    py: 0.6,
-                    fontWeight: 500,
-                    textTransform: 'none',
-                    fontSize: '0.825rem',
-                    '&:hover': {
-                      backgroundColor: '#F3F5F2',
-                      borderColor: '#496A57',
-                    },
-                  }}
-                >
-                  {hasVoted ? `Supported (${item.upvotes})` : `♡ ${item.upvotes} citizens support this proposal`}
-                </Button>
-
-                <Typography variant="caption" sx={{ color: '#68706B' }}>
-                  Community Initiative
-                </Typography>
-              </Box>
-            </Box>
-          );
-        })}
+              proposal={item}
+              onVote={handleVote}
+              onComment={handleComment}
+            />
+          ))
+        )}
       </Stack>
 
       {/* Modal to Submit Proposal */}

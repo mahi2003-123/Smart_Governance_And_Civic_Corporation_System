@@ -36,6 +36,9 @@ public class AdminService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private AuditService auditService;
+
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
@@ -43,8 +46,20 @@ public class AdminService {
     public User createUser(User user) {
         String email = user.getEmail().trim().toLowerCase();
 
+        if (!email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+            throw new RuntimeException("Please enter a valid email address (e.g. user@example.com).");
+        }
+
         if (userRepository.existsByEmailIgnoreCase(email)) {
-            throw new RuntimeException("User email already exists in database.");
+            throw new RuntimeException("Email address \"" + email + "\" is already registered in the system.");
+        }
+
+        if (user.getPhone() != null && !user.getPhone().trim().isEmpty()) {
+            String cleanPhone = user.getPhone().replaceAll("[\\s\\-\\+]", "");
+            String numberToCheck = (cleanPhone.startsWith("91") && cleanPhone.length() == 12) ? cleanPhone.substring(2) : cleanPhone;
+            if (!numberToCheck.matches("^[6-9]\\d{9}$")) {
+                throw new RuntimeException("Phone number must be a 10-digit mobile number starting with 6, 7, 8, or 9.");
+            }
         }
 
         // Enforce strict 1 Councillor per ward constraint
@@ -82,6 +97,16 @@ public class AdminService {
             }
         }
 
+        auditService.logActivity(
+            "admin",
+            "Super Admin",
+            "ADMIN",
+            "Created User Account",
+            "ADMIN",
+            saved.getId(),
+            "Created " + saved.getRole() + " account for " + saved.getFullName() + " (" + saved.getEmail() + ")" + (saved.getWard() != null ? " assigned to " + saved.getWard() : "")
+        );
+
         return saved;
     }
 
@@ -90,7 +115,19 @@ public class AdminService {
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             user.setStatus(status);
-            return userRepository.save(user);
+            User saved = userRepository.save(user);
+
+            auditService.logActivity(
+                "admin",
+                "Super Admin",
+                "ADMIN",
+                "Updated User Status",
+                "ADMIN",
+                saved.getId(),
+                "Updated account status of " + saved.getFullName() + " to " + status
+            );
+
+            return saved;
         } else {
             throw new RuntimeException("User not found with ID: " + userId);
         }
@@ -115,6 +152,16 @@ public class AdminService {
 
             // Strictly delete ONLY the targeted single user by primary key ID
             userRepository.deleteById(userId);
+
+            auditService.logActivity(
+                "admin",
+                "Super Admin",
+                "ADMIN",
+                "Deleted User Account",
+                "ADMIN",
+                user.getId(),
+                "Deleted " + user.getRole() + " user record: " + user.getFullName() + " (" + user.getEmail() + ")"
+            );
         } else {
             throw new RuntimeException("User not found with ID: " + userId);
         }

@@ -119,9 +119,34 @@ export const CouncillorManagement: React.FC = () => {
     setModalError('');
     setModalSuccess('');
 
-    if (!formData.fullName || !formData.email) {
-      setModalError('Please fill in name and email address.');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const cleanEmail = (formData.email || '').trim().toLowerCase();
+    const cleanName = (formData.fullName || '').trim();
+
+    if (!cleanName) {
+      setModalError('Please enter councillor full name.');
       return;
+    }
+
+    if (!cleanEmail || !emailRegex.test(cleanEmail)) {
+      setModalError('Please enter a valid email address (e.g. councillor@sgcs.gov.in).');
+      return;
+    }
+
+    // Check duplicate email
+    const existingUser = allUsers.find((u) => u.email.trim().toLowerCase() === cleanEmail);
+    if (existingUser) {
+      setModalError(`Email address "${cleanEmail}" is already registered in the system (${existingUser.fullName} - ${existingUser.role}). Duplicate email addresses are not allowed.`);
+      return;
+    }
+
+    if (formData.phone) {
+      const cleanPhone = formData.phone.replace(/[\s\-\+]/g, '');
+      const numberToCheck = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone.slice(2) : cleanPhone;
+      if (!/^[6-9]\d{9}$/.test(numberToCheck)) {
+        setModalError('Phone number must be a 10-digit mobile number starting with 6, 7, 8, or 9.');
+        return;
+      }
     }
 
     // Check 1 Councillor per ward constraint
@@ -330,7 +355,7 @@ export const CouncillorManagement: React.FC = () => {
         onClose={() => setOpenModal(false)}
         maxWidth="sm"
         fullWidth
-        PaperProps={{ sx: { borderRadius: '8px', p: 1 } }}
+        slotProps={{ paper: { sx: { borderRadius: '8px', p: 1 } } }}
       >
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
           <Typography variant="h6" sx={{ fontWeight: 600, color: '#202522' }}>

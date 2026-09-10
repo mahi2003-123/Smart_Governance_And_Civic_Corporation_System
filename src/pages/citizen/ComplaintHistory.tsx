@@ -23,6 +23,7 @@ import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 import { complaintService } from '../../services/complaintService';
 import { Complaint } from '../../types';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
@@ -30,6 +31,7 @@ import { StatusBadge } from '../../components/common/StatusBadge';
 
 export const ComplaintHistory: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -39,8 +41,16 @@ export const ComplaintHistory: React.FC = () => {
   const loadComplaints = async () => {
     setLoading(true);
     try {
-      const data = await complaintService.getComplaints();
-      setComplaints(data);
+      const data = await complaintService.getComplaints(user?.id ? { citizenId: user.id } : undefined);
+      // Filter strictly to current citizen's own complaints
+      const userOwnComplaints = data.filter(
+        (c) =>
+          !user?.id ||
+          c.citizenId === user.id ||
+          (user.fullName && c.citizenName === user.fullName) ||
+          (user.email && c.citizenPhone === user.email)
+      );
+      setComplaints(userOwnComplaints);
     } catch (e) {
       console.error(e);
     } finally {
@@ -50,7 +60,7 @@ export const ComplaintHistory: React.FC = () => {
 
   useEffect(() => {
     loadComplaints();
-  }, []);
+  }, [user]);
 
   const filteredComplaints = complaints
     .filter((c) => {

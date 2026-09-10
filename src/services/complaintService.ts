@@ -1,30 +1,6 @@
 import api from './api';
 import { Complaint, ComplaintStatus, ComplaintPriority, ComplaintCategory } from '../types';
 
-export const INITIAL_COMPLAINTS: Complaint[] = [];
-
-const getSavedComplaints = (): Complaint[] => {
-  try {
-    const stored = localStorage.getItem('sgcs_complaints');
-    if (stored) {
-      return JSON.parse(stored);
-    }
-  } catch (e) {
-    console.error('Failed to parse saved complaints:', e);
-  }
-  return INITIAL_COMPLAINTS;
-};
-
-const saveComplaints = (list: Complaint[]) => {
-  try {
-    localStorage.setItem('sgcs_complaints', JSON.stringify(list));
-  } catch (e) {
-    console.error('Failed to save complaints to localStorage:', e);
-  }
-};
-
-let complaintsMemory = getSavedComplaints();
-
 export const complaintService = {
   getComplaints: async (filters?: {
     status?: ComplaintStatus;
@@ -34,13 +10,10 @@ export const complaintService = {
     citizenId?: string;
     assignedWorkerId?: string;
   }): Promise<Complaint[]> => {
-    let resultList: Complaint[] = [];
-
     try {
       const res = await api.get('/complaints', { params: filters });
       if (res.data && Array.isArray(res.data)) {
-        // Parse images if backend sends string
-        resultList = res.data.map((item: any) => ({
+        let resultList: Complaint[] = res.data.map((item: any) => ({
           ...item,
           images: Array.isArray(item.images)
             ? item.images
@@ -48,56 +21,47 @@ export const complaintService = {
           comments: Array.isArray(item.comments) ? item.comments : [],
           timeline: Array.isArray(item.timeline) ? item.timeline : [],
         }));
+
+        if (filters) {
+          if (filters.status) {
+            resultList = resultList.filter((c) => c.status === filters.status);
+          }
+          if (filters.category) {
+            resultList = resultList.filter((c) => c.category === filters.category);
+          }
+          if (filters.ward) {
+            resultList = resultList.filter((c) => c.ward.toLowerCase().includes(filters.ward!.toLowerCase()));
+          }
+          if (filters.citizenId) {
+            resultList = resultList.filter(
+              (c) =>
+                c.citizenId === filters.citizenId ||
+                c.citizenName === filters.citizenId ||
+                c.citizenPhone === filters.citizenId
+            );
+          }
+          if (filters.assignedWorkerId) {
+            resultList = resultList.filter((c) => c.assignedWorkerId === filters.assignedWorkerId);
+          }
+          if (filters.search) {
+            const q = filters.search.toLowerCase();
+            resultList = resultList.filter(
+              (c) =>
+                c.title.toLowerCase().includes(q) ||
+                c.trackingNumber.toLowerCase().includes(q) ||
+                c.description.toLowerCase().includes(q) ||
+                c.locationAddress.toLowerCase().includes(q)
+            );
+          }
+        }
+
+        return resultList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       }
-    } catch (err) {
-      console.warn('[SGCS Frontend] PostgreSQL server unreachable, using local memory store.');
+      return [];
+    } catch (err: any) {
+      console.error('[SGCS Frontend] Failed to fetch complaints from backend:', err);
+      throw new Error(err.response?.data?.error || err.message || 'Failed to load complaints from database.');
     }
-
-    if (resultList.length === 0) {
-      resultList = [...complaintsMemory];
-    } else {
-      // Merge memory complaints that might not be in API response yet
-      const apiIds = new Set(resultList.map((c) => c.id));
-      const missingFromApi = complaintsMemory.filter((c) => !apiIds.has(c.id));
-      resultList = [...missingFromApi, ...resultList];
-    }
-
-    resultList = resultList.map(c => ({
-      ...c,
-      images: Array.isArray(c.images) ? c.images : (c.images ? String(c.images).split(',') : []),
-      comments: Array.isArray(c.comments) ? c.comments : [],
-      timeline: Array.isArray(c.timeline) ? c.timeline : [],
-    }));
-
-    if (filters) {
-      if (filters.status) {
-        resultList = resultList.filter((c) => c.status === filters.status);
-      }
-      if (filters.category) {
-        resultList = resultList.filter((c) => c.category === filters.category);
-      }
-      if (filters.ward) {
-        resultList = resultList.filter((c) => c.ward.toLowerCase().includes(filters.ward!.toLowerCase()));
-      }
-      if (filters.citizenId) {
-        resultList = resultList.filter((c) => c.citizenId === filters.citizenId);
-      }
-      if (filters.assignedWorkerId) {
-        resultList = resultList.filter((c) => c.assignedWorkerId === filters.assignedWorkerId);
-      }
-      if (filters.search) {
-        const q = filters.search.toLowerCase();
-        resultList = resultList.filter(
-          (c) =>
-            c.title.toLowerCase().includes(q) ||
-            c.trackingNumber.toLowerCase().includes(q) ||
-            c.description.toLowerCase().includes(q) ||
-            c.locationAddress.toLowerCase().includes(q)
-        );
-      }
-    }
-
-    return resultList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   },
 
   getComplaintById: async (id: string): Promise<Complaint | null> => {
@@ -113,18 +77,11 @@ export const complaintService = {
           timeline: Array.isArray(res.data.timeline) ? res.data.timeline : [],
         };
       }
-    } catch (err) {
-      // Fallback to local memory
+      return null;
+    } catch (err: any) {
+      console.error('[SGCS Frontend] Failed to fetch complaint details:', err);
+      throw new Error(err.response?.data?.error || err.message || 'Failed to load complaint details.');
     }
-
-    const found = complaintsMemory.find((c) => c.id === id || c.trackingNumber === id);
-    if (!found) return null;
-    return {
-      ...found,
-      images: Array.isArray(found.images) ? found.images : (found.images ? String(found.images).split(',') : []),
-      comments: Array.isArray(found.comments) ? found.comments : [],
-      timeline: Array.isArray(found.timeline) ? found.timeline : [],
-    };
   },
 
   createComplaint: async (payload: {
@@ -139,47 +96,6 @@ export const complaintService = {
     citizenPhone: string;
     images?: string[];
   }): Promise<Complaint> => {
-    const randomSuffix = Math.floor(100000 + Math.random() * 900000);
-
-    const newComplaint: Complaint = {
-      id: `cmp_${Date.now()}`,
-      trackingNumber: `TRK-${randomSuffix}`,
-      title: payload.title,
-      category: payload.category,
-      priority: payload.priority || 'MEDIUM',
-      description: payload.description,
-      ward: payload.ward,
-      locationAddress: payload.locationAddress,
-      status: 'PENDING',
-      citizenId: payload.citizenId,
-      citizenName: payload.citizenName,
-      citizenPhone: payload.citizenPhone,
-      assignedWorkerId: undefined,
-      assignedWorkerName: undefined,
-      images: payload.images || [
-        'https://images.unsplash.com/photo-1541888946425-d0fbb186a5b3?auto=format&fit=crop&q=80&w=600'
-      ],
-      timeline: [
-        {
-          id: `tl_${Date.now()}`,
-          title: 'Complaint Registered',
-          description: 'Filed through Citizen Portal. Awaiting Councillor triage & technician assignment.',
-          timestamp: new Date().toISOString(),
-          actorName: payload.citizenName,
-          actorRole: 'CITIZEN',
-          status: 'PENDING'
-        }
-      ],
-      comments: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    // Save locally first so it is never lost
-    complaintsMemory = [newComplaint, ...complaintsMemory];
-    saveComplaints(complaintsMemory);
-
-    // Try posting to Spring Boot backend
     try {
       const apiPayload = {
         ...payload,
@@ -189,27 +105,20 @@ export const complaintService = {
       };
       const res = await api.post('/complaints', apiPayload);
       if (res.data) {
-        const savedFromBackend: Complaint = {
+        return {
           ...res.data,
           images: Array.isArray(res.data.images)
             ? res.data.images
-            : (res.data.images ? res.data.images.split(',') : [])
+            : (res.data.images ? res.data.images.split(',') : []),
+          comments: Array.isArray(res.data.comments) ? res.data.comments : [],
+          timeline: Array.isArray(res.data.timeline) ? res.data.timeline : [],
         };
-        // Replace temporary local complaint with backend response
-        const idx = complaintsMemory.findIndex(c => c.id === newComplaint.id);
-        if (idx !== -1) {
-          complaintsMemory[idx] = savedFromBackend;
-        } else {
-          complaintsMemory = [savedFromBackend, ...complaintsMemory];
-        }
-        saveComplaints(complaintsMemory);
-        return savedFromBackend;
       }
-    } catch (err) {
-      console.warn('[SGCS Frontend] Backend save failed, kept local complaint copy.');
+      throw new Error('Failed to save complaint in PostgreSQL database.');
+    } catch (err: any) {
+      console.error('[SGCS Frontend] Complaint creation error:', err);
+      throw new Error(err.response?.data?.error || err.message || 'Error submitting complaint to database.');
     }
-
-    return newComplaint;
   },
 
   updateComplaintStatus: async (
@@ -228,80 +137,155 @@ export const complaintService = {
         note,
         completionImage
       });
-      if (res.data) return res.data;
-    } catch (err) {
-      // Fallback
+      if (res.data) {
+        return {
+          ...res.data,
+          images: Array.isArray(res.data.images)
+            ? res.data.images
+            : (res.data.images ? res.data.images.split(',') : []),
+          comments: Array.isArray(res.data.comments) ? res.data.comments : [],
+          timeline: Array.isArray(res.data.timeline) ? res.data.timeline : [],
+        };
+      }
+      throw new Error('Failed to update complaint status in database.');
+    } catch (err: any) {
+      console.error('[SGCS Frontend] Status update error:', err);
+      throw new Error(err.response?.data?.error || err.message || 'Failed to update complaint status.');
     }
-
-    await new Promise((res) => setTimeout(res, 200));
-    const index = complaintsMemory.findIndex((c) => c.id === id);
-    if (index === -1) throw new Error('Complaint not found');
-
-    const existing = complaintsMemory[index];
-    const newTimelineItem = {
-      id: `tl_${Date.now()}`,
-      title: `Status updated to ${status.replace('_', ' ')}`,
-      description: note || `Status changed by ${actorName}`,
-      timestamp: new Date().toISOString(),
-      actorName,
-      actorRole,
-      status
-    };
-
-    const updated: Complaint = {
-      ...existing,
-      status,
-      updatedAt: new Date().toISOString(),
-      timeline: [newTimelineItem, ...existing.timeline],
-      completionImage: completionImage || existing.completionImage
-    };
-
-    complaintsMemory[index] = updated;
-    saveComplaints(complaintsMemory);
-    return updated;
   },
 
-  assignWorker: async (id: string, workerId: string, workerName: string, assignerName: string, priority?: ComplaintPriority): Promise<Complaint> => {
+  assignWorker: async (id: string, workerId: string, workerName: string, assignerName: string, priority?: ComplaintPriority, dueDate?: string): Promise<Complaint> => {
     try {
       const res = await api.post(`/complaints/${id}/assign`, {
         workerId,
         workerName,
         assignerName,
-        priority
+        priority,
+        dueDate
       });
-      if (res.data) return res.data;
-    } catch (err) {
-      // Fallback
+      if (res.data) {
+        return {
+          ...res.data,
+          images: Array.isArray(res.data.images)
+            ? res.data.images
+            : (res.data.images ? res.data.images.split(',') : []),
+          comments: Array.isArray(res.data.comments) ? res.data.comments : [],
+          timeline: Array.isArray(res.data.timeline) ? res.data.timeline : [],
+        };
+      }
+      throw new Error('Worker assignment failed in database.');
+    } catch (err: any) {
+      console.error('[SGCS Frontend] Worker assignment error:', err);
+      throw new Error(err.response?.data?.error || err.message || 'Failed to assign worker in database.');
     }
+  },
 
-    await new Promise((res) => setTimeout(res, 200));
-    const index = complaintsMemory.findIndex((c) => c.id === id);
-    if (index === -1) throw new Error('Complaint not found');
+  startTask: async (id: string): Promise<Complaint> => {
+    try {
+      const res = await api.post(`/complaints/${id}/start`);
+      if (res.data) {
+        return {
+          ...res.data,
+          images: Array.isArray(res.data.images)
+            ? res.data.images
+            : (res.data.images ? res.data.images.split(',') : []),
+          comments: Array.isArray(res.data.comments) ? res.data.comments : [],
+          timeline: Array.isArray(res.data.timeline) ? res.data.timeline : [],
+        };
+      }
+      throw new Error('Failed to start task in database.');
+    } catch (err: any) {
+      console.error('[SGCS Frontend] Start task error:', err);
+      throw new Error(err.response?.data?.error || err.message || 'Failed to start task.');
+    }
+  },
 
-    const existing = complaintsMemory[index];
-    const newTimelineItem = {
-      id: `tl_${Date.now()}`,
-      title: `Assigned to ${workerName}`,
-      description: `Assigned for field action by Councillor ${assignerName}${priority ? ` with priority ${priority}` : ''}`,
-      timestamp: new Date().toISOString(),
-      actorName: assignerName,
-      actorRole: 'COUNCILLOR' as const,
-      status: 'IN_PROGRESS' as const
-    };
+  completeTask: async (id: string, notes?: string, afterImage?: string, beforeImage?: string): Promise<Complaint> => {
+    try {
+      const res = await api.post(`/complaints/${id}/complete`, {
+        notes,
+        afterImage,
+        beforeImage
+      });
+      if (res.data) {
+        return {
+          ...res.data,
+          images: Array.isArray(res.data.images)
+            ? res.data.images
+            : (res.data.images ? res.data.images.split(',') : []),
+          comments: Array.isArray(res.data.comments) ? res.data.comments : [],
+          timeline: Array.isArray(res.data.timeline) ? res.data.timeline : [],
+        };
+      }
+      throw new Error('Failed to complete task in database.');
+    } catch (err: any) {
+      console.error('[SGCS Frontend] Complete task error:', err);
+      throw new Error(err.response?.data?.error || err.message || 'Failed to complete task.');
+    }
+  },
 
-    const updated: Complaint = {
-      ...existing,
-      assignedWorkerId: workerId,
-      assignedWorkerName: workerName,
-      priority: priority || existing.priority,
-      status: 'IN_PROGRESS',
-      updatedAt: new Date().toISOString(),
-      timeline: [newTimelineItem, ...existing.timeline]
-    };
+  approveTask: async (id: string, councillorName?: string): Promise<Complaint> => {
+    try {
+      const res = await api.post(`/complaints/${id}/approve`);
+      if (res.data) {
+        return {
+          ...res.data,
+          images: Array.isArray(res.data.images)
+            ? res.data.images
+            : (res.data.images ? res.data.images.split(',') : []),
+          comments: Array.isArray(res.data.comments) ? res.data.comments : [],
+          timeline: Array.isArray(res.data.timeline) ? res.data.timeline : [],
+        };
+      }
+      throw new Error('Failed to approve task in database.');
+    } catch (err: any) {
+      console.error('[SGCS Frontend] Approve task error:', err);
+      throw new Error(err.response?.data?.error || err.message || 'Failed to approve task.');
+    }
+  },
 
-    complaintsMemory[index] = updated;
-    saveComplaints(complaintsMemory);
-    return updated;
+  rejectTaskProof: async (id: string, councillorName?: string, feedback?: string): Promise<Complaint> => {
+    try {
+      const res = await api.post(`/complaints/${id}/reject-proof`, { feedback });
+      if (res.data) {
+        return {
+          ...res.data,
+          images: Array.isArray(res.data.images)
+            ? res.data.images
+            : (res.data.images ? res.data.images.split(',') : []),
+          comments: Array.isArray(res.data.comments) ? res.data.comments : [],
+          timeline: Array.isArray(res.data.timeline) ? res.data.timeline : [],
+        };
+      }
+      throw new Error('Failed to reject task proof in database.');
+    } catch (err: any) {
+      console.error('[SGCS Frontend] Reject task proof error:', err);
+      throw new Error(err.response?.data?.error || err.message || 'Failed to request rework.');
+    }
+  },
+
+  reportDelay: async (id: string, reason: string, notes?: string, delayImage?: string): Promise<Complaint> => {
+    try {
+      const res = await api.post(`/complaints/${id}/delay`, {
+        reason,
+        notes,
+        delayImage
+      });
+      if (res.data) {
+        return {
+          ...res.data,
+          images: Array.isArray(res.data.images)
+            ? res.data.images
+            : (res.data.images ? res.data.images.split(',') : []),
+          comments: Array.isArray(res.data.comments) ? res.data.comments : [],
+          timeline: Array.isArray(res.data.timeline) ? res.data.timeline : [],
+        };
+      }
+      throw new Error('Failed to report delay in database.');
+    } catch (err: any) {
+      console.error('[SGCS Frontend] Report delay error:', err);
+      throw new Error(err.response?.data?.error || err.message || 'Failed to log delay.');
+    }
   },
 
   addComment: async (id: string, authorName: string, authorRole: 'CITIZEN' | 'COUNCILLOR' | 'WORKER' | 'ADMIN', content: string): Promise<Complaint> => {
@@ -311,32 +295,20 @@ export const complaintService = {
         authorRole,
         content
       });
-      if (res.data) return res.data;
-    } catch (err) {
-      // Fallback
+      if (res.data) {
+        return {
+          ...res.data,
+          images: Array.isArray(res.data.images)
+            ? res.data.images
+            : (res.data.images ? res.data.images.split(',') : []),
+          comments: Array.isArray(res.data.comments) ? res.data.comments : [],
+          timeline: Array.isArray(res.data.timeline) ? res.data.timeline : [],
+        };
+      }
+      throw new Error('Failed to post comment in database.');
+    } catch (err: any) {
+      console.error('[SGCS Frontend] Add comment error:', err);
+      throw new Error(err.response?.data?.error || err.message || 'Failed to post comment.');
     }
-
-    await new Promise((res) => setTimeout(res, 200));
-    const index = complaintsMemory.findIndex((c) => c.id === id);
-    if (index === -1) throw new Error('Complaint not found');
-
-    const existing = complaintsMemory[index];
-    const newComment = {
-      id: `cmt_${Date.now()}`,
-      authorName,
-      authorRole,
-      content,
-      createdAt: new Date().toISOString()
-    };
-
-    const updated: Complaint = {
-      ...existing,
-      comments: [...existing.comments, newComment],
-      updatedAt: new Date().toISOString()
-    };
-
-    complaintsMemory[index] = updated;
-    saveComplaints(complaintsMemory);
-    return updated;
   }
 };

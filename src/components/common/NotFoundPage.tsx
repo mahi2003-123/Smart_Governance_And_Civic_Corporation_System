@@ -14,26 +14,26 @@ export const NotFoundPage: React.FC = () => {
         sx={{
           p: 6,
           textAlign: 'center',
-          borderRadius: '6px',
-          backgroundColor: '#FAF8F5',
-          border: '1px solid #E2E6EA',
+          borderRadius: '8px',
+          backgroundColor: '#FBFDFB',
+          border: '1px solid #E2EAF0',
         }}
       >
-        <MapOutlinedIcon sx={{ fontSize: 80, color: '#0F4C5C', mb: 2 }} />
-        <Typography variant="h1" sx={{ color: '#0F4C5C', fontWeight: 800, mb: 1 }}>
+        <MapOutlinedIcon sx={{ fontSize: 80, color: '#1F4D3A', mb: 2 }} />
+        <Typography variant="h1" sx={{ color: '#1F4D3A', fontWeight: 800, mb: 1 }}>
           404
         </Typography>
-        <Typography variant="h4" sx={{ fontWeight: 700, color: '#1A232A', mb: 2 }}>
+        <Typography variant="h4" sx={{ fontWeight: 700, color: '#1C2A24', mb: 2 }}>
           Civic Page Not Found
         </Typography>
-        <Typography variant="body1" sx={{ color: '#5A6672', maxWidth: 500, mx: 'auto', mb: 4 }}>
+        <Typography variant="body1" sx={{ color: '#5F7367', maxWidth: 500, mx: 'auto', mb: 4 }}>
           The page or civic resource you are searching for does not exist or has been moved to another ward directory.
         </Typography>
         <Button
           variant="contained"
           size="large"
           onClick={() => navigate('/')}
-          sx={{ borderRadius: '6px', px: 4, bgcolor: '#0F4C5C', '&:hover': { bgcolor: '#0A343F' }, textTransform: 'none', fontWeight: 700 }}
+          sx={{ borderRadius: '6px', px: 4, bgcolor: '#1F4D3A', '&:hover': { bgcolor: '#16382A' }, textTransform: 'none', fontWeight: 700 }}
         >
           Return to Portal Home
         </Button>
@@ -72,7 +72,7 @@ export const UnauthorizedPage: React.FC = () => {
           variant="contained"
           size="large"
           onClick={() => navigate('/')}
-          sx={{ borderRadius: '6px', px: 4, bgcolor: '#0F4C5C', '&:hover': { bgcolor: '#0A343F' }, textTransform: 'none', fontWeight: 700 }}
+          sx={{ borderRadius: '6px', px: 4, bgcolor: '#1F4D3A', '&:hover': { bgcolor: '#16382A' }, textTransform: 'none', fontWeight: 700 }}
         >
           Go Back to Safety
         </Button>

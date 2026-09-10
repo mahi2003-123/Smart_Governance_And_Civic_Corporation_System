@@ -18,7 +18,7 @@ export const WelcomeCard: React.FC<WelcomeCardProps> = ({
   actionText,
   actionIcon,
   onAction,
-  gradientBackground = '#0F4C5C',
+  gradientBackground = '#1F4D3A',
 }) => {
   return (
     <Card
@@ -28,8 +28,8 @@ export const WelcomeCard: React.FC<WelcomeCardProps> = ({
         p: { xs: 3, md: 3.5 },
         backgroundColor: gradientBackground,
         color: '#FFFFFF',
-        borderRadius: '6px',
-        border: '1px solid #0A343F',
+        borderRadius: '8px',
+        border: '1px solid #16382A',
         boxShadow: 'none',
       }}
     >
@@ -39,14 +39,14 @@ export const WelcomeCard: React.FC<WelcomeCardProps> = ({
             <Avatar
               src={avatarUrl}
               alt={title}
-              sx={{ width: 56, height: 56, border: '2px solid #E0F2F1' }}
+              sx={{ width: 56, height: 56, border: '2px solid #E8F3EE' }}
             />
           )}
           <Box>
             <Typography variant="h4" sx={{ fontWeight: 700, color: '#FFFFFF', letterSpacing: '-0.015em', fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
               {title}
             </Typography>
-            <Typography variant="body2" sx={{ opacity: 0.9, color: '#E0F2F1', fontWeight: 500, mt: 0.5 }}>
+            <Typography variant="body2" sx={{ opacity: 0.9, color: '#E8F3EE', fontWeight: 500, mt: 0.5 }}>
               {subtitle}
             </Typography>
           </Box>
@@ -59,7 +59,7 @@ export const WelcomeCard: React.FC<WelcomeCardProps> = ({
             startIcon={actionIcon}
             onClick={onAction}
             sx={{
-              bgcolor: '#C85A32',
+              bgcolor: '#236B4E',
               color: '#FFFFFF',
               fontWeight: 700,
               px: 2.5,
@@ -68,7 +68,7 @@ export const WelcomeCard: React.FC<WelcomeCardProps> = ({
               textTransform: 'none',
               fontSize: '0.85rem',
               boxShadow: 'none',
-              '&:hover': { bgcolor: '#A03F1B' },
+              '&:hover': { bgcolor: '#1C563E' },
             }}
           >
             {actionText}

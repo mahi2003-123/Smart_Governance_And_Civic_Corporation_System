@@ -24,6 +24,9 @@ public class AuthService {
     @Autowired
     private JwtUtils jwtUtils;
 
+    @Autowired
+    private AuditService auditService;
+
     public AuthDto.AuthResponse login(AuthDto.LoginRequest request) {
         String email = request.getEmail().trim().toLowerCase();
         String password = request.getPassword().trim();
@@ -39,6 +42,17 @@ public class AuthService {
         }
 
         String token = jwtUtils.generateToken(user);
+
+        auditService.logActivity(
+            user.getId(),
+            user.getFullName(),
+            user.getRole(),
+            "User Login",
+            "AUTH",
+            user.getEmail(),
+            "User " + user.getFullName() + " (" + user.getRole() + ") logged into SGCS portal"
+        );
+
         return new AuthDto.AuthResponse(true, user, token);
     }
 
@@ -74,6 +88,16 @@ public class AuthService {
 
         User saved = userRepository.save(user);
         String token = jwtUtils.generateToken(saved);
+
+        auditService.logActivity(
+            saved.getId(),
+            saved.getFullName(),
+            saved.getRole(),
+            "User Self-Registration",
+            "AUTH",
+            saved.getEmail(),
+            "Registered new account with role " + saved.getRole() + " in " + saved.getWard()
+        );
 
         return new AuthDto.AuthResponse(true, saved, token);
     }

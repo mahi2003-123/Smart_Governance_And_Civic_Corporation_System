@@ -6,6 +6,7 @@ import com.sgcs.repository.UserRepository;
 import com.sgcs.repository.WardRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -23,8 +24,21 @@ public class DataInitializer implements CommandLineRunner {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     @Override
     public void run(String... args) throws Exception {
+        // Drop restrictive PostgreSQL check constraints if present so all status and notification types persist
+        try {
+            jdbcTemplate.execute("ALTER TABLE complaints DROP CONSTRAINT IF EXISTS complaints_status_check");
+            jdbcTemplate.execute("ALTER TABLE notifications DROP CONSTRAINT IF EXISTS notifications_type_check");
+            jdbcTemplate.execute("ALTER TABLE complaint_timeline DROP CONSTRAINT IF EXISTS complaint_timeline_status_check");
+            System.out.println("✅ Adjusted PostgreSQL database table constraints.");
+        } catch (Exception e) {
+            System.out.println("Note on PostgreSQL constraint adjustment: " + e.getMessage());
+        }
+
         // Seed standard municipal Wards if empty
         if (wardRepository.count() == 0) {
             List<Ward> defaultWards = List.of(

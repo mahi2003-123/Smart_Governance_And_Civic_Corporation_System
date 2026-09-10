@@ -183,7 +183,7 @@ export const SidebarContent: React.FC<{ onItemClick?: () => void }> = ({ onItemC
                 width: 8,
                 height: 8,
                 borderRadius: '50%',
-                backgroundColor: '#0F4C5C',
+                backgroundColor: '#1F4D3A',
                 display: 'inline-block',
               }}
             />
@@ -200,8 +200,8 @@ export const SidebarContent: React.FC<{ onItemClick?: () => void }> = ({ onItemC
               label={roleLabelMap[user.role] || user.role}
               size="small"
               sx={{
-                backgroundColor: '#E0F2F1',
-                color: '#0F4C5C',
+                backgroundColor: '#E8F3EE',
+                color: '#1F4D3A',
                 fontWeight: 700,
                 fontSize: '0.725rem',
                 height: '22px',
@@ -252,12 +252,12 @@ export const SidebarContent: React.FC<{ onItemClick?: () => void }> = ({ onItemC
                         px: 3,
                         mb: 0.2,
                         position: 'relative',
-                        backgroundColor: isSelected ? '#E0F2F1' : 'transparent',
-                        color: isSelected ? '#0F4C5C' : '#5A6672',
+                        backgroundColor: isSelected ? '#E8F3EE' : 'transparent',
+                        color: isSelected ? '#1F4D3A' : '#5A6672',
                         transition: 'all 0.15s ease',
                         '&:hover': {
-                          backgroundColor: isSelected ? '#E0F2F1' : '#F4F1EA',
-                          color: '#1A232A',
+                          backgroundColor: isSelected ? '#E8F3EE' : '#F2F7F4',
+                          color: '#1C2A24',
                         },
                         '&::before': isSelected
                           ? {
@@ -267,7 +267,7 @@ export const SidebarContent: React.FC<{ onItemClick?: () => void }> = ({ onItemC
                               top: '15%',
                               height: '70%',
                               width: '3px',
-                              backgroundColor: '#0F4C5C',
+                              backgroundColor: '#1F4D3A',
                               borderRadius: '0 2px 2px 0',
                             }
                           : undefined,
@@ -276,7 +276,7 @@ export const SidebarContent: React.FC<{ onItemClick?: () => void }> = ({ onItemC
                       <ListItemIcon
                         sx={{
                           minWidth: 30,
-                          color: isSelected ? '#0F4C5C' : '#5A6672',
+                          color: isSelected ? '#1F4D3A' : '#5A6672',
                         }}
                       >
                         {item.icon}
@@ -288,7 +288,7 @@ export const SidebarContent: React.FC<{ onItemClick?: () => void }> = ({ onItemC
                             sx={{
                               fontWeight: isSelected ? 700 : 500,
                               fontSize: '0.825rem',
-                              color: isSelected ? '#0F4C5C' : 'inherit',
+                              color: isSelected ? '#1F4D3A' : 'inherit',
                             }}
                           >
                             {item.label}

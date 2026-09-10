@@ -27,9 +27,9 @@ export const EmailVerification: React.FC = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#F8F5F2', display: 'flex', alignItems: 'center', py: 6 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#FBFDFB', display: 'flex', alignItems: 'center', py: 6 }}>
       <Container maxWidth="xs">
-        <Card sx={{ p: { xs: 3, sm: 4 }, borderRadius: 4, boxShadow: '0 16px 40px rgba(111, 78, 55, 0.08)' }}>
+        <Card sx={{ p: { xs: 3, sm: 4 }, borderRadius: 4, boxShadow: '0 16px 40px rgba(31, 77, 58, 0.08)', border: '1px solid #E2EAF0' }}>
           <CardContent sx={{ p: 0 }}>
             <Box textAlign="center" mb={3}>
               <Box
@@ -37,8 +37,8 @@ export const EmailVerification: React.FC = () => {
                   width: 60,
                   height: 60,
                   borderRadius: '50%',
-                  bgcolor: '#E8DDD3',
-                  color: '#4F3523',
+                  bgcolor: '#E8F3EE',
+                  color: '#1F4D3A',
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -47,10 +47,10 @@ export const EmailVerification: React.FC = () => {
               >
                 <MarkEmailReadIcon sx={{ fontSize: 32 }} />
               </Box>
-              <Typography variant="h4" fontWeight={800}>
+              <Typography variant="h4" fontWeight={800} sx={{ color: '#1C2A24' }}>
                 Verify Email Address
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ color: '#5F7367' }}>
                 We sent a 6-digit verification security code to your registered email address.
               </Typography>
             </Box>
@@ -86,11 +86,11 @@ export const EmailVerification: React.FC = () => {
                 </CustomButton>
 
                 <Box textAlign="center">
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" color="text.secondary" sx={{ color: '#5F7367' }}>
                     Didn't receive code?{' '}
                     <Typography
                       component="span"
-                      sx={{ color: '#6F4E37', fontWeight: 700, cursor: 'pointer' }}
+                      sx={{ color: '#1F4D3A', fontWeight: 700, cursor: 'pointer' }}
                       onClick={() => alert('Verification code resent!')}
                     >
                       Resend Code

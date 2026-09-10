@@ -39,18 +39,19 @@ import { SystemReports } from '../pages/admin/SystemReports';
 
 import { NotFoundPage, UnauthorizedPage } from '../components/common/NotFoundPage';
 import { ProtectedRoute } from './ProtectedRoute';
+import { PublicOnlyRoute } from './PublicOnlyRoute';
 
 export const AppRoutes: React.FC = () => {
   return (
     <Routes>
       {/* Public Auth Routes */}
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/landing" element={<LandingPage />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/email-verification" element={<EmailVerification />} />
+      <Route path="/" element={<PublicOnlyRoute><LandingPage /></PublicOnlyRoute>} />
+      <Route path="/landing" element={<PublicOnlyRoute><LandingPage /></PublicOnlyRoute>} />
+      <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
+      <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
+      <Route path="/forgot-password" element={<PublicOnlyRoute><ForgotPassword /></PublicOnlyRoute>} />
+      <Route path="/reset-password" element={<PublicOnlyRoute><ResetPassword /></PublicOnlyRoute>} />
+      <Route path="/email-verification" element={<PublicOnlyRoute><EmailVerification /></PublicOnlyRoute>} />
 
       {/* Citizen Routes */}
       <Route

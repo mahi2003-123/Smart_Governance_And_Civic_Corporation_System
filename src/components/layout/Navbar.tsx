@@ -104,7 +104,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onMobileMenuToggle }) => {
               underline="none"
               color="inherit"
               onClick={() => navigate(user ? `/${user.role.toLowerCase()}/dashboard` : '/')}
-              sx={{ color: '#5A6672', fontSize: '0.775rem', cursor: 'pointer', fontWeight: 600, '&:hover': { color: '#0F4C5C' } }}
+              sx={{ color: '#5A6672', fontSize: '0.775rem', cursor: 'pointer', fontWeight: 600, '&:hover': { color: '#1F4D3A' } }}
             >
               SGCS Portal
             </MuiLink>
@@ -147,14 +147,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onMobileMenuToggle }) => {
                 border: '1px solid #E2E6EA',
                 backgroundColor: '#FFFFFF',
                 transition: 'all 0.15s ease',
-                '&:hover': { backgroundColor: '#F4F1EA', borderColor: '#0F4C5C' },
+                '&:hover': { backgroundColor: '#E8F3EE', borderColor: '#1F4D3A' },
               }}
             >
               <Avatar
                 sx={{
                   width: 28,
                   height: 28,
-                  backgroundColor: '#0F4C5C',
+                  backgroundColor: '#1F4D3A',
                   color: '#FFFFFF',
                   fontSize: '0.8rem',
                   fontWeight: 700,

@@ -29,9 +29,9 @@ export const ResetPassword: React.FC = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#F8F5F2', display: 'flex', alignItems: 'center', py: 6 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#FBFDFB', display: 'flex', alignItems: 'center', py: 6 }}>
       <Container maxWidth="xs">
-        <Card sx={{ p: { xs: 3, sm: 4 }, borderRadius: 4, boxShadow: '0 16px 40px rgba(111, 78, 55, 0.08)' }}>
+        <Card sx={{ p: { xs: 3, sm: 4 }, borderRadius: 4, boxShadow: '0 16px 40px rgba(31, 77, 58, 0.08)', border: '1px solid #E2EAF0' }}>
           <CardContent sx={{ p: 0 }}>
             <Box textAlign="center" mb={3}>
               <Box
@@ -39,8 +39,8 @@ export const ResetPassword: React.FC = () => {
                   width: 50,
                   height: 50,
                   borderRadius: '50%',
-                  bgcolor: '#E8DDD3',
-                  color: '#4F3523',
+                  bgcolor: '#E8F3EE',
+                  color: '#1F4D3A',
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -49,10 +49,10 @@ export const ResetPassword: React.FC = () => {
               >
                 <LocationCityIcon />
               </Box>
-              <Typography variant="h4" fontWeight={800}>
+              <Typography variant="h4" fontWeight={800} sx={{ color: '#1C2A24' }}>
                 Set New Password
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ color: '#5F7367' }}>
                 Choose a strong security password for your SGCS account.
               </Typography>
             </Box>
@@ -82,7 +82,7 @@ export const ResetPassword: React.FC = () => {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <LockIcon sx={{ color: '#6F4E37' }} />
+                        <LockIcon sx={{ color: '#1F4D3A' }} />
                       </InputAdornment>
                     ),
                   }}
@@ -96,7 +96,7 @@ export const ResetPassword: React.FC = () => {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <LockIcon sx={{ color: '#6F4E37' }} />
+                        <LockIcon sx={{ color: '#1F4D3A' }} />
                       </InputAdornment>
                     ),
                   }}

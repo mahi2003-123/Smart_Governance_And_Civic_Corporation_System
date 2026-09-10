@@ -42,6 +42,9 @@ import { StatCard } from '../../components/cards/StatCard';
 import { AssignWorkerModal } from '../../components/modals/AssignWorkerModal';
 import { StatusBadge } from '../../components/common/StatusBadge';
 
+import VerifiedIcon from '@mui/icons-material/Verified';
+import { VerifyProofModal } from '../../components/modals/VerifyProofModal';
+
 export const CouncillorDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -49,6 +52,7 @@ export const CouncillorDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [assignModalComplaint, setAssignModalComplaint] = useState<Complaint | null>(null);
+  const [verifyModalComplaint, setVerifyModalComplaint] = useState<Complaint | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -72,10 +76,31 @@ export const CouncillorDashboard: React.FC = () => {
         assignModalComplaint.id,
         workerId,
         workerName,
-        user.fullName
+        user.fullName,
+        priority
       );
-      const withPriority: Complaint = { ...updated, priority };
-      setComplaints((prev) => prev.map((c) => (c.id === withPriority.id ? withPriority : c)));
+      setComplaints((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+      setAssignModalComplaint(null);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleApproveProof = async (complaintId: string) => {
+    if (!user) return;
+    try {
+      const updated = await complaintService.approveTask(complaintId, user.fullName);
+      setComplaints((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleRejectProof = async (complaintId: string, feedback: string) => {
+    if (!user) return;
+    try {
+      const updated = await complaintService.rejectTaskProof(complaintId, user.fullName, feedback);
+      setComplaints((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
     } catch (e) {
       console.error(e);
     }
@@ -87,13 +112,16 @@ export const CouncillorDashboard: React.FC = () => {
     ? complaints.filter((c) => matchesWard(c.ward, user.ward))
     : complaints;
 
-  const pendingList = wardComplaints.filter((c) => c.status === 'PENDING' || !c.assignedWorkerId);
-  const inProgressList = wardComplaints.filter((c) => c.status === 'IN_PROGRESS');
+  const unassignedList = wardComplaints.filter((c) => (c.status === 'PENDING' || (c.status as string) === 'SUBMITTED') && !c.assignedWorkerId);
+  const assignedOrInProgressList = wardComplaints.filter((c) => (c.status === 'ASSIGNED' || c.status === 'IN_PROGRESS' || Boolean(c.assignedWorkerId)) && c.status !== 'RESOLVED' && c.status !== 'PENDING_APPROVAL');
+  const pendingApprovalList = wardComplaints.filter((c) => c.status === 'PENDING_APPROVAL');
   const resolvedList = wardComplaints.filter((c) => c.status === 'RESOLVED');
 
+  const actionQueueList = [...pendingApprovalList, ...unassignedList, ...assignedOrInProgressList];
+
   const statusPieData = [
-    { name: 'Pending', value: pendingList.length, color: '#B58A45' },
-    { name: 'In Progress', value: inProgressList.length, color: '#496A57' },
+    { name: 'Unassigned', value: unassignedList.length, color: '#B58A45' },
+    { name: 'Assigned / Active', value: assignedOrInProgressList.length, color: '#496A57' },
     { name: 'Resolved', value: resolvedList.length, color: '#68706B' },
   ];
 
@@ -128,7 +156,7 @@ export const CouncillorDashboard: React.FC = () => {
       >
         <StatCard
           title="Pending Ward Queue"
-          value={pendingList.length}
+          value={unassignedList.length}
           subtitle="Awaiting triage or dispatch"
           icon={<HourglassEmptyOutlinedIcon />}
           iconBgColor="#FBF7F0"
@@ -138,7 +166,7 @@ export const CouncillorDashboard: React.FC = () => {
 
         <StatCard
           title="Work In Progress"
-          value={inProgressList.length}
+          value={assignedOrInProgressList.length}
           subtitle="Field technicians active"
           icon={<TrackChangesOutlinedIcon />}
           iconBgColor="#E8EFE9"
@@ -316,14 +344,14 @@ export const CouncillorDashboard: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {pendingList.length === 0 ? (
+              {actionQueueList.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} align="center" sx={{ py: 5, color: '#68706B' }}>
-                    No pending complaints in your ward queue.
+                    No pending complaints or worker verification requests in your ward queue.
                   </TableCell>
                 </TableRow>
               ) : (
-                pendingList.map((row) => (
+                actionQueueList.map((row) => (
                   <TableRow key={row.id} hover>
                     <TableCell sx={{ fontWeight: 600, color: '#496A57' }}>
                       #{row.trackingNumber}
@@ -343,24 +371,61 @@ export const CouncillorDashboard: React.FC = () => {
                       {row.priority}
                     </TableCell>
                     <TableCell>
-                      <StatusBadge status={row.status} />
+                      <StatusBadge status={row.status} assignedWorkerName={row.assignedWorkerName} />
                     </TableCell>
                     <TableCell align="center">
-                      <Button
-                        size="small"
-                        variant="contained"
-                        onClick={() => setAssignModalComplaint(row)}
-                        sx={{
-                          borderRadius: '6px',
-                          backgroundColor: '#496A57',
-                          color: '#FFFFFF',
-                          fontWeight: 500,
-                          fontSize: '0.8rem',
-                          '&:hover': { backgroundColor: '#304B3A' },
-                        }}
-                      >
-                        Assign Worker
-                      </Button>
+                      {row.status === 'PENDING_APPROVAL' ? (
+                        <Button
+                          size="small"
+                          variant="contained"
+                          color="warning"
+                          startIcon={<VerifiedIcon />}
+                          onClick={() => setVerifyModalComplaint(row)}
+                          sx={{
+                            borderRadius: '6px',
+                            backgroundColor: '#D97706',
+                            color: '#FFFFFF',
+                            fontWeight: 700,
+                            fontSize: '0.8rem',
+                            '&:hover': { backgroundColor: '#B45309' },
+                          }}
+                        >
+                          Verify Proof
+                        </Button>
+                      ) : row.assignedWorkerName ? (
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={() => setAssignModalComplaint(row)}
+                          sx={{
+                            borderRadius: '6px',
+                            borderColor: '#2563EB',
+                            color: '#1E40AF',
+                            backgroundColor: '#EBF5FF',
+                            fontWeight: 600,
+                            fontSize: '0.8rem',
+                            '&:hover': { backgroundColor: '#DBEAFE' },
+                          }}
+                        >
+                          Reassign ({row.assignedWorkerName.split(' ')[0]})
+                        </Button>
+                      ) : (
+                        <Button
+                          size="small"
+                          variant="contained"
+                          onClick={() => setAssignModalComplaint(row)}
+                          sx={{
+                            borderRadius: '6px',
+                            backgroundColor: '#496A57',
+                            color: '#FFFFFF',
+                            fontWeight: 500,
+                            fontSize: '0.8rem',
+                            '&:hover': { backgroundColor: '#304B3A' },
+                          }}
+                        >
+                          Assign Worker
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))
@@ -376,6 +441,15 @@ export const CouncillorDashboard: React.FC = () => {
         complaint={assignModalComplaint}
         onClose={() => setAssignModalComplaint(null)}
         onConfirm={handleConfirmAssign}
+      />
+
+      {/* Councillor Verify Proof Modal */}
+      <VerifyProofModal
+        open={Boolean(verifyModalComplaint)}
+        complaint={verifyModalComplaint}
+        onClose={() => setVerifyModalComplaint(null)}
+        onApprove={handleApproveProof}
+        onRejectProof={handleRejectProof}
       />
     </Box>
   );

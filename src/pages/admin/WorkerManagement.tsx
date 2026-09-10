@@ -114,9 +114,34 @@ export const WorkerManagement: React.FC = () => {
     setModalError('');
     setModalSuccess('');
 
-    if (!formData.fullName || !formData.email) {
-      setModalError('Please fill in worker name and email address.');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const cleanEmail = (formData.email || '').trim().toLowerCase();
+    const cleanName = (formData.fullName || '').trim();
+
+    if (!cleanName) {
+      setModalError('Please enter technician full name.');
       return;
+    }
+
+    if (!cleanEmail || !emailRegex.test(cleanEmail)) {
+      setModalError('Please enter a valid email address (e.g. technician@sgcs.gov.in).');
+      return;
+    }
+
+    // Check duplicate email
+    const existingUser = workers.find((u) => u.email.trim().toLowerCase() === cleanEmail);
+    if (existingUser) {
+      setModalError(`Email address "${cleanEmail}" is already registered in the system (${existingUser.fullName}). Duplicate email addresses are not allowed.`);
+      return;
+    }
+
+    if (formData.phone) {
+      const cleanPhone = formData.phone.replace(/[\s\-\+]/g, '');
+      const numberToCheck = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone.slice(2) : cleanPhone;
+      if (!/^[6-9]\d{9}$/.test(numberToCheck)) {
+        setModalError('Phone number must be a 10-digit mobile number starting with 6, 7, 8, or 9.');
+        return;
+      }
     }
 
     setModalLoading(true);

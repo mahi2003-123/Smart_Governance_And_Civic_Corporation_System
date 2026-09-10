@@ -26,8 +26,11 @@ import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader';
 import { FilterBar, FilterOption } from '../../components/admin/FilterBar';
 import { ActionMenu, ActionMenuItem } from '../../components/admin/ActionMenu';
+import { ProposalItemCard } from '../../components/proposals/ProposalItemCard';
+import { useAuth } from '../../hooks/useAuth';
 
 export const ProposalMonitoring: React.FC = () => {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [proposals, setProposals] = useState<CommunityProposal[]>([]);
   const [wards, setWards] = useState<Ward[]>([]);
@@ -40,24 +43,61 @@ export const ProposalMonitoring: React.FC = () => {
   // Detail Modal
   const [selectedProposal, setSelectedProposal] = useState<CommunityProposal | null>(null);
 
+  const userIdentifier = user?.email || user?.id || user?.fullName || 'anonymous';
+
+  const fetchProposals = async () => {
+    try {
+      const [pData, wData] = await Promise.all([
+        proposalService.getProposals(undefined, userIdentifier),
+        adminService.getWards(),
+      ]);
+      setProposals(pData);
+      setWards(wData);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      try {
-        const [pData, wData] = await Promise.all([
-          proposalService.getProposals(),
-          adminService.getWards(),
-        ]);
-        setProposals(pData);
-        setWards(wData);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
+      await fetchProposals();
+      setLoading(false);
     };
     fetchData();
-  }, []);
+  }, [userIdentifier]);
+
+  const handleVote = async (proposalId: string, voteType: 'UP' | 'DOWN') => {
+    try {
+      const updated = await proposalService.voteProposal(proposalId, voteType, userIdentifier);
+      setProposals((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+      if (selectedProposal?.id === updated.id) {
+        setSelectedProposal(updated);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleComment = async (proposalId: string, commentText: string) => {
+    try {
+      const updated = await proposalService.addComment(
+        proposalId,
+        {
+          content: commentText,
+          authorName: user?.fullName || 'System Admin',
+          authorRole: 'ADMIN',
+        },
+        userIdentifier
+      );
+      setProposals((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+      if (selectedProposal?.id === updated.id) {
+        setSelectedProposal(updated);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const filtered = proposals.filter((p) => {
     const matchesSearch =
@@ -102,7 +142,7 @@ export const ProposalMonitoring: React.FC = () => {
     <Box sx={{ pb: 6 }}>
       <AdminPageHeader
         title="Community Proposals"
-        description="Monitor citizen proposals and ward voting support across the city."
+        description="Monitor citizen proposals, voting responses, and comments across all city wards."
       />
 
       <FilterBar
@@ -125,8 +165,8 @@ export const ProposalMonitoring: React.FC = () => {
             <TableRow>
               <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Proposal Title & Category</TableCell>
               <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Ward</TableCell>
-              <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Author (Citizen)</TableCell>
-              <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Support Count</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Author & Role</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Votes & Comments</TableCell>
               <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Status</TableCell>
               <TableCell sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Submitted</TableCell>
               <TableCell align="right" sx={{ fontWeight: 600, color: '#202522', fontSize: '0.8rem' }}>Actions</TableCell>
@@ -143,16 +183,18 @@ export const ProposalMonitoring: React.FC = () => {
               filtered.map((p) => {
                 const actionItems: ActionMenuItem[] = [
                   {
-                    label: 'View Full Proposal',
+                    label: 'View Proposal & Discussion',
                     icon: <VisibilityOutlinedIcon fontSize="small" />,
                     onClick: () => setSelectedProposal(p),
                   },
                   {
-                    label: 'View Author Profile',
+                    label: 'View Author Details',
                     icon: <PersonOutlinedIcon fontSize="small" />,
-                    onClick: () => alert(`Author: ${p.authorName}`),
+                    onClick: () => alert(`Author: ${p.authorName} (${p.authorRole || 'CITIZEN'})`),
                   },
                 ];
+
+                const commentCount = p.comments?.length || 0;
 
                 return (
                   <TableRow key={p.id} sx={{ '&:hover': { backgroundColor: '#F8F9F7' }, borderBottom: '1px solid #E5E8E4' }}>
@@ -168,20 +210,27 @@ export const ProposalMonitoring: React.FC = () => {
                       {p.ward.split(' - ')[0]}
                     </TableCell>
                     <TableCell sx={{ fontSize: '0.85rem', color: '#202522' }}>
-                      {p.authorName}
+                      {p.authorName}{' '}
+                      <Chip label={p.authorRole || 'CITIZEN'} size="small" variant="outlined" sx={{ height: 18, fontSize: '0.625rem' }} />
                     </TableCell>
                     <TableCell>
-                      <Chip
-                        label={`${p.upvotes} Upvotes`}
-                        size="small"
-                        sx={{
-                          fontWeight: 600,
-                          fontSize: '0.725rem',
-                          backgroundColor: '#E8EFE9',
-                          color: '#304B3A',
-                          borderRadius: '4px',
-                        }}
-                      />
+                      <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                        <Chip
+                          label={`👍 ${p.upvotes || 0}`}
+                          size="small"
+                          sx={{ fontWeight: 600, fontSize: '0.7rem', backgroundColor: '#E8EFE9', color: '#304B3A', height: 20 }}
+                        />
+                        <Chip
+                          label={`👎 ${p.downvotes || 0}`}
+                          size="small"
+                          sx={{ fontWeight: 600, fontSize: '0.7rem', backgroundColor: '#FDE8E8', color: '#B45D59', height: 20 }}
+                        />
+                        <Chip
+                          label={`💬 ${commentCount}`}
+                          size="small"
+                          sx={{ fontWeight: 600, fontSize: '0.7rem', backgroundColor: '#F3F5F2', color: '#68706B', height: 20 }}
+                        />
+                      </Box>
                     </TableCell>
                     <TableCell>
                       <Chip
@@ -221,42 +270,30 @@ export const ProposalMonitoring: React.FC = () => {
         </Table>
       </TableContainer>
 
-      {/* Modal */}
+      {/* Modal to view and participate in proposal discussion */}
       {selectedProposal && (
         <Dialog
           open={Boolean(selectedProposal)}
           onClose={() => setSelectedProposal(null)}
-          maxWidth="sm"
+          maxWidth="md"
           fullWidth
-          PaperProps={{ sx: { borderRadius: '8px', p: 1 } }}
+          slotProps={{ paper: { sx: { borderRadius: '8px', p: 1 } } }}
         >
-          <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 600, color: '#202522' }}>
-                {selectedProposal.title}
-              </Typography>
-              <Typography variant="caption" sx={{ color: '#68706B' }}>
-                {selectedProposal.ward} — Submitted by {selectedProposal.authorName}
-              </Typography>
-            </Box>
+          <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, color: '#202522' }}>
+              Proposal Overview & Discussions
+            </Typography>
             <IconButton size="small" onClick={() => setSelectedProposal(null)}>
               <CloseOutlinedIcon fontSize="small" />
             </IconButton>
           </DialogTitle>
 
           <DialogContent dividers sx={{ borderColor: '#E5E8E4' }}>
-            <Typography variant="body2" sx={{ color: '#4A524D', lineHeight: 1.6, mb: 2 }}>
-              {selectedProposal.description}
-            </Typography>
-
-            <Box sx={{ p: 2, backgroundColor: '#F8F9F7', borderRadius: '6px', border: '1px solid #E5E8E4' }}>
-              <Typography variant="caption" sx={{ color: '#68706B', display: 'block', mb: 0.5 }}>
-                Community Support Statistics
-              </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 600, color: '#496A57' }}>
-                {selectedProposal.upvotes} Upvotes | {selectedProposal.downvotes || 0} Downvotes
-              </Typography>
-            </Box>
+            <ProposalItemCard
+              proposal={selectedProposal}
+              onVote={handleVote}
+              onComment={handleComment}
+            />
           </DialogContent>
 
           <DialogActions sx={{ p: 2 }}>

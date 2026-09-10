@@ -16,6 +16,7 @@ import {
   FormControl,
   InputLabel,
   OutlinedInput,
+  FormHelperText,
 } from '@mui/material';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
@@ -48,33 +49,77 @@ export const Register: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Validation regex patterns
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const phoneRegex = /^[6-9]\d{9}$/; // 10-digit mobile number starting with 6, 7, 8, or 9
+  const nameRegex = /^[a-zA-Z\s.]{2,50}$/;
 
-    if (!fullName || !email || !phone || !address || !password || !confirmPassword) {
-      setError('Please complete all mandatory registration fields.');
-      return;
+  const validateFields = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    if (!fullName.trim()) {
+      errors.fullName = 'Full Name is required.';
+    } else if (!nameRegex.test(fullName.trim())) {
+      errors.fullName = 'Please enter a valid name (alphabets only, min 2 chars).';
     }
 
-    if (password !== confirmPassword) {
-      setError('Passwords do not match. Please verify your entry.');
-      return;
+    if (!email.trim()) {
+      errors.email = 'Email address is required.';
+    } else if (!emailRegex.test(email.trim())) {
+      errors.email = 'Please enter a valid email address (e.g. user@example.com).';
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long.');
-      return;
+    const cleanPhone = phone.replace(/[\s\-\+]/g, '');
+    const numberToCheck = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone.slice(2) : cleanPhone;
+    if (!phone.trim()) {
+      errors.phone = 'Mobile phone number is required.';
+    } else if (!phoneRegex.test(numberToCheck)) {
+      errors.phone = 'Phone number must be a 10-digit number starting with 6, 7, 8, or 9.';
+    }
+
+    if (!address.trim()) {
+      errors.address = 'Residential address is required.';
+    } else if (address.trim().length < 5) {
+      errors.address = 'Address must be at least 5 characters long.';
+    }
+
+    if (!ward) {
+      errors.ward = 'Please select your assigned municipal ward.';
+    }
+
+    if (!password) {
+      errors.password = 'Password is required.';
+    } else if (password.length < 6) {
+      errors.password = 'Password must be at least 6 characters long.';
+    }
+
+    if (!confirmPassword) {
+      errors.confirmPassword = 'Please confirm your password.';
+    } else if (password !== confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match.';
     }
 
     if (!agreeTerms) {
-      setError('Please agree to the SGCS Terms of Public Service.');
+      errors.agreeTerms = 'You must agree to the Terms of Service to register.';
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!validateFields()) {
+      setError('Please resolve all validation errors highlighted below before proceeding.');
       return;
     }
 
     setLoading(true);
-    setError('');
 
     try {
       await register({
@@ -94,9 +139,9 @@ export const Register: React.FC = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#FFFDFB', display: 'flex', flexDirection: 'column', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#FBFDFB', display: 'flex', flexDirection: 'column', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       {/* Header */}
-      <Box sx={{ borderBottom: '1px solid #E2E8F0', py: 2, px: { xs: 2, md: 6 }, backgroundColor: '#FFFFFF' }}>
+      <Box sx={{ borderBottom: '1px solid #E2EAF0', py: 2, px: { xs: 2, md: 6 }, backgroundColor: '#FFFFFF' }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1280, mx: 'auto', width: '100%' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, cursor: 'pointer' }} onClick={() => navigate('/')}>
             <Box
@@ -104,21 +149,21 @@ export const Register: React.FC = () => {
                 width: 32,
                 height: 32,
                 borderRadius: '9px',
-                background: 'linear-gradient(135deg, #FF9A52 0%, #FF7A30 100%)',
+                backgroundColor: '#1F4D3A',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: '#FFFFFF',
-                boxShadow: '0 4px 12px rgba(255, 140, 56, 0.32)',
+                boxShadow: '0 4px 12px rgba(31, 77, 58, 0.25)',
               }}
             >
               <AddIcon sx={{ fontSize: 22, fontWeight: 900 }} />
             </Box>
             <Box>
-              <Typography variant="subtitle1" sx={{ fontWeight: 900, color: '#1E1B4B', lineHeight: 1.1 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 900, color: '#1C2A24', lineHeight: 1.1 }}>
                 SGCS Citizen Portal
               </Typography>
-              <Typography variant="caption" sx={{ color: '#64748B', fontSize: '0.75rem', fontWeight: 500 }}>
+              <Typography variant="caption" sx={{ color: '#5F7367', fontSize: '0.75rem', fontWeight: 500 }}>
                 Smart Governance & Civic Registration
               </Typography>
             </Box>
@@ -127,7 +172,7 @@ export const Register: React.FC = () => {
           <Button
             startIcon={<ArrowBackOutlinedIcon sx={{ fontSize: 16 }} />}
             onClick={() => navigate('/')}
-            sx={{ color: '#64748B', fontWeight: 600, textTransform: 'none', '&:hover': { color: '#1E1B4B' } }}
+            sx={{ color: '#5F7367', fontWeight: 600, textTransform: 'none', '&:hover': { color: '#1F4D3A' } }}
           >
             Back to Home
           </Button>
@@ -141,8 +186,8 @@ export const Register: React.FC = () => {
         <Box
           sx={{
             flex: { md: 5 },
-            backgroundColor: '#FFF8F2',
-            borderRight: { md: '1px solid #FFE6D5' },
+            backgroundColor: '#F2F7F4',
+            borderRight: { md: '1px solid #E2EAF0' },
             p: { xs: 4, md: 7 },
             display: 'flex',
             flexDirection: 'column',
@@ -150,23 +195,23 @@ export const Register: React.FC = () => {
           }}
         >
           <Box sx={{ maxWidth: 460 }}>
-            <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, px: 1.8, py: 0.6, borderRadius: '20px', backgroundColor: '#FFE6D5', color: '#FF8C38', mb: 3 }}>
+            <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, px: 1.8, py: 0.6, borderRadius: '20px', backgroundColor: '#E8F3EE', color: '#1F4D3A', mb: 3 }}>
               <AccountBalanceOutlinedIcon sx={{ fontSize: 16 }} />
               <Typography variant="caption" sx={{ fontWeight: 700 }}>
                 Citizen Account Registration
               </Typography>
             </Box>
 
-            <Typography variant="h2" component="h1" sx={{ fontWeight: 900, color: '#1E1B4B', mb: 2, letterSpacing: '-0.025em' }}>
+            <Typography variant="h2" component="h1" sx={{ fontWeight: 900, color: '#1C2A24', mb: 2, letterSpacing: '-0.025em' }}>
               Register for direct civic representation.
             </Typography>
 
-            <Typography variant="body1" sx={{ color: '#64748B', mb: 4, lineHeight: 1.65 }}>
+            <Typography variant="body1" sx={{ color: '#5F7367', mb: 4, lineHeight: 1.65 }}>
               Create a citizen account to submit local infrastructure grievances, monitor repair progress, and vote on municipal ward project proposals.
             </Typography>
 
-            <Box sx={{ pt: 3, borderTop: '1px solid #FFE6D5' }}>
-              <Typography variant="caption" sx={{ color: '#64748B', display: 'block' }}>
+            <Box sx={{ pt: 3, borderTop: '1px solid #E2EAF0' }}>
+              <Typography variant="caption" sx={{ color: '#5F7367', display: 'block' }}>
                 * Note: Ward Councillor and Field Worker accounts are issued directly by Super Admin.
               </Typography>
             </Box>
@@ -186,10 +231,10 @@ export const Register: React.FC = () => {
         >
           <Box sx={{ maxWidth: 540, mx: 'auto', width: '100%' }}>
             <Box sx={{ mb: 3.5 }}>
-              <Typography variant="h3" sx={{ fontWeight: 900, color: '#1E1B4B', mb: 0.5 }}>
+              <Typography variant="h3" sx={{ fontWeight: 900, color: '#1C2A24', mb: 0.5 }}>
                 Create Citizen Account
               </Typography>
-              <Typography variant="body2" sx={{ color: '#64748B' }}>
+              <Typography variant="body2" sx={{ color: '#5F7367' }}>
                 Fill in your personal details to link your municipal ward
               </Typography>
             </Box>
@@ -202,146 +247,179 @@ export const Register: React.FC = () => {
 
             <Box component="form" onSubmit={handleRegister}>
               <Stack spacing={2.5}>
-                <FormControl fullWidth variant="outlined">
-                  <InputLabel id="reg-fn-label">Full Name</InputLabel>
+                <FormControl fullWidth variant="outlined" error={Boolean(fieldErrors.fullName)}>
+                  <InputLabel id="reg-fn-label">Full Name *</InputLabel>
                   <OutlinedInput
                     id="register-fullname-field"
-                    label="Full Name"
+                    label="Full Name *"
                     placeholder="e.g. Rahul Sharma"
                     value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
+                    onChange={(e) => {
+                      setFullName(e.target.value);
+                      if (fieldErrors.fullName) setFieldErrors((prev) => ({ ...prev, fullName: '' }));
+                    }}
                     required
                     startAdornment={
                       <InputAdornment position="start">
-                        <PersonOutlinedIcon sx={{ color: '#64748B', fontSize: 18 }} />
+                        <PersonOutlinedIcon sx={{ color: fieldErrors.fullName ? '#d32f2f' : '#5F7367', fontSize: 18 }} />
                       </InputAdornment>
                     }
                   />
+                  {fieldErrors.fullName && <FormHelperText error>{fieldErrors.fullName}</FormHelperText>}
                 </FormControl>
 
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
-                  <FormControl fullWidth variant="outlined">
-                    <InputLabel id="reg-email-label">Email Address</InputLabel>
+                  <FormControl fullWidth variant="outlined" error={Boolean(fieldErrors.email)}>
+                    <InputLabel id="reg-email-label">Email Address *</InputLabel>
                     <OutlinedInput
                       id="register-email-field"
-                      label="Email Address"
+                      label="Email Address *"
                       type="email"
                       placeholder="citizen@example.com"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: '' }));
+                      }}
                       required
                       startAdornment={
                         <InputAdornment position="start">
-                          <EmailOutlinedIcon sx={{ color: '#64748B', fontSize: 18 }} />
+                          <EmailOutlinedIcon sx={{ color: fieldErrors.email ? '#d32f2f' : '#5F7367', fontSize: 18 }} />
                         </InputAdornment>
                       }
                     />
+                    {fieldErrors.email && <FormHelperText error>{fieldErrors.email}</FormHelperText>}
                   </FormControl>
 
-                  <FormControl fullWidth variant="outlined">
-                    <InputLabel id="reg-phone-label">Mobile Phone</InputLabel>
+                  <FormControl fullWidth variant="outlined" error={Boolean(fieldErrors.phone)}>
+                    <InputLabel id="reg-phone-label">Mobile Phone *</InputLabel>
                     <OutlinedInput
                       id="register-phone-field"
-                      label="Mobile Phone"
+                      label="Mobile Phone *"
                       placeholder="9876543210"
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
+                      onChange={(e) => {
+                        setPhone(e.target.value);
+                        if (fieldErrors.phone) setFieldErrors((prev) => ({ ...prev, phone: '' }));
+                      }}
                       required
                       startAdornment={
                         <InputAdornment position="start">
-                          <PhoneOutlinedIcon sx={{ color: '#64748B', fontSize: 18 }} />
+                          <PhoneOutlinedIcon sx={{ color: fieldErrors.phone ? '#d32f2f' : '#5F7367', fontSize: 18 }} />
                         </InputAdornment>
                       }
                     />
+                    {fieldErrors.phone && <FormHelperText error>{fieldErrors.phone}</FormHelperText>}
                   </FormControl>
                 </Box>
 
-                <FormControl fullWidth variant="outlined">
-                  <InputLabel id="reg-addr-label">Residential Address</InputLabel>
+                <FormControl fullWidth variant="outlined" error={Boolean(fieldErrors.address)}>
+                  <InputLabel id="reg-addr-label">Residential Address *</InputLabel>
                   <OutlinedInput
                     id="register-address-field"
-                    label="Residential Address"
+                    label="Residential Address *"
                     placeholder="Flat No, Street, Neighborhood"
                     value={address}
-                    onChange={(e) => setAddress(e.target.value)}
+                    onChange={(e) => {
+                      setAddress(e.target.value);
+                      if (fieldErrors.address) setFieldErrors((prev) => ({ ...prev, address: '' }));
+                    }}
                     required
                     startAdornment={
                       <InputAdornment position="start">
-                        <HomeOutlinedIcon sx={{ color: '#64748B', fontSize: 18 }} />
+                        <HomeOutlinedIcon sx={{ color: fieldErrors.address ? '#d32f2f' : '#5F7367', fontSize: 18 }} />
                       </InputAdornment>
                     }
                   />
+                  {fieldErrors.address && <FormHelperText error>{fieldErrors.address}</FormHelperText>}
                 </FormControl>
 
                 <WardSelector
                   value={ward}
-                  onChange={(val) => setWard(val)}
-                  label="Assigned Municipal Ward"
+                  onChange={(val) => {
+                    setWard(val);
+                    if (fieldErrors.ward) setFieldErrors((prev) => ({ ...prev, ward: '' }));
+                  }}
+                  label="Assigned Municipal Ward *"
                   required
-                  helperText="Municipal ward assignment determines local councillor routing"
+                  helperText={fieldErrors.ward || 'Municipal ward assignment determines local councillor routing'}
                 />
 
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
-                  <FormControl fullWidth variant="outlined">
-                    <InputLabel id="reg-pass-label">Password</InputLabel>
+                  <FormControl fullWidth variant="outlined" error={Boolean(fieldErrors.password)}>
+                    <InputLabel id="reg-pass-label">Password *</InputLabel>
                     <OutlinedInput
                       id="register-password-field"
-                      label="Password"
+                      label="Password *"
                       type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: '' }));
+                      }}
                       required
                       startAdornment={
                         <InputAdornment position="start">
-                          <LockOutlinedIcon sx={{ color: '#64748B', fontSize: 18 }} />
+                          <LockOutlinedIcon sx={{ color: fieldErrors.password ? '#d32f2f' : '#5F7367', fontSize: 18 }} />
                         </InputAdornment>
                       }
                       endAdornment={
                         <InputAdornment position="end">
-                          <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" size="small" sx={{ color: '#64748B' }}>
+                          <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" size="small" sx={{ color: '#5F7367' }}>
                             {showPassword ? <VisibilityOffOutlinedIcon sx={{ fontSize: 18 }} /> : <VisibilityOutlinedIcon sx={{ fontSize: 18 }} />}
                           </IconButton>
                         </InputAdornment>
                       }
                     />
+                    {fieldErrors.password && <FormHelperText error>{fieldErrors.password}</FormHelperText>}
                   </FormControl>
 
-                  <FormControl fullWidth variant="outlined">
-                    <InputLabel id="reg-confpass-label">Confirm Password</InputLabel>
+                  <FormControl fullWidth variant="outlined" error={Boolean(fieldErrors.confirmPassword)}>
+                    <InputLabel id="reg-confpass-label">Confirm Password *</InputLabel>
                     <OutlinedInput
                       id="register-confirmpassword-field"
-                      label="Confirm Password"
+                      label="Confirm Password *"
                       type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••"
                       value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        if (fieldErrors.confirmPassword) setFieldErrors((prev) => ({ ...prev, confirmPassword: '' }));
+                      }}
                       required
                       startAdornment={
                         <InputAdornment position="start">
-                          <LockOutlinedIcon sx={{ color: '#64748B', fontSize: 18 }} />
+                          <LockOutlinedIcon sx={{ color: fieldErrors.confirmPassword ? '#d32f2f' : '#5F7367', fontSize: 18 }} />
                         </InputAdornment>
                       }
                     />
+                    {fieldErrors.confirmPassword && <FormHelperText error>{fieldErrors.confirmPassword}</FormHelperText>}
                   </FormControl>
                 </Box>
 
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      id="register-agree-checkbox"
-                      checked={agreeTerms}
-                      onChange={(e) => setAgreeTerms(e.target.checked)}
-                      sx={{ color: '#FF8C38', '&.Mui-checked': { color: '#FF8C38' } }}
-                    />
-                  }
-                  label={
-                    <Typography variant="caption" sx={{ color: '#64748B' }}>
-                      I confirm that the provided details are accurate and agree to the SGCS{' '}
-                      <span style={{ color: '#FF8C38', fontWeight: 700 }}>Terms of Service</span>.
-                    </Typography>
-                  }
-                />
+                <Box>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        id="register-agree-checkbox"
+                        checked={agreeTerms}
+                        onChange={(e) => {
+                          setAgreeTerms(e.target.checked);
+                          if (fieldErrors.agreeTerms) setFieldErrors((prev) => ({ ...prev, agreeTerms: '' }));
+                        }}
+                        sx={{ color: fieldErrors.agreeTerms ? '#d32f2f' : '#1F4D3A', '&.Mui-checked': { color: '#1F4D3A' } }}
+                      />
+                    }
+                    label={
+                      <Typography variant="caption" sx={{ color: fieldErrors.agreeTerms ? '#d32f2f' : '#5F7367' }}>
+                        I confirm that the provided details are accurate and agree to the SGCS{' '}
+                        <span style={{ color: '#1F4D3A', fontWeight: 700 }}>Terms of Service</span>.
+                      </Typography>
+                    }
+                  />
+                  {fieldErrors.agreeTerms && <FormHelperText error sx={{ ml: 4 }}>{fieldErrors.agreeTerms}</FormHelperText>}
+                </Box>
 
                 <Button
                   type="submit"
@@ -351,14 +429,14 @@ export const Register: React.FC = () => {
                   sx={{
                     py: 1.4,
                     borderRadius: '50px',
-                    background: 'linear-gradient(135deg, #FF9A52 0%, #FF7A30 100%)',
+                    backgroundColor: '#1F4D3A',
                     color: '#FFFFFF',
                     fontWeight: 700,
                     fontSize: '0.95rem',
-                    boxShadow: '0 6px 18px rgba(255, 140, 56, 0.35)',
+                    boxShadow: '0 6px 18px rgba(31, 77, 58, 0.25)',
                     '&:hover': {
-                      background: 'linear-gradient(135deg, #F8883B 0%, #EB6A20 100%)',
-                      boxShadow: '0 8px 22px rgba(255, 140, 56, 0.45)',
+                      backgroundColor: '#16382A',
+                      boxShadow: '0 8px 22px rgba(31, 77, 58, 0.35)',
                     },
                   }}
                 >
@@ -366,9 +444,9 @@ export const Register: React.FC = () => {
                 </Button>
 
                 <Box sx={{ textAlign: 'center', mt: 1 }}>
-                  <Typography variant="body2" sx={{ color: '#64748B' }}>
+                  <Typography variant="body2" sx={{ color: '#5F7367' }}>
                     Already registered?{' '}
-                    <Link to="/login" style={{ color: '#FF8C38', fontWeight: 700, textDecoration: 'none' }}>
+                    <Link to="/login" style={{ color: '#1F4D3A', fontWeight: 700, textDecoration: 'none' }}>
                       Sign in to Portal
                     </Link>
                   </Typography>
@@ -389,12 +467,12 @@ export const Register: React.FC = () => {
           },
         }}
       >
-        <DialogTitle sx={{ fontWeight: 900, color: '#1E1B4B', pt: 3, textAlign: 'center' }}>
-          <CheckCircleOutlinedIcon sx={{ fontSize: 44, color: '#FF8C38', mb: 1, display: 'block', mx: 'auto' }} />
+        <DialogTitle sx={{ fontWeight: 900, color: '#1C2A24', pt: 3, textAlign: 'center' }}>
+          <CheckCircleOutlinedIcon sx={{ fontSize: 44, color: '#1F4D3A', mb: 1, display: 'block', mx: 'auto' }} />
           Registration Completed
         </DialogTitle>
         <DialogContent>
-          <Typography variant="body2" sx={{ color: '#64748B', textAlign: 'center', lineHeight: 1.6 }}>
+          <Typography variant="body2" sx={{ color: '#5F7367', textAlign: 'center', lineHeight: 1.6 }}>
             Your citizen account has been successfully created in the SGCS database. You may now log in to access your municipal ward portal.
           </Typography>
         </DialogContent>
@@ -407,8 +485,10 @@ export const Register: React.FC = () => {
             }}
             sx={{
               borderRadius: '50px',
-              background: 'linear-gradient(135deg, #FF9A52 0%, #FF7A30 100%)',
+              backgroundColor: '#1F4D3A',
+              color: '#FFFFFF',
               px: 4,
+              '&:hover': { backgroundColor: '#16382A' },
             }}
           >
             Proceed to Sign In

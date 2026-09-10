@@ -6,19 +6,19 @@ export const getCustomTheme = (mode: 'light' | 'dark') => {
     palette: {
       mode: 'light',
       primary: {
-        main: '#2D5A46',        // SGCS Deep Forest Green
-        dark: '#1F3E31',         // Dark Forest
-        light: '#427A60',        // Medium Sage Green
+        main: '#1F4D3A',        // SGCS Unique Landing Page Dark Forest Green
+        dark: '#16382A',         // Dark Forest Hover
+        light: '#236B4E',        // Emerald Sage Green Accent
         contrastText: '#FFFFFF',
       },
       secondary: {
-        main: '#E67E22',        // Warm Terracotta / Amber Accent
-        light: '#F39C12',
-        dark: '#D35400',
+        main: '#236B4E',        // Emerald Green Secondary Accent
+        light: '#2E8B65',
+        dark: '#1C563E',
         contrastText: '#FFFFFF',
       },
       background: {
-        default: '#FBFDFB',      // Crisp Clean Base
+        default: '#FBFDFB',      // Crisp Clean Studio Base
         paper: '#FFFFFF',
       },
       text: {
@@ -27,7 +27,7 @@ export const getCustomTheme = (mode: 'light' | 'dark') => {
       },
       divider: '#E2EAF0',
       success: {
-        main: '#2D5A46',
+        main: '#1F4D3A',
         light: '#E8F3EE',
         contrastText: '#FFFFFF',
       },
@@ -42,8 +42,8 @@ export const getCustomTheme = (mode: 'light' | 'dark') => {
         contrastText: '#FFFFFF',
       },
       info: {
-        main: '#2980B9',
-        light: '#EBF5FB',
+        main: '#236B4E',
+        light: '#E8F3EE',
         contrastText: '#FFFFFF',
       },
       action: {
@@ -146,7 +146,7 @@ export const getCustomTheme = (mode: 'light' | 'dark') => {
             border: '1px solid #E2EAF0',
             transition: 'all 0.2s ease-in-out',
             '&:hover': {
-              borderColor: '#2D5A46',
+              borderColor: '#1F4D3A',
             },
           },
         },
@@ -176,25 +176,25 @@ export const getCustomTheme = (mode: 'light' | 'dark') => {
             },
           },
           contained: {
-            backgroundColor: '#2D5A46',
+            backgroundColor: '#1F4D3A',
             color: '#FFFFFF',
             '&:hover': {
-              backgroundColor: '#1F3E31',
-              boxShadow: '0 4px 14px rgba(45, 90, 70, 0.3)',
+              backgroundColor: '#16382A',
+              boxShadow: '0 4px 14px rgba(31, 77, 58, 0.3)',
             },
           },
           outlined: {
-            borderColor: '#D1E6DC',
+            borderColor: '#C3E0D2',
             color: '#1C2A24',
             backgroundColor: '#FFFFFF',
             '&:hover': {
-              borderColor: '#2D5A46',
+              borderColor: '#1F4D3A',
               backgroundColor: '#E8F3EE',
-              color: '#2D5A46',
+              color: '#1F4D3A',
             },
           },
           text: {
-            color: '#2D5A46',
+            color: '#1F4D3A',
             '&:hover': {
               backgroundColor: '#E8F3EE',
             },
@@ -214,7 +214,7 @@ export const getCustomTheme = (mode: 'light' | 'dark') => {
               borderColor: '#94A3B8',
             },
             '&.Mui-focused fieldset': {
-              borderColor: '#2D5A46',
+              borderColor: '#1F4D3A',
               borderWidth: '1.5px',
             },
           },
@@ -226,7 +226,7 @@ export const getCustomTheme = (mode: 'light' | 'dark') => {
             color: '#5F7367',
             fontSize: '0.875rem',
             '&.Mui-focused': {
-              color: '#2D5A46',
+              color: '#1F4D3A',
             },
           },
         },

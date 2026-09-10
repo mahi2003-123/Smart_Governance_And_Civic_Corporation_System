@@ -10,10 +10,20 @@ export const ForgotPassword: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [submitted, setSubmitted] = useState(false);
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+
+    if (!email.trim() || !emailRegex.test(email.trim())) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
@@ -22,18 +32,18 @@ export const ForgotPassword: React.FC = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#F8F5F2', display: 'flex', alignItems: 'center', py: 6 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#FBFDFB', display: 'flex', alignItems: 'center', py: 6 }}>
       <Container maxWidth="xs">
-        <Card sx={{ p: { xs: 3, sm: 4 }, borderRadius: 4, boxShadow: '0 16px 40px rgba(111, 78, 55, 0.08)' }}>
+        <Card sx={{ p: { xs: 3, sm: 4 }, borderRadius: 4, boxShadow: '0 16px 40px rgba(31, 77, 58, 0.08)', border: '1px solid #E2EAF0' }}>
           <CardContent sx={{ p: 0 }}>
-            <Box textAlign="center" mb={3}>
+            <Box sx={{ textAlign: 'center', mb: 3 }}>
               <Box
                 sx={{
                   width: 50,
                   height: 50,
                   borderRadius: '50%',
-                  bgcolor: '#E8DDD3',
-                  color: '#4F3523',
+                  bgcolor: '#E8F3EE',
+                  color: '#1F4D3A',
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -42,16 +52,22 @@ export const ForgotPassword: React.FC = () => {
               >
                 <LocationCityIcon />
               </Box>
-              <Typography variant="h4" fontWeight={800}>
+              <Typography variant="h4" sx={{ fontWeight: 800, color: '#1C2A24' }}>
                 Reset Password
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{ color: '#5F7367' }}>
                 Enter your email address to receive password reset instructions.
               </Typography>
             </Box>
 
+            {error && (
+              <Alert severity="error" onClose={() => setError('')} sx={{ mb: 2, borderRadius: 2 }}>
+                {error}
+              </Alert>
+            )}
+
             {submitted ? (
-              <Box textAlign="center">
+              <Box sx={{ textAlign: 'center' }}>
                 <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>
                   Instructions have been sent to <strong>{email}</strong>. Please check your inbox.
                 </Alert>
@@ -67,22 +83,15 @@ export const ForgotPassword: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <EmailIcon sx={{ color: '#6F4E37' }} />
-                      </InputAdornment>
-                    ),
-                  }}
                 />
                 <CustomButton type="submit" fullWidth size="large" loading={loading} sx={{ mb: 3 }}>
                   Send Recovery Link
                 </CustomButton>
-                <Box textAlign="center">
+                <Box sx={{ textAlign: 'center' }}>
                   <Typography
                     component={RouterLink}
                     to="/login"
-                    sx={{ color: '#6F4E37', fontWeight: 700, textDecoration: 'none', fontSize: '0.9rem' }}
+                    sx={{ color: '#1F4D3A', fontWeight: 700, textDecoration: 'none', fontSize: '0.9rem' }}
                   >
                     Back to Sign In
                   </Typography>

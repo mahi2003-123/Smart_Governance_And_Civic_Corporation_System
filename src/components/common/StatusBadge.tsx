@@ -3,12 +3,25 @@ import { Box, Typography } from '@mui/material';
 
 interface StatusBadgeProps {
   status: string;
+  assignedWorkerName?: string;
   size?: 'small' | 'medium';
 }
 
-export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
+export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, assignedWorkerName }) => {
   const getBadgeStyle = (stat: string) => {
     const formatted = stat ? stat.toUpperCase() : 'PENDING';
+    const cleanWorkerName = assignedWorkerName ? assignedWorkerName.replace(/\(.*?\)/g, '').trim() : '';
+    
+    // If assigned worker is present or status is ASSIGNED
+    if (formatted === 'ASSIGNED' || (cleanWorkerName && (formatted === 'IN_PROGRESS' || formatted === 'PENDING'))) {
+      return {
+        label: cleanWorkerName ? `Assigned to ${cleanWorkerName}` : 'Assigned to Worker',
+        bg: '#EBF5FF',
+        color: '#1E40AF',
+        dot: '#2563EB',
+      };
+    }
+
     switch (formatted) {
       case 'RESOLVED':
       case 'APPROVED':
@@ -21,10 +34,17 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
         };
       case 'IN_PROGRESS':
         return {
-          label: 'In Progress',
+          label: cleanWorkerName ? `Assigned to ${cleanWorkerName}` : 'In Progress',
           bg: '#FBF4E8',
           color: '#8A6424',
           dot: '#B58A45',
+        };
+      case 'PENDING_APPROVAL':
+        return {
+          label: 'Pending Councillor Review',
+          bg: '#FEF3C7',
+          color: '#92400E',
+          dot: '#D97706',
         };
       case 'UNDER_REVIEW':
         return {
@@ -44,10 +64,10 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
       case 'SUBMITTED':
       default:
         return {
-          label: 'Submitted',
-          bg: '#F8F9F7',
-          color: '#68706B',
-          dot: '#8E9691',
+          label: cleanWorkerName ? `Assigned to ${cleanWorkerName}` : 'Submitted',
+          bg: cleanWorkerName ? '#EBF5FF' : '#F8F9F7',
+          color: cleanWorkerName ? '#1E40AF' : '#68706B',
+          dot: cleanWorkerName ? '#2563EB' : '#8E9691',
         };
     }
   };

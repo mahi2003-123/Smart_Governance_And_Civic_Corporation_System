@@ -13,6 +13,7 @@ import { Complaint, ComplaintPriority } from '../../types';
 import { CustomTextField } from '../common/CustomTextField';
 import { CustomButton } from '../common/CustomButton';
 import { adminService } from '../../services/adminService';
+import { matchesWard } from '../../utils/wardUtils';
 
 interface AssignWorkerModalProps {
   open: boolean;
@@ -27,7 +28,7 @@ export const AssignWorkerModal: React.FC<AssignWorkerModalProps> = ({
   onClose,
   onConfirm,
 }) => {
-  const [workersList, setWorkersList] = useState<{ id: string; name: string }[]>([]);
+  const [workersList, setWorkersList] = useState<{ id: string; fullName: string; name: string; ward?: string }[]>([]);
   const [selectedWorkerId, setSelectedWorkerId] = useState<string>('');
   const [selectedPriority, setSelectedPriority] = useState<ComplaintPriority>('MEDIUM');
   const [loading, setLoading] = useState(false);
@@ -39,15 +40,28 @@ export const AssignWorkerModal: React.FC<AssignWorkerModalProps> = ({
         const registered = users.filter((u) => u.role === 'WORKER' && (u.status || 'ACTIVE') === 'ACTIVE');
         
         if (registered.length > 0) {
-          const list = registered.map((w) => ({
-            id: w.id,
-            name: `${w.fullName} (${w.ward || 'Field Technician'})`,
-          }));
+          // Sort workers so those matching the complaint ward appear first, but ALL database workers remain available
+          const sortedWorkers = [...registered].sort((a, b) => {
+            const aMatch = complaint && complaint.ward ? matchesWard(a.ward, complaint.ward) : false;
+            const bMatch = complaint && complaint.ward ? matchesWard(b.ward, complaint.ward) : false;
+            if (aMatch && !bMatch) return -1;
+            if (!aMatch && bMatch) return 1;
+            return (a.fullName || '').localeCompare(b.fullName || '');
+          });
+
+          const list = sortedWorkers.map((w) => {
+            const isWardMatch = complaint && complaint.ward ? matchesWard(w.ward, complaint.ward) : false;
+            return {
+              id: w.id,
+              fullName: w.fullName,
+              name: `${w.fullName} (${w.ward || 'Field Technician'})${isWardMatch ? ' ★ Ward Worker' : ''}`,
+              ward: w.ward,
+            };
+          });
           
           setWorkersList(list);
           setSelectedWorkerId(list[0].id);
 
-          // Auto-select match if complaint has category
           if (complaint) {
             const cat = complaint.category?.toLowerCase() || '';
             const matched = list.find((w) => {
@@ -64,7 +78,7 @@ export const AssignWorkerModal: React.FC<AssignWorkerModalProps> = ({
           setSelectedWorkerId('');
         }
       } catch (e) {
-        console.error('Failed to load registered workers:', e);
+        console.error('Failed to load registered workers from database:', e);
         setWorkersList([]);
         setSelectedWorkerId('');
       }
@@ -95,7 +109,7 @@ export const AssignWorkerModal: React.FC<AssignWorkerModalProps> = ({
 
     setLoading(true);
     try {
-      await onConfirm(worker.id, worker.name, selectedPriority);
+      await onConfirm(worker.id, worker.fullName, selectedPriority);
       onClose();
     } catch (e) {
       console.error(e);
@@ -122,7 +136,7 @@ export const AssignWorkerModal: React.FC<AssignWorkerModalProps> = ({
               {complaint.trackingNumber}: {complaint.title}
             </Typography>
             <Typography variant="body2" sx={{ color: '#68706B', mb: 3 }}>
-              Category: {complaint.category} | Location: {complaint.locationAddress}
+              Category: {complaint.category} | Ward: {complaint.ward} | Location: {complaint.locationAddress}
             </Typography>
 
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, mb: 2 }}>
@@ -159,7 +173,7 @@ export const AssignWorkerModal: React.FC<AssignWorkerModalProps> = ({
               >
                 {workersList.length === 0 ? (
                   <MenuItem disabled value="">
-                    No registered technicians available
+                    No active registered technicians available in database
                   </MenuItem>
                 ) : (
                   workersList.map((w) => (

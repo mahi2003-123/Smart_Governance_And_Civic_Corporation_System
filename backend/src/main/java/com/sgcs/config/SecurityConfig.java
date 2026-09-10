@@ -49,12 +49,12 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/admin/users", "/api/admin/wards").hasAnyAuthority("ADMIN", "ROLE_ADMIN", "COUNCILLOR", "ROLE_COUNCILLOR")
                 .requestMatchers("/api/admin/**").hasAnyAuthority("ADMIN", "ROLE_ADMIN")
-                .requestMatchers(HttpMethod.POST, "/api/complaints").hasAnyAuthority("CITIZEN", "ROLE_CITIZEN", "COUNCILLOR", "ROLE_COUNCILLOR", "WORKER", "ROLE_WORKER", "ADMIN", "ROLE_ADMIN")
-                .requestMatchers(HttpMethod.POST, "/api/proposals/*/vote").hasAnyAuthority("CITIZEN", "ROLE_CITIZEN", "COUNCILLOR", "ROLE_COUNCILLOR", "WORKER", "ROLE_WORKER", "ADMIN", "ROLE_ADMIN")
-                .requestMatchers(HttpMethod.POST, "/api/complaints/**", "/api/proposals/**", "/api/notices/**").hasAnyAuthority("COUNCILLOR", "ROLE_COUNCILLOR", "WORKER", "ROLE_WORKER", "ADMIN", "ROLE_ADMIN")
-                .requestMatchers(HttpMethod.PATCH, "/api/complaints/**", "/api/proposals/**", "/api/notices/**").hasAnyAuthority("COUNCILLOR", "ROLE_COUNCILLOR", "WORKER", "ROLE_WORKER", "ADMIN", "ROLE_ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/complaints/**", "/api/proposals/**", "/api/notices/**").hasAnyAuthority("COUNCILLOR", "ROLE_COUNCILLOR", "WORKER", "ROLE_WORKER", "ADMIN", "ROLE_ADMIN")
-                .requestMatchers(HttpMethod.GET, "/api/complaints/**", "/api/proposals/**", "/api/notices/**").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/complaints", "/api/complaints/**").hasAnyAuthority("CITIZEN", "ROLE_CITIZEN", "COUNCILLOR", "ROLE_COUNCILLOR", "WORKER", "ROLE_WORKER", "ADMIN", "ROLE_ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/proposals", "/api/proposals/**", "/api/notifications", "/api/notifications/**").hasAnyAuthority("CITIZEN", "ROLE_CITIZEN", "COUNCILLOR", "ROLE_COUNCILLOR", "WORKER", "ROLE_WORKER", "ADMIN", "ROLE_ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/notices/**").hasAnyAuthority("COUNCILLOR", "ROLE_COUNCILLOR", "WORKER", "ROLE_WORKER", "ADMIN", "ROLE_ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/complaints/**", "/api/proposals/**", "/api/notices/**", "/api/notifications/**").hasAnyAuthority("CITIZEN", "ROLE_CITIZEN", "COUNCILLOR", "ROLE_COUNCILLOR", "WORKER", "ROLE_WORKER", "ADMIN", "ROLE_ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/complaints/**", "/api/proposals/**", "/api/notices/**", "/api/notifications/**").hasAnyAuthority("COUNCILLOR", "ROLE_COUNCILLOR", "WORKER", "ROLE_WORKER", "ADMIN", "ROLE_ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/complaints/**", "/api/proposals/**", "/api/notices/**", "/api/notifications/**").authenticated()
                 .anyRequest().authenticated()
             );
 

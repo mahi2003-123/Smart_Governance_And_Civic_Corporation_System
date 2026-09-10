@@ -26,6 +26,9 @@ import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { AssignWorkerModal } from '../../components/modals/AssignWorkerModal';
 import { matchesWard } from '../../utils/wardUtils';
 
+import VerifiedIcon from '@mui/icons-material/Verified';
+import { VerifyProofModal } from '../../components/modals/VerifyProofModal';
+
 export const ManageComplaints: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -33,6 +36,7 @@ export const ManageComplaints: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [assignDialogComplaint, setAssignDialogComplaint] = useState<Complaint | null>(null);
+  const [verifyModalComplaint, setVerifyModalComplaint] = useState<Complaint | null>(null);
 
   const fetchComplaints = async () => {
     setLoading(true);
@@ -62,6 +66,26 @@ export const ManageComplaints: React.FC = () => {
       );
       setComplaints((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
       setAssignDialogComplaint(null);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleApproveProof = async (complaintId: string) => {
+    if (!user) return;
+    try {
+      const updated = await complaintService.approveTask(complaintId, user.fullName);
+      setComplaints((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleRejectProof = async (complaintId: string, feedback: string) => {
+    if (!user) return;
+    try {
+      const updated = await complaintService.rejectTaskProof(complaintId, user.fullName, feedback);
+      setComplaints((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
     } catch (e) {
       console.error(e);
     }
@@ -164,15 +188,23 @@ export const ManageComplaints: React.FC = () => {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Chip
-                        label={row.status.replace('_', ' ')}
-                        size="small"
-                        sx={{
-                          bgcolor: STATUS_COLORS[row.status]?.bg || '#F8F9F7',
-                          color: STATUS_COLORS[row.status]?.text || '#68706B',
-                          fontWeight: 600,
-                        }}
-                      />
+                      {row.status === 'RESOLVED' ? (
+                        <Chip label="Resolved" size="small" sx={{ bgcolor: '#E8EFE9', color: '#304B3A', fontWeight: 600 }} />
+                      ) : row.status === 'PENDING_APPROVAL' ? (
+                        <Chip label="Proof Verification Pending" size="small" sx={{ bgcolor: '#FEF3C7', color: '#92400E', fontWeight: 600 }} />
+                      ) : row.assignedWorkerName ? (
+                        <Chip
+                          label={`Assigned to ${row.assignedWorkerName.replace(/\(.*?\)/g, '').trim()}`}
+                          size="small"
+                          sx={{ bgcolor: '#EBF5FF', color: '#1E40AF', fontWeight: 600 }}
+                        />
+                      ) : (
+                        <Chip
+                          label={row.status.replace('_', ' ')}
+                          size="small"
+                          sx={{ bgcolor: STATUS_COLORS[row.status]?.bg || '#F8F9F7', color: STATUS_COLORS[row.status]?.text || '#68706B', fontWeight: 600 }}
+                        />
+                      )}
                     </TableCell>
                     <TableCell align="center">
                       <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
@@ -182,22 +214,62 @@ export const ManageComplaints: React.FC = () => {
                           </IconButton>
                         </Tooltip>
 
-                        <Button
-                          variant="contained"
-                          size="small"
-                          startIcon={<BuildIcon />}
-                          onClick={() => setAssignDialogComplaint(row)}
-                          sx={{
-                            borderRadius: '6px',
-                            backgroundColor: '#496A57',
-                            fontWeight: 500,
-                            textTransform: 'none',
-                            fontSize: '0.825rem',
-                            '&:hover': { backgroundColor: '#304B3A' }
-                          }}
-                        >
-                          Triage & Assign
-                        </Button>
+                        {row.status === 'PENDING_APPROVAL' ? (
+                          <Button
+                            variant="contained"
+                            size="small"
+                            color="warning"
+                            startIcon={<VerifiedIcon />}
+                            onClick={() => setVerifyModalComplaint(row)}
+                            sx={{
+                              borderRadius: '6px',
+                              fontWeight: 700,
+                              textTransform: 'none',
+                              fontSize: '0.825rem',
+                              bgcolor: '#D97706',
+                              color: '#FFFFFF',
+                              '&:hover': { bgcolor: '#B45309' }
+                            }}
+                          >
+                            Verify Proof
+                          </Button>
+                        ) : row.assignedWorkerName ? (
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<BuildIcon />}
+                            onClick={() => setAssignDialogComplaint(row)}
+                            sx={{
+                              borderRadius: '6px',
+                              borderColor: '#2563EB',
+                              color: '#1E40AF',
+                              backgroundColor: '#EBF5FF',
+                              fontWeight: 600,
+                              textTransform: 'none',
+                              fontSize: '0.825rem',
+                              '&:hover': { backgroundColor: '#DBEAFE' }
+                            }}
+                          >
+                            Reassign ({row.assignedWorkerName.split(' ')[0]})
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="contained"
+                            size="small"
+                            startIcon={<BuildIcon />}
+                            onClick={() => setAssignDialogComplaint(row)}
+                            sx={{
+                              borderRadius: '6px',
+                              backgroundColor: '#496A57',
+                              fontWeight: 500,
+                              textTransform: 'none',
+                              fontSize: '0.825rem',
+                              '&:hover': { backgroundColor: '#304B3A' }
+                            }}
+                          >
+                            Triage & Assign
+                          </Button>
+                        )}
 
                         {row.status !== 'REJECTED' && row.status !== 'RESOLVED' && (
                           <Tooltip title="Reject Complaint">
@@ -222,6 +294,15 @@ export const ManageComplaints: React.FC = () => {
         complaint={assignDialogComplaint}
         onClose={() => setAssignDialogComplaint(null)}
         onConfirm={handleConfirmAssign}
+      />
+
+      {/* Councillor Verify Proof Modal */}
+      <VerifyProofModal
+        open={Boolean(verifyModalComplaint)}
+        complaint={verifyModalComplaint}
+        onClose={() => setVerifyModalComplaint(null)}
+        onApprove={handleApproveProof}
+        onRejectProof={handleRejectProof}
       />
     </Box>
   );

@@ -35,22 +35,53 @@ public class ProposalController {
         }
     }
 
+    private com.sgcs.security.UserPrincipal getCurrentUser() {
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof com.sgcs.security.UserPrincipal principal) {
+            return principal;
+        }
+        return null;
+    }
+
     @PostMapping("/{id}/vote")
     public ResponseEntity<?> voteProposal(@PathVariable String id, @RequestBody Map<String, String> body) {
         try {
+            com.sgcs.security.UserPrincipal principal = getCurrentUser();
+            String userId = principal != null ? principal.getId() : body.get("userId");
             String voteType = body.getOrDefault("voteType", "UP");
-            Proposal updated = proposalService.voteProposal(id, voteType);
+            Proposal updated = proposalService.voteProposal(id, userId, voteType);
             return ResponseEntity.ok(updated);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
     }
 
-    @PatchMapping("/{id}/review")
+    @PostMapping({"/{id}/comment", "/{id}/comments"})
+    public ResponseEntity<?> addComment(@PathVariable String id, @RequestBody Map<String, String> body) {
+        try {
+            String content = body.get("content");
+            String authorName = body.getOrDefault("authorName", "Citizen Resident");
+            String authorRole = body.getOrDefault("authorRole", "CITIZEN");
+
+            if (content == null || content.trim().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Comment content cannot be empty"));
+            }
+
+            Proposal updated = proposalService.addComment(id, authorName, authorRole, content.trim());
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PatchMapping({"/{id}/review", "/{id}/status"})
     public ResponseEntity<?> reviewProposal(@PathVariable String id, @RequestBody Map<String, String> body) {
         try {
             String status = body.get("status");
             String notes = body.get("notes");
+            if (notes == null) {
+                notes = body.get("councillorNotes");
+            }
             Proposal updated = proposalService.updateStatus(id, status, notes);
             return ResponseEntity.ok(updated);
         } catch (Exception e) {

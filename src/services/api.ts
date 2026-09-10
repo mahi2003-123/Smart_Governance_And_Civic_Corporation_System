@@ -15,7 +15,7 @@ const api = axios.create({
 // Request interceptor to attach bearer token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('sgcs_auth_token') || 'mock-bearer-token-sgcs-2026';
+    const token = localStorage.getItem('sgcs_auth_token');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }

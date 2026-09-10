@@ -1,38 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Card,
-  CardContent,
   Typography,
-  Grid,
+  Stack,
   Button,
-  Chip,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Alert
+  Alert,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
-import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import { proposalService } from '../../services/proposalService';
 import { CommunityProposal, ProposalStatus } from '../../types';
 import { CustomTextField } from '../../components/common/CustomTextField';
 import { CustomButton } from '../../components/common/CustomButton';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { ProposalItemCard } from '../../components/proposals/ProposalItemCard';
+import { useAuth } from '../../hooks/useAuth';
 
 export const ProposalReview: React.FC = () => {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [proposals, setProposals] = useState<CommunityProposal[]>([]);
   const [activeReviewItem, setActiveReviewItem] = useState<{ item: CommunityProposal; action: ProposalStatus } | null>(null);
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const userIdentifier = user?.email || user?.id || user?.fullName || 'anonymous';
+
   const fetchProposals = async () => {
     setLoading(true);
     try {
-      const data = await proposalService.getProposals();
+      const data = await proposalService.getProposals(undefined, userIdentifier);
       setProposals(data);
     } catch (e) {
       console.error(e);
@@ -43,7 +44,33 @@ export const ProposalReview: React.FC = () => {
 
   useEffect(() => {
     fetchProposals();
-  }, []);
+  }, [userIdentifier]);
+
+  const handleVote = async (proposalId: string, voteType: 'UP' | 'DOWN') => {
+    try {
+      const updated = await proposalService.voteProposal(proposalId, voteType, userIdentifier);
+      setProposals((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleComment = async (proposalId: string, commentText: string) => {
+    try {
+      const updated = await proposalService.addComment(
+        proposalId,
+        {
+          content: commentText,
+          authorName: user?.fullName || 'Ward Councillor',
+          authorRole: 'COUNCILLOR',
+        },
+        userIdentifier
+      );
+      setProposals((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const handleConfirmDecision = async () => {
     if (!activeReviewItem) return;
@@ -52,7 +79,8 @@ export const ProposalReview: React.FC = () => {
       const updated = await proposalService.updateProposalStatus(
         activeReviewItem.item.id,
         activeReviewItem.action,
-        notes
+        notes,
+        userIdentifier
       );
       setProposals((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
       setActiveReviewItem(null);
@@ -67,97 +95,85 @@ export const ProposalReview: React.FC = () => {
   if (loading) return <LoadingSpinner message="Loading Community Proposals for Board Review..." />;
 
   return (
-    <Box>
-      <Box mb={4}>
-        <Typography variant="h3" fontWeight={800}>
+    <Box sx={{ pb: 6, maxWidth: 980, mx: 'auto' }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h1" sx={{ fontWeight: 600, color: '#202522', mb: 1 }}>
           Community Proposal Board Review
         </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Review upvoted citizen civic proposals and allocate municipal project budgets.
+        <Typography variant="body1" sx={{ color: '#68706B' }}>
+          Review citizen proposals across wards, express vote support, participate in discussions, and issue councillor decisions.
         </Typography>
       </Box>
 
-      <Grid container spacing={3}>
-        {proposals.map((item) => (
-          <Grid item xs={12} key={item.id}>
-            <Card sx={{ p: 3, borderRadius: 4 }}>
-              <CardContent sx={{ p: '0 !important' }}>
-                <Grid container spacing={2} alignItems="center">
-                  <Grid item xs={12} md={8}>
-                    <Box display="flex" alignItems="center" gap={1.5} mb={1}>
-                      <Chip label={item.ward} size="small" sx={{ bgcolor: '#E8DDD3', color: '#4F3523', fontWeight: 700 }} />
-                      <Chip
-                        label={item.status}
-                        size="small"
-                        color={
-                          item.status === 'APPROVED'
-                            ? 'success'
-                            : item.status === 'REJECTED'
-                            ? 'error'
-                            : 'warning'
-                        }
-                        sx={{ fontWeight: 700 }}
-                      />
-                    </Box>
-                    <Typography variant="h5" fontWeight={700} gutterBottom>
-                      {item.title}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" paragraph>
-                      {item.description}
-                    </Typography>
-                    <Box display="flex" alignItems="center" gap={2}>
-                      <Chip icon={<ThumbUpIcon fontSize="small" />} label={`${item.upvotes} Citizens Supported`} color="primary" variant="outlined" size="small" />
-                      <Typography variant="caption" color="text.secondary">
-                        Author: {item.authorName}
-                      </Typography>
-                    </Box>
-                  </Grid>
+      <Stack spacing={3}>
+        {proposals.length === 0 ? (
+          <Box sx={{ p: 4, textAlign: 'center', color: '#68706B', backgroundColor: '#FFFFFF', borderRadius: '8px', border: '1px solid #E5E8E4' }}>
+            <Typography variant="body1">No community proposals submitted for review.</Typography>
+          </Box>
+        ) : (
+          proposals.map((item) => {
+            const isEvaluated = item.status === 'APPROVED' || item.status === 'REJECTED';
 
-                  {/* Decision Controls */}
-                  <Grid item xs={12} md={4}>
-                    {item.status === 'APPROVED' || item.status === 'REJECTED' ? (
-                      <Alert severity={item.status === 'APPROVED' ? 'success' : 'error'} sx={{ borderRadius: 2 }}>
-                        Status: {item.status}. {item.councillorNotes && `Remarks: ${item.councillorNotes}`}
-                      </Alert>
-                    ) : (
-                      <Box display="flex" gap={1.5} justifyContent="flex-end">
-                        <Button
-                          variant="outlined"
-                          color="error"
-                          startIcon={<CancelIcon />}
-                          onClick={() => setActiveReviewItem({ item, action: 'REJECTED' })}
-                          sx={{ borderRadius: 28 }}
-                        >
-                          Reject
-                        </Button>
-                        <Button
-                          variant="contained"
-                          color="success"
-                          startIcon={<CheckCircleIcon />}
-                          onClick={() => setActiveReviewItem({ item, action: 'APPROVED' })}
-                          sx={{ borderRadius: 28 }}
-                        >
-                          Approve
-                        </Button>
-                      </Box>
-                    )}
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+            const councillorActionControls = isEvaluated ? (
+              <Alert
+                severity={item.status === 'APPROVED' ? 'success' : 'error'}
+                sx={{ borderRadius: '6px', py: 0, px: 1.5, fontSize: '0.8rem' }}
+              >
+                Reviewed: {item.status}
+              </Alert>
+            ) : (
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="error"
+                  startIcon={<CancelIcon sx={{ fontSize: 16 }} />}
+                  onClick={() => setActiveReviewItem({ item, action: 'REJECTED' })}
+                  sx={{ borderRadius: '6px', fontSize: '0.8rem', textTransform: 'none' }}
+                >
+                  Reject
+                </Button>
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="success"
+                  startIcon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
+                  onClick={() => setActiveReviewItem({ item, action: 'APPROVED' })}
+                  sx={{ borderRadius: '6px', fontSize: '0.8rem', textTransform: 'none', backgroundColor: '#496A57', '&:hover': { backgroundColor: '#304B3A' } }}
+                >
+                  Approve
+                </Button>
+              </Box>
+            );
+
+            return (
+              <ProposalItemCard
+                key={item.id}
+                proposal={item}
+                onVote={handleVote}
+                onComment={handleComment}
+                extraActions={councillorActionControls}
+              />
+            );
+          })
+        )}
+      </Stack>
 
       {/* Review Dialog */}
-      <Dialog open={Boolean(activeReviewItem)} onClose={() => setActiveReviewItem(null)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 4, p: 2 } }}>
+      <Dialog
+        open={Boolean(activeReviewItem)}
+        onClose={() => setActiveReviewItem(null)}
+        maxWidth="sm"
+        fullWidth
+        slotProps={{ paper: { sx: { borderRadius: '8px', p: 1 } } }}
+      >
         {activeReviewItem && (
           <>
-            <DialogTitle fontWeight={800}>
+            <DialogTitle sx={{ fontWeight: 600 }}>
               {activeReviewItem.action === 'APPROVED' ? 'Approve Community Proposal' : 'Reject Proposal'}
             </DialogTitle>
             <DialogContent>
-              <Typography variant="subtitle2" color="primary" mb={2}>
+              <Typography variant="subtitle2" color="primary" sx={{ mb: 2 }}>
                 {activeReviewItem.item.title}
               </Typography>
               <CustomTextField
@@ -170,7 +186,7 @@ export const ProposalReview: React.FC = () => {
               />
             </DialogContent>
             <DialogActions sx={{ px: 3, pb: 2 }}>
-              <Button onClick={() => setActiveReviewItem(null)} sx={{ borderRadius: 28 }}>
+              <Button onClick={() => setActiveReviewItem(null)} sx={{ color: '#68706B', textTransform: 'none' }}>
                 Cancel
               </Button>
               <CustomButton
@@ -187,3 +203,5 @@ export const ProposalReview: React.FC = () => {
     </Box>
   );
 };
+
+export default ProposalReview;

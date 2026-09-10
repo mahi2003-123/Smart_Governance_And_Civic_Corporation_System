@@ -11,24 +11,24 @@ export const CustomTextField: React.FC<CustomTextFieldProps> = ({ sx, ...props }
       fullWidth
       variant="outlined"
       sx={{
+        width: '100%',
         '& .MuiOutlinedInput-root': {
-          borderRadius: 3,
+          borderRadius: '8px',
           backgroundColor: '#FFFFFF',
           transition: 'all 0.2s ease-in-out',
           '& fieldset': {
             borderColor: '#E2E8F0',
           },
           '&:hover fieldset': {
-            borderColor: '#94A3B8',
+            borderColor: '#496A57',
           },
           '&.Mui-focused fieldset': {
-            borderColor: '#0284C7',
+            borderColor: '#496A57',
             borderWidth: '2px',
           },
         },
         '& .MuiInputLabel-root': {
-          fontFamily: '"Hanken Grotesk", sans-serif',
-          fontWeight: 600,
+          fontWeight: 500,
         },
         ...sx,
       }}

@@ -20,6 +20,14 @@ public class ComplaintDto {
     private String assignedWorkerName;
     private String images;
     private String completionImage;
+    private LocalDateTime assignedDate;
+    private LocalDateTime dueDate;
+    private String beforeImage;
+    private String afterImage;
+    private String workerNotes;
+    private String delayReason;
+    private String delayNotes;
+    private String delayImage;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -42,6 +50,14 @@ public class ComplaintDto {
         this.assignedWorkerName = complaint.getAssignedWorkerName();
         this.images = complaint.getImages();
         this.completionImage = complaint.getCompletionImage();
+        this.assignedDate = complaint.getAssignedDate();
+        this.dueDate = complaint.getDueDate();
+        this.beforeImage = complaint.getBeforeImage();
+        this.afterImage = complaint.getAfterImage();
+        this.workerNotes = complaint.getWorkerNotes();
+        this.delayReason = complaint.getDelayReason();
+        this.delayNotes = complaint.getDelayNotes();
+        this.delayImage = complaint.getDelayImage();
         this.createdAt = complaint.getCreatedAt();
         this.updatedAt = complaint.getUpdatedAt();
     }
@@ -93,6 +109,30 @@ public class ComplaintDto {
 
     public String getCompletionImage() { return completionImage; }
     public void setCompletionImage(String completionImage) { this.completionImage = completionImage; }
+
+    public LocalDateTime getAssignedDate() { return assignedDate; }
+    public void setAssignedDate(LocalDateTime assignedDate) { this.assignedDate = assignedDate; }
+
+    public LocalDateTime getDueDate() { return dueDate; }
+    public void setDueDate(LocalDateTime dueDate) { this.dueDate = dueDate; }
+
+    public String getBeforeImage() { return beforeImage; }
+    public void setBeforeImage(String beforeImage) { this.beforeImage = beforeImage; }
+
+    public String getAfterImage() { return afterImage; }
+    public void setAfterImage(String afterImage) { this.afterImage = afterImage; }
+
+    public String getWorkerNotes() { return workerNotes; }
+    public void setWorkerNotes(String workerNotes) { this.workerNotes = workerNotes; }
+
+    public String getDelayReason() { return delayReason; }
+    public void setDelayReason(String delayReason) { this.delayReason = delayReason; }
+
+    public String getDelayNotes() { return delayNotes; }
+    public void setDelayNotes(String delayNotes) { this.delayNotes = delayNotes; }
+
+    public String getDelayImage() { return delayImage; }
+    public void setDelayImage(String delayImage) { this.delayImage = delayImage; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

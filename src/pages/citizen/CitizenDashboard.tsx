@@ -35,11 +35,21 @@ export const CitizenDashboard: React.FC = () => {
       setLoading(true);
       try {
         const [complaintData, noticeData, proposalData] = await Promise.all([
-          complaintService.getComplaints(),
+          complaintService.getComplaints(user?.id ? { citizenId: user.id } : undefined),
           noticeService.getNotices(),
           proposalService.getProposals(),
         ]);
-        setComplaints(complaintData);
+
+        // Filter strictly to current citizen's own complaints
+        const userOwnComplaints = complaintData.filter(
+          (c) =>
+            !user?.id ||
+            c.citizenId === user.id ||
+            (user.fullName && c.citizenName === user.fullName) ||
+            (user.email && c.citizenPhone === user.email)
+        );
+
+        setComplaints(userOwnComplaints);
         setNotices(noticeData);
         setProposals(proposalData);
       } catch (e) {
@@ -49,7 +59,7 @@ export const CitizenDashboard: React.FC = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [user]);
 
   const totalComplaints = complaints.length;
   const inProgressCount = complaints.filter(

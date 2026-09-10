@@ -116,9 +116,34 @@ export const UserManagement: React.FC = () => {
     setModalError('');
     setModalSuccess('');
 
-    if (!formData.fullName || !formData.email || !formData.password) {
-      setModalError('Please enter full name, email address, and initial password.');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const cleanEmail = (formData.email || '').trim().toLowerCase();
+    const cleanName = (formData.fullName || '').trim();
+
+    if (!cleanName || !formData.password.trim()) {
+      setModalError('Please enter full name and initial password.');
       return;
+    }
+
+    if (!cleanEmail || !emailRegex.test(cleanEmail)) {
+      setModalError('Please enter a valid email address (e.g. user@example.com).');
+      return;
+    }
+
+    // Check duplicate email
+    const existingUser = users.find((u) => u.email.trim().toLowerCase() === cleanEmail);
+    if (existingUser) {
+      setModalError(`Email address "${cleanEmail}" is already registered in the system (${existingUser.fullName} - ${existingUser.role}). Duplicate email addresses are not allowed.`);
+      return;
+    }
+
+    if (formData.phone) {
+      const cleanPhone = formData.phone.replace(/[\s\-\+]/g, '');
+      const numberToCheck = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone.slice(2) : cleanPhone;
+      if (!/^[6-9]\d{9}$/.test(numberToCheck)) {
+        setModalError('Phone number must be a 10-digit mobile number starting with 6, 7, 8, or 9.');
+        return;
+      }
     }
 
     if (formData.role === 'COUNCILLOR' && formData.ward && formData.ward !== 'All Wards') {

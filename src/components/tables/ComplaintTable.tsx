@@ -86,11 +86,11 @@ export const ComplaintTable: React.FC<ComplaintTableProps> = ({
                 </TableCell>
                 <TableCell>
                   <Chip
-                    label={row.status.replace('_', ' ')}
+                    label={row.assignedWorkerName ? `Assigned to ${row.assignedWorkerName}` : row.status.replace('_', ' ')}
                     size="small"
                     sx={{
-                      bgcolor: STATUS_COLORS[row.status].bg,
-                      color: STATUS_COLORS[row.status].text,
+                      bgcolor: row.assignedWorkerName ? '#EBF5FF' : (STATUS_COLORS[row.status]?.bg || '#F8F9F7'),
+                      color: row.assignedWorkerName ? '#1E40AF' : (STATUS_COLORS[row.status]?.text || '#68706B'),
                       fontWeight: 700,
                     }}
                   />

@@ -112,11 +112,39 @@ export const ComplaintDetails: React.FC = () => {
       </Box>
     );
 
+  // Security check: Citizens can only view their own filed complaints
+  if (
+    user?.role === 'CITIZEN' &&
+    complaint.citizenId &&
+    user.id &&
+    complaint.citizenId !== user.id &&
+    complaint.citizenName !== user.fullName &&
+    complaint.citizenPhone !== user.email
+  ) {
+    return (
+      <Box sx={{ textAlign: 'center', py: 8, maxWidth: 600, mx: 'auto' }}>
+        <Typography variant="h3" sx={{ color: '#B45D59', fontWeight: 600, mb: 1 }}>
+          Access Denied
+        </Typography>
+        <Typography variant="body1" sx={{ color: '#68706B', mb: 3 }}>
+          You are only authorized to view complaints that you have registered under your citizen account.
+        </Typography>
+        <Button
+          onClick={handleBack}
+          variant="contained"
+          sx={{ backgroundColor: '#496A57', textTransform: 'none' }}
+        >
+          Return to My Complaints
+        </Button>
+      </Box>
+    );
+  }
+
   const timelineSteps = [
     { key: 'SUBMITTED', label: 'Submitted' },
     { key: 'PENDING', label: 'Under Review' },
-    { key: 'IN_PROGRESS', label: 'In Progress' },
-    { key: 'RESOLVED', label: 'Resolved' },
+    { key: 'IN_PROGRESS', label: 'Site Visited & In Progress' },
+    { key: 'RESOLVED', label: 'Fully Resolved' },
   ];
 
   const getStepIndex = (status: string) => {
@@ -147,6 +175,66 @@ export const ComplaintDetails: React.FC = () => {
       >
         Back
       </Button>
+
+      {/* Pending Approval Councillor Action Banner */}
+      {complaint.status === 'PENDING_APPROVAL' && (
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
+            mb: 4,
+            borderRadius: '8px',
+            border: '2px solid #D97706',
+            bgcolor: '#FFFBEB',
+          }}
+        >
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+            <Box>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#92400E' }}>
+                ⚠️ WORK ORDER SUBMITTED FOR COUNCILLOR VERIFICATION
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#78350F', mt: 0.5 }}>
+                Field technician <strong>{complaint.assignedWorkerName || 'Worker'}</strong> has completed the work and uploaded evidence.
+              </Typography>
+            </Box>
+            {user?.role === 'COUNCILLOR' && (
+              <Box sx={{ display: 'flex', gap: 1.5 }}>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  size="small"
+                  onClick={async () => {
+                    const feedback = prompt('Please enter feedback / rework instructions for the worker:');
+                    if (feedback !== null) {
+                      const updated = await complaintService.rejectTaskProof(complaint.id, user.fullName, feedback);
+                      setComplaint(updated);
+                    }
+                  }}
+                  sx={{ fontWeight: 600, textTransform: 'none' }}
+                >
+                  Request Rework
+                </Button>
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={async () => {
+                    const updated = await complaintService.approveTask(complaint.id, user.fullName);
+                    setComplaint(updated);
+                  }}
+                  sx={{
+                    bgcolor: '#16A34A',
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    '&:hover': { bgcolor: '#15803D' }
+                  }}
+                >
+                  Approve & Mark Resolved
+                </Button>
+              </Box>
+            )}
+          </Box>
+        </Paper>
+      )}
 
       {/* Complaint Overview Card */}
       <Box sx={{ border: '1px solid #E5E8E4', borderRadius: '8px', backgroundColor: '#FFFFFF', p: { xs: 3, sm: 4.5 }, mb: 4 }}>
@@ -371,27 +459,99 @@ export const ComplaintDetails: React.FC = () => {
 
       {/* Photos & Activity Section */}
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 4 }}>
-        {/* Photo Evidence */}
+        {/* Photo Evidence & Resolution Proof */}
         <Box sx={{ border: '1px solid #E5E8E4', borderRadius: '8px', backgroundColor: '#FFFFFF', p: 3 }}>
           <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#202522', mb: 2 }}>
-            Photo Evidence
+            Site Photo Evidence & Verification Proof
           </Typography>
-          {complaint.images && complaint.images.length > 0 ? (
+
+          {(complaint.afterImage || complaint.completionImage || complaint.workerNotes) && (
+            <Paper elevation={0} sx={{ p: 2.5, mb: 3, borderRadius: '8px', border: '1px solid #16A34A', bgcolor: '#F0FDF4' }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#166534', mb: 1.5 }}>
+                ✓ FIELD WORK RESOLUTION EVIDENCE
+              </Typography>
+
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, mb: 2 }}>
+                {/* BEFORE */}
+                <Box>
+                  <Typography variant="caption" sx={{ fontWeight: 800, color: '#68706B', display: 'block', mb: 0.5, letterSpacing: '0.05em' }}>
+                    BEFORE
+                  </Typography>
+                  {complaint.beforeImage ? (
+                    <CardMedia
+                      component="img"
+                      image={complaint.beforeImage}
+                      alt="Before Photo"
+                      sx={{ borderRadius: '6px', height: 150, objectFit: 'cover', border: '1px solid #E5E8E4' }}
+                    />
+                  ) : complaint.images && complaint.images.length > 0 ? (
+                    <CardMedia
+                      component="img"
+                      image={complaint.images[0]}
+                      alt="Before Photo"
+                      sx={{ borderRadius: '6px', height: 150, objectFit: 'cover', border: '1px solid #E5E8E4' }}
+                    />
+                  ) : (
+                    <Box sx={{ height: 150, border: '1px dashed #CCC', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#FFF' }}>
+                      <Typography variant="caption" color="text.secondary">No Before Photo</Typography>
+                    </Box>
+                  )}
+                </Box>
+
+                {/* AFTER / RESOLVED */}
+                <Box>
+                  <Typography variant="caption" sx={{ fontWeight: 800, color: '#16A34A', display: 'block', mb: 0.5, letterSpacing: '0.05em' }}>
+                    AFTER / RESOLVED
+                  </Typography>
+                  {(complaint.afterImage || complaint.completionImage) ? (
+                    <CardMedia
+                      component="img"
+                      image={complaint.afterImage || complaint.completionImage}
+                      alt="Resolved Photo"
+                      sx={{ borderRadius: '6px', height: 150, objectFit: 'cover', border: '2px solid #16A34A' }}
+                    />
+                  ) : (
+                    <Box sx={{ height: 150, border: '1px dashed #16A34A', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#FFF' }}>
+                      <Typography variant="caption" color="success.main">Resolved Photo Pending</Typography>
+                    </Box>
+                  )}
+                </Box>
+              </Box>
+
+              {/* COMPLETION NOTE */}
+              {complaint.workerNotes && (
+                <Box sx={{ bgcolor: '#FFFFFF', p: 2, borderRadius: '6px', border: '1px solid #BBF7D0' }}>
+                  <Typography variant="caption" sx={{ fontWeight: 800, color: '#166534', display: 'block', mb: 0.5 }}>
+                    COMPLETION NOTE
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#202522', fontWeight: 500 }}>
+                    {complaint.workerNotes}
+                  </Typography>
+                  {complaint.assignedWorkerName && (
+                    <Typography variant="caption" sx={{ color: '#68706B', display: 'block', mt: 1 }}>
+                      Field Worker: {complaint.assignedWorkerName}
+                    </Typography>
+                  )}
+                </Box>
+              )}
+            </Paper>
+          )}
+
+          {complaint.images && complaint.images.length > 0 && (
             <Stack spacing={2}>
+              <Typography variant="caption" sx={{ color: '#68706B', fontWeight: 600, display: 'block' }}>
+                ORIGINAL CITIZEN ATTACHMENTS
+              </Typography>
               {complaint.images.map((img, i) => (
                 <CardMedia
                   key={i}
                   component="img"
                   image={img}
                   alt="Site Evidence"
-                  sx={{ borderRadius: '6px', maxHeight: 240, objectFit: 'cover', border: '1px solid #E5E8E4' }}
+                  sx={{ borderRadius: '6px', maxHeight: 180, objectFit: 'cover', border: '1px solid #E5E8E4' }}
                 />
               ))}
             </Stack>
-          ) : (
-            <Typography variant="body2" sx={{ color: '#68706B' }}>
-              No photo evidence attached.
-            </Typography>
           )}
         </Box>
 

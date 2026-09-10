@@ -223,9 +223,9 @@ export const Announcements: React.FC = () => {
               </Alert>
             )}
 
-            <form onSubmit={handlePublishNotice}>
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
+            <form onSubmit={handlePublishNotice} style={{ width: '100%' }}>
+              <Stack spacing={2.5}>
+                <Box>
                   <CustomTextField
                     label="Bulletin Headline / Notice Title"
                     placeholder="e.g. Scheduled Main Feeder Pipe Replacement"
@@ -234,9 +234,9 @@ export const Announcements: React.FC = () => {
                     required
                     fullWidth
                   />
-                </Grid>
+                </Box>
 
-                <Grid item xs={12} sm={6}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
                   <CustomTextField
                     select
                     label="Notice Priority"
@@ -249,9 +249,7 @@ export const Announcements: React.FC = () => {
                     <MenuItem value="IMPORTANT">Important Advisory</MenuItem>
                     <MenuItem value="EMERGENCY">Emergency Alert</MenuItem>
                   </CustomTextField>
-                </Grid>
 
-                <Grid item xs={12} sm={6}>
                   <CustomTextField
                     select
                     label="Target Audience / Ward Scope"
@@ -266,9 +264,9 @@ export const Announcements: React.FC = () => {
                       </MenuItem>
                     ))}
                   </CustomTextField>
-                </Grid>
+                </Box>
 
-                <Grid item xs={12}>
+                <Box>
                   <CustomTextField
                     select
                     label="Category Classification"
@@ -283,9 +281,9 @@ export const Announcements: React.FC = () => {
                       </MenuItem>
                     ))}
                   </CustomTextField>
-                </Grid>
+                </Box>
 
-                <Grid item xs={12}>
+                <Box>
                   <CustomTextField
                     label="Full Notice Description & About Details"
                     placeholder="Provide clear details regarding timings, affected areas, guidelines, and helpline contacts..."
@@ -296,10 +294,10 @@ export const Announcements: React.FC = () => {
                     required
                     fullWidth
                   />
-                </Grid>
+                </Box>
 
                 {/* File Attachment Upload Section */}
-                <Grid item xs={12}>
+                <Box>
                   <Typography variant="body2" sx={{ fontWeight: 600, color: '#202522', mb: 1 }}>
                     Attach Circular Form / Poster / Image (PDF or Image)
                   </Typography>
@@ -372,32 +370,30 @@ export const Announcements: React.FC = () => {
                       />
                     </Box>
                   )}
-                </Grid>
+                </Box>
 
                 {/* Issuing Councillor Signature Info */}
-                <Grid item xs={12}>
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 2,
-                      borderRadius: '8px',
-                      border: '1px solid #E5E8E4',
-                      backgroundColor: '#F8F9F7'
-                    }}
-                  >
-                    <Typography variant="caption" sx={{ color: '#68706B', fontWeight: 600, display: 'block' }}>
-                      ISSUING COUNCILLOR SIGNATURE
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#202522' }}>
-                      Published by: {user?.fullName || 'Ward Councillor'}
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: '#496A57' }}>
-                      {user?.ward || 'Ward 1 - Central Town'} Councillor Desk
-                    </Typography>
-                  </Paper>
-                </Grid>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    borderRadius: '8px',
+                    border: '1px solid #E5E8E4',
+                    backgroundColor: '#F8F9F7'
+                  }}
+                >
+                  <Typography variant="caption" sx={{ color: '#68706B', fontWeight: 600, display: 'block' }}>
+                    ISSUING COUNCILLOR SIGNATURE
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#202522' }}>
+                    Published by: {user?.fullName || 'Ward Councillor'}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: '#496A57' }}>
+                    {user?.ward || 'Ward 1 - Central Town'} Councillor Desk
+                  </Typography>
+                </Paper>
 
-                <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 1 }}>
                   <CustomButton
                     type="submit"
                     startIcon={<CampaignIcon />}
@@ -412,8 +408,8 @@ export const Announcements: React.FC = () => {
                   >
                     Broadcast Notice to All Users
                   </CustomButton>
-                </Grid>
-              </Grid>
+                </Box>
+              </Stack>
             </form>
           </Card>
         </Grid>
@@ -428,130 +424,170 @@ export const Announcements: React.FC = () => {
           </Box>
 
           <Stack spacing={2.5}>
-            {notices.map((n) => {
-              const isEmergency = n.priority === 'EMERGENCY';
-              const isImportant = n.priority === 'IMPORTANT';
-
-              return (
-                <Card
-                  key={n.id}
-                  elevation={0}
+            {notices.length === 0 ? (
+              <Card
+                elevation={0}
+                sx={{
+                  p: 4,
+                  borderRadius: '12px',
+                  border: '1.5px dashed #D0D7D1',
+                  backgroundColor: '#F8F9F7',
+                  textAlign: 'center',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minHeight: 340
+                }}
+              >
+                <Box
                   sx={{
-                    p: 2.5,
-                    borderRadius: '10px',
-                    border: '1px solid #E5E8E4',
-                    backgroundColor: '#FFFFFF',
-                    transition: 'box-shadow 0.15s ease',
-                    '&:hover': {
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
-                    }
+                    width: 56,
+                    height: 56,
+                    borderRadius: '50%',
+                    backgroundColor: '#E8EFE9',
+                    color: '#304B3A',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mb: 2
                   }}
                 >
-                  <CardContent sx={{ p: '0 !important' }}>
-                    {/* Header line */}
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5, flexWrap: 'wrap', gap: 1 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Chip
-                          label={n.priority}
-                          size="small"
-                          sx={{
-                            fontWeight: 600,
-                            fontSize: '0.7rem',
-                            height: 22,
-                            backgroundColor: isEmergency ? '#FDE8E8' : isImportant ? '#FBF4E8' : '#E8EFE9',
-                            color: isEmergency ? '#B45D59' : isImportant ? '#B58A45' : '#304B3A'
-                          }}
-                        />
-                        <Chip
-                          label={n.category}
-                          size="small"
-                          variant="outlined"
-                          sx={{ borderColor: '#E5E8E4', color: '#68706B', fontSize: '0.7rem', height: 22 }}
-                        />
+                  <CampaignIcon sx={{ fontSize: 30 }} />
+                </Box>
+                <Typography variant="h6" sx={{ fontWeight: 600, color: '#202522', mb: 0.5 }}>
+                  No Active Bulletins Broadcasted
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#68706B', maxWidth: 360 }}>
+                  Official notices, maintenance advisories, and emergency alerts published from the left console will appear in this feed live.
+                </Typography>
+              </Card>
+            ) : (
+              notices.map((n) => {
+                const isEmergency = n.priority === 'EMERGENCY';
+                const isImportant = n.priority === 'IMPORTANT';
+
+                return (
+                  <Card
+                    key={n.id}
+                    elevation={0}
+                    sx={{
+                      p: 2.5,
+                      borderRadius: '10px',
+                      border: '1px solid #E5E8E4',
+                      backgroundColor: '#FFFFFF',
+                      transition: 'box-shadow 0.15s ease',
+                      '&:hover': {
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                      }
+                    }}
+                  >
+                    <CardContent sx={{ p: '0 !important' }}>
+                      {/* Header line */}
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5, flexWrap: 'wrap', gap: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Chip
+                            label={n.priority}
+                            size="small"
+                            sx={{
+                              fontWeight: 600,
+                              fontSize: '0.7rem',
+                              height: 22,
+                              backgroundColor: isEmergency ? '#FDE8E8' : isImportant ? '#FBF4E8' : '#E8EFE9',
+                              color: isEmergency ? '#B45D59' : isImportant ? '#B58A45' : '#304B3A'
+                            }}
+                          />
+                          <Chip
+                            label={n.category}
+                            size="small"
+                            variant="outlined"
+                            sx={{ borderColor: '#E5E8E4', color: '#68706B', fontSize: '0.7rem', height: 22 }}
+                          />
+                        </Box>
+                        <Typography variant="caption" sx={{ color: '#68706B' }}>
+                          {new Date(n.publishDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </Typography>
                       </Box>
-                      <Typography variant="caption" sx={{ color: '#68706B' }}>
-                        {new Date(n.publishDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+
+                      {/* Title */}
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#202522', mb: 1, lineHeight: 1.3 }}>
+                        {n.title}
                       </Typography>
-                    </Box>
 
-                    {/* Title */}
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#202522', mb: 1, lineHeight: 1.3 }}>
-                      {n.title}
-                    </Typography>
-
-                    {/* Description */}
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: '#68706B',
-                        mb: 2,
-                        lineHeight: 1.6,
-                        display: '-webkit-box',
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden'
-                      }}
-                    >
-                      {n.content}
-                    </Typography>
-
-                    {/* Attachment preview if present */}
-                    {n.attachmentName && (
-                      <Paper
-                        elevation={0}
-                        onClick={() => setPreviewNotice(n)}
+                      {/* Description */}
+                      <Typography
+                        variant="body2"
                         sx={{
-                          p: 1.5,
+                          color: '#68706B',
                           mb: 2,
-                          borderRadius: '6px',
-                          border: '1px solid #E5E8E4',
-                          backgroundColor: '#F8F9F7',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          '&:hover': { backgroundColor: '#E8EFE9' }
+                          lineHeight: 1.6,
+                          display: '-webkit-box',
+                          WebkitLineClamp: 3,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
                         }}
                       >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          {n.attachmentType === 'pdf' ? (
-                            <PictureAsPdfIcon sx={{ color: '#B45D59', fontSize: 20 }} />
-                          ) : (
-                            <ImageIcon sx={{ color: '#496A57', fontSize: 20 }} />
-                          )}
-                          <Typography variant="body2" sx={{ fontWeight: 500, color: '#202522', fontSize: '0.85rem' }}>
-                            {n.attachmentName}
-                          </Typography>
-                        </Box>
-
-                        <Chip
-                          label="View Attachment"
-                          size="small"
-                          icon={<OpenInNewIcon style={{ fontSize: 14 }} />}
-                          sx={{ height: 22, fontSize: '0.7rem', backgroundColor: '#FFFFFF', border: '1px solid #E5E8E4' }}
-                        />
-                      </Paper>
-                    )}
-
-                    {/* Councillor attribution footer */}
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pt: 1.5, borderTop: '1px solid #F3F5F2' }}>
-                      <Typography variant="caption" sx={{ color: '#304B3A', fontWeight: 600 }}>
-                        📢 Published by {n.publishedBy} • ({n.ward})
+                        {n.content}
                       </Typography>
 
-                      <Button
-                        size="small"
-                        onClick={() => setPreviewNotice(n)}
-                        endIcon={<VisibilityIcon sx={{ fontSize: 14 }} />}
-                        sx={{ color: '#496A57', textTransform: 'none', fontWeight: 500, fontSize: '0.8rem', p: 0 }}
-                      >
-                        Read Notice
-                      </Button>
-                    </Box>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                      {/* Attachment preview if present */}
+                      {n.attachmentName && (
+                        <Paper
+                          elevation={0}
+                          onClick={() => setPreviewNotice(n)}
+                          sx={{
+                            p: 1.5,
+                            mb: 2,
+                            borderRadius: '6px',
+                            border: '1px solid #E5E8E4',
+                            backgroundColor: '#F8F9F7',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            '&:hover': { backgroundColor: '#E8EFE9' }
+                          }}
+                        >
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {n.attachmentType === 'pdf' ? (
+                              <PictureAsPdfIcon sx={{ color: '#B45D59', fontSize: 20 }} />
+                            ) : (
+                              <ImageIcon sx={{ color: '#496A57', fontSize: 20 }} />
+                            )}
+                            <Typography variant="body2" sx={{ fontWeight: 500, color: '#202522', fontSize: '0.85rem' }}>
+                              {n.attachmentName}
+                            </Typography>
+                          </Box>
+
+                          <Chip
+                            label="View Attachment"
+                            size="small"
+                            icon={<OpenInNewIcon style={{ fontSize: 14 }} />}
+                            sx={{ height: 22, fontSize: '0.7rem', backgroundColor: '#FFFFFF', border: '1px solid #E5E8E4' }}
+                          />
+                        </Paper>
+                      )}
+
+                      {/* Councillor attribution footer */}
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pt: 1.5, borderTop: '1px solid #F3F5F2' }}>
+                        <Typography variant="caption" sx={{ color: '#304B3A', fontWeight: 600 }}>
+                          📢 Published by {n.publishedBy} • ({n.ward})
+                        </Typography>
+
+                        <Button
+                          size="small"
+                          onClick={() => setPreviewNotice(n)}
+                          endIcon={<VisibilityIcon sx={{ fontSize: 14 }} />}
+                          sx={{ color: '#496A57', textTransform: 'none', fontWeight: 500, fontSize: '0.8rem', p: 0 }}
+                        >
+                          Read Notice
+                        </Button>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
           </Stack>
         </Grid>
       </Grid>

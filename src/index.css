@@ -1,23 +1,23 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
-/* SGCS Civic Service Design System Tokens */
+/* SGCS Civic Service Design System Tokens - White & Signature Landing Page Dark Green Theme */
 :root {
-  --bg-primary: #FAF8F5;
+  --bg-primary: #FBFDFB;
   --bg-surface: #FFFFFF;
-  --bg-secondary: #F4F1EA;
-  --bg-soft: #EBF1F2;
-  --text-primary: #1A232A;
-  --text-secondary: #5A6672;
-  --border-color: #E2E6EA;
-  --accent-primary: #0F4C5C;
-  --accent-dark: #0A343F;
-  --accent-light: #266B7B;
-  --accent-warm: #C85A32;
-  --accent-warm-light: #E27D56;
-  --accent-warm-dark: #A03F1B;
-  --color-success: #2D6A4F;
-  --color-warning: #D97706;
-  --color-error: #C0392B;
+  --bg-secondary: #F2F7F4;
+  --bg-soft: #E8F3EE;
+  --text-primary: #1C2A24;
+  --text-secondary: #5F7367;
+  --border-color: #E2EAF0;
+  --accent-primary: #1F4D3A;
+  --accent-dark: #16382A;
+  --accent-light: #236B4E;
+  --accent-warm: #E67E22;
+  --accent-warm-light: #FDF2E9;
+  --accent-warm-dark: #D35400;
+  --color-success: #1F4D3A;
+  --color-warning: #E67E22;
+  --color-error: #E74C3C;
   --font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 

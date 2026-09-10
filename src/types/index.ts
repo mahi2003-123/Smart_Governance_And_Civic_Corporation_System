@@ -15,7 +15,7 @@ export interface User {
 }
 
 export type ComplaintPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
-export type ComplaintStatus = 'PENDING' | 'IN_PROGRESS' | 'RESOLVED' | 'REJECTED';
+export type ComplaintStatus = 'PENDING' | 'ASSIGNED' | 'IN_PROGRESS' | 'PENDING_APPROVAL' | 'RESOLVED' | 'REJECTED';
 export type ComplaintCategory = 
   | 'Roads & Potholes'
   | 'Street Lighting'
@@ -62,6 +62,15 @@ export interface Complaint {
   citizenPhone: string;
   assignedWorkerId?: string;
   assignedWorkerName?: string;
+  assignedDate?: string;
+  dueDate?: string;
+  beforeImage?: string;
+  afterImage?: string;
+  workerNotes?: string;
+  delayReason?: string;
+  delayNotes?: string;
+  delayImage?: string;
+  isRead?: boolean;
   images: string[];
   completionImage?: string;
   timeline: TimelineItem[];
@@ -71,6 +80,14 @@ export interface Complaint {
 }
 
 export type ProposalStatus = 'ACTIVE' | 'APPROVED' | 'REJECTED' | 'UNDER_REVIEW';
+
+export interface ProposalComment {
+  id: string;
+  authorName: string;
+  authorRole: UserRole;
+  content: string;
+  createdAt: string;
+}
 
 export interface CommunityProposal {
   id: string;
@@ -85,6 +102,7 @@ export interface CommunityProposal {
   userVoted?: 'UP' | 'DOWN';
   status: ProposalStatus;
   councillorNotes?: string;
+  comments?: ProposalComment[];
   createdAt: string;
 }
 
@@ -140,12 +158,17 @@ export interface NotificationItem {
 
 export interface SystemActivityLog {
   id: string;
-  timestamp: string;
-  user: string;
-  role: UserRole;
+  timestamp?: string;
+  userId?: string;
+  userName?: string;
+  userRole?: string;
+  user?: string;
+  role?: string;
   action: string;
-  module: 'COMPLAINT' | 'PROPOSAL' | 'NOTICE' | 'USER' | 'WARD' | 'SYSTEM';
+  module: string;
+  reference?: string;
   details: string;
+  createdAt?: string;
 }
 
 

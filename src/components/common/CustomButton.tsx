@@ -20,11 +20,15 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
       color={color}
       disabled={disabled || loading}
       sx={{
-        borderRadius: 28,
+        borderRadius: '8px',
         fontWeight: 600,
+        textTransform: 'none',
         px: 3,
-        py: 1.2,
-        boxShadow: variant === 'contained' && color === 'primary' ? '0 6px 16px rgba(111, 78, 55, 0.25)' : 'none',
+        py: 1.1,
+        boxShadow: 'none',
+        '&:hover': {
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        },
         ...sx,
       }}
       {...props}

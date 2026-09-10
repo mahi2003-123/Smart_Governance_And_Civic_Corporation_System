@@ -37,11 +37,10 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           sx={{
             flex: 1,
             backgroundColor: '#FFFFFF',
-            py: { xs: 3, md: 5 },
-            px: { xs: 2, sm: 4, md: 6 },
-            maxWidth: '1360px',
+            py: { xs: 3, md: 4 },
+            px: { xs: 2.5, sm: 4, md: 5 },
             width: '100%',
-            mx: 'auto',
+            boxSizing: 'border-box',
           }}
         >
           {children}

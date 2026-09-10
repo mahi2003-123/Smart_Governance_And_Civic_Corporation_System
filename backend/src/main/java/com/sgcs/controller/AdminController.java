@@ -69,8 +69,21 @@ public class AdminController {
         }
     }
 
+    @Autowired
+    private com.sgcs.service.AuditService auditService;
+
     @GetMapping("/analytics")
     public ResponseEntity<Map<String, Object>> getAnalytics() {
         return ResponseEntity.ok(adminService.getAnalytics());
+    }
+
+    @GetMapping("/audit-logs")
+    public ResponseEntity<?> getAuditLogs() {
+        return ResponseEntity.ok(auditService.getAllActivities());
+    }
+    
+    @GetMapping("/activities")
+    public ResponseEntity<?> getActivities() {
+        return ResponseEntity.ok(auditService.getAllActivities());
     }
 }

@@ -2,6 +2,7 @@ package com.sgcs.dto;
 
 import com.sgcs.entity.Proposal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class ProposalDto {
     private String id;
@@ -15,6 +16,7 @@ public class ProposalDto {
     private Integer downvotes;
     private String status;
     private String councillorNotes;
+    private List<Proposal.ProposalComment> comments;
     private LocalDateTime createdAt;
 
     public ProposalDto() {}
@@ -31,6 +33,7 @@ public class ProposalDto {
         this.downvotes = proposal.getDownvotes();
         this.status = proposal.getStatus();
         this.councillorNotes = proposal.getCouncillorNotes();
+        this.comments = proposal.getComments();
         this.createdAt = proposal.getCreatedAt();
     }
 
@@ -66,6 +69,9 @@ public class ProposalDto {
 
     public String getCouncillorNotes() { return councillorNotes; }
     public void setCouncillorNotes(String councillorNotes) { this.councillorNotes = councillorNotes; }
+
+    public List<Proposal.ProposalComment> getComments() { return comments; }
+    public void setComments(List<Proposal.ProposalComment> comments) { this.comments = comments; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
