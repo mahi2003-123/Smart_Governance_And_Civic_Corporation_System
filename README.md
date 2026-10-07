@@ -42,25 +42,28 @@ SGCS bridges citizens, ward councillors, field workers, and municipal administra
    ```
 
 ### Step 2: Configure Environment / `application.properties`
-Navigate to `backend/src/main/resources/application.properties` and verify your database credentials:
+Set the database password and JWT secret as environment variables locally before starting the backend, or specify them in your launcher configuration:
+
+```bash
+# Windows PowerShell
+$env:DB_PASSWORD="your_postgres_password"
+$env:JWT_SECRET="your_custom_jwt_secret_key"
+
+# Linux / macOS / Bash
+export DB_PASSWORD="your_postgres_password"
+export JWT_SECRET="your_custom_jwt_secret_key"
+```
+
+The `backend/src/main/resources/application.properties` relies on these environment variables:
 
 ```ini
-# Server Configuration
-server.port=5000
-server.servlet.context-path=/
-
 # PostgreSQL Datasource Configuration
 spring.datasource.url=jdbc:postgresql://localhost:5432/sgcs_db
 spring.datasource.username=postgres
-spring.datasource.password=1102003
-spring.datasource.driver-class-name=org.postgresql.Driver
-
-# JPA & Hibernate Settings
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
+spring.datasource.password=${DB_PASSWORD}
 
 # JWT Configuration
-sgcs.app.jwtSecret=SGCSSecretKeyForJWTAuthenticationSmartGovernanceCivicSystem2026SecureKey
+sgcs.app.jwtSecret=${JWT_SECRET}
 sgcs.app.jwtExpirationMs=86400000
 ```
 

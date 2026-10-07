@@ -2,6 +2,7 @@ package com.sgcs.service;
 
 import com.sgcs.dto.AuthDto;
 import com.sgcs.entity.User;
+import com.sgcs.exception.BadRequestException;
 import com.sgcs.repository.UserRepository;
 import com.sgcs.security.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,12 +34,12 @@ public class AuthService {
 
         Optional<User> userOpt = userRepository.findByEmailIgnoreCase(email);
         if (userOpt.isEmpty()) {
-            throw new RuntimeException("Invalid email or password.");
+            throw new BadRequestException("Invalid email or password.");
         }
 
         User user = userOpt.get();
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new RuntimeException("Invalid email or password.");
+            throw new BadRequestException("Invalid email or password.");
         }
 
         String token = jwtUtils.generateToken(user);
@@ -60,7 +61,7 @@ public class AuthService {
         String email = request.getEmail().trim().toLowerCase();
         
         if (userRepository.existsByEmailIgnoreCase(email)) {
-            throw new RuntimeException("Email address is already registered in SGCS database.");
+            throw new BadRequestException("Email address is already registered in SGCS database.");
         }
 
         String role = request.getRole() != null ? request.getRole() : "CITIZEN";
@@ -71,7 +72,7 @@ public class AuthService {
             List<User> allCouncillors = userRepository.findByRoleIgnoreCase("COUNCILLOR");
             for (User c : allCouncillors) {
                 if (c.getWard() != null && isSameWard(c.getWard(), ward)) {
-                    throw new RuntimeException("Ward \"" + ward + "\" already has an assigned Ward Councillor (" + c.getFullName() + " - " + c.getEmail() + "). Only 1 Councillor is permitted per municipal ward.");
+                    throw new BadRequestException("Ward \"" + ward + "\" already has an assigned Ward Councillor (" + c.getFullName() + " - " + c.getEmail() + "). Only 1 Councillor is permitted per municipal ward.");
                 }
             }
         }
@@ -100,6 +101,38 @@ public class AuthService {
         );
 
         return new AuthDto.AuthResponse(true, saved, token);
+    }
+
+    public AuthDto.AuthResponse updateProfile(String userId, AuthDto.UpdateProfileRequest request) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            throw new BadRequestException("User not found.");
+        }
+        User user = userOpt.get();
+        
+        if (request.getFullName() != null && !request.getFullName().trim().isEmpty()) {
+            user.setFullName(request.getFullName().trim());
+        }
+        if (request.getPhone() != null) {
+            user.setPhone(request.getPhone().trim());
+        }
+        if (request.getWard() != null && !request.getWard().trim().isEmpty()) {
+            user.setWard(request.getWard().trim());
+        }
+        
+        User saved = userRepository.save(user);
+        
+        auditService.logActivity(
+            saved.getId(),
+            saved.getFullName(),
+            saved.getRole(),
+            "Profile Update",
+            "AUTH",
+            saved.getEmail(),
+            "User updated their profile (phone: " + saved.getPhone() + ")"
+        );
+        
+        return new AuthDto.AuthResponse(true, saved, null);
     }
 
     private boolean isSameWard(String wardA, String wardB) {

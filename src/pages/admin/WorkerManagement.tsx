@@ -31,21 +31,14 @@ import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import { adminService } from '../../services/adminService';
 import { User } from '../../types';
+import { COMPLAINT_CATEGORIES } from '../../constants';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader';
 import { FilterBar, FilterOption } from '../../components/admin/FilterBar';
 import { ActionMenu, ActionMenuItem } from '../../components/admin/ActionMenu';
 import { CustomTextField } from '../../components/common/CustomTextField';
 
-export const WORKER_SPECIALIZATIONS = [
-  'Public Works Dept',
-  'Water & Drainage Dept',
-  'Electrical Maintenance',
-  'Sanitation & Waste Management',
-  'Roads & Civil Infrastructure',
-  'Public Lighting & Power',
-  'Parks & Environment',
-];
+export const WORKER_SPECIALIZATIONS = COMPLAINT_CATEGORIES;
 
 export const WorkerManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);

@@ -1,0 +1,17 @@
+Dataset: bmc_raw_complaints.csv
+File format: CSV
+Rows: 1250
+Columns: 7
+Column Names: ['complaint_id', 'complaint_date', 'ward_code', 'complaint_category', 'complaint_text', 'severity', 'status']
+Text column: complaint_text
+Category column: complaint_category
+Missing text: 61
+Duplicate rows: 50
+Original categories:
+ - Dead Animal: 186
+ - Drainage / Flooding: 185
+ - Solid Waste / Garbage: 184
+ - Water Supply Disruption: 180
+ - Street Light Failure: 172
+ - Park / Public Space: 172
+ - Pothole / Road Damage: 171

@@ -1,16 +1,27 @@
 package com.sgcs.dto;
 
 import com.sgcs.entity.Complaint;
+import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 
 public class ComplaintDto {
     private String id;
     private String trackingNumber;
+
+    @NotBlank(message = "Complaint title is required")
     private String title;
+
+    @NotBlank(message = "Complaint category is required")
     private String category;
+
     private String priority;
+
+    @NotBlank(message = "Complaint description is required")
     private String description;
+
+    @NotBlank(message = "Ward location is required")
     private String ward;
+
     private String locationAddress;
     private String status;
     private String citizenId;
@@ -28,6 +39,13 @@ public class ComplaintDto {
     private String delayReason;
     private String delayNotes;
     private String delayImage;
+    private String aiSuggestedCategory;
+    private Double aiConfidence;
+    private Boolean isAiCategoryAccepted;
+    private String masterComplaintId;
+    private String possibleDuplicateId;
+    private Double duplicateSimilarityScore;
+    private Boolean isDuplicateConfirmed;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -58,6 +76,13 @@ public class ComplaintDto {
         this.delayReason = complaint.getDelayReason();
         this.delayNotes = complaint.getDelayNotes();
         this.delayImage = complaint.getDelayImage();
+        this.aiSuggestedCategory = complaint.getAiSuggestedCategory();
+        this.aiConfidence = complaint.getAiConfidence();
+        this.isAiCategoryAccepted = complaint.getIsAiCategoryAccepted();
+        this.masterComplaintId = complaint.getMasterComplaintId();
+        this.possibleDuplicateId = complaint.getPossibleDuplicateId();
+        this.duplicateSimilarityScore = complaint.getDuplicateSimilarityScore();
+        this.isDuplicateConfirmed = complaint.getIsDuplicateConfirmed();
         this.createdAt = complaint.getCreatedAt();
         this.updatedAt = complaint.getUpdatedAt();
     }
@@ -133,6 +158,27 @@ public class ComplaintDto {
 
     public String getDelayImage() { return delayImage; }
     public void setDelayImage(String delayImage) { this.delayImage = delayImage; }
+
+    public String getAiSuggestedCategory() { return aiSuggestedCategory; }
+    public void setAiSuggestedCategory(String aiSuggestedCategory) { this.aiSuggestedCategory = aiSuggestedCategory; }
+
+    public Double getAiConfidence() { return aiConfidence; }
+    public void setAiConfidence(Double aiConfidence) { this.aiConfidence = aiConfidence; }
+
+    public Boolean getIsAiCategoryAccepted() { return isAiCategoryAccepted; }
+    public void setIsAiCategoryAccepted(Boolean isAiCategoryAccepted) { this.isAiCategoryAccepted = isAiCategoryAccepted; }
+
+    public String getMasterComplaintId() { return masterComplaintId; }
+    public void setMasterComplaintId(String masterComplaintId) { this.masterComplaintId = masterComplaintId; }
+
+    public String getPossibleDuplicateId() { return possibleDuplicateId; }
+    public void setPossibleDuplicateId(String possibleDuplicateId) { this.possibleDuplicateId = possibleDuplicateId; }
+
+    public Double getDuplicateSimilarityScore() { return duplicateSimilarityScore; }
+    public void setDuplicateSimilarityScore(Double duplicateSimilarityScore) { this.duplicateSimilarityScore = duplicateSimilarityScore; }
+
+    public Boolean getIsDuplicateConfirmed() { return isDuplicateConfirmed; }
+    public void setIsDuplicateConfirmed(Boolean isDuplicateConfirmed) { this.isDuplicateConfirmed = isDuplicateConfirmed; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

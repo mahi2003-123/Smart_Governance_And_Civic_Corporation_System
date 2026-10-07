@@ -1,42 +1,38 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Card,
-  Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Chip,
-  Button,
-  IconButton,
-  Tooltip
-} from '@mui/material';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Box, Card, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, Button, IconButton, Tooltip, Grid, MenuItem } from '@mui/material';
 import BuildIcon from '@mui/icons-material/Build';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import BlockIcon from '@mui/icons-material/Block';
+import VerifiedIcon from '@mui/icons-material/Verified';
+import AssessmentIcon from '@mui/icons-material/Assessment';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import EventBusyIcon from '@mui/icons-material/EventBusy';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { complaintService } from '../../services/complaintService';
 import { Complaint, ComplaintPriority, ComplaintStatus } from '../../types';
-import { STATUS_COLORS, PRIORITY_COLORS } from '../../constants';
+import { STATUS_COLORS, PRIORITY_COLORS, COMPLAINT_CATEGORIES } from '../../constants';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { AssignWorkerModal } from '../../components/modals/AssignWorkerModal';
-import { matchesWard } from '../../utils/wardUtils';
-
-import VerifiedIcon from '@mui/icons-material/Verified';
 import { VerifyProofModal } from '../../components/modals/VerifyProofModal';
+import { matchesWard } from '../../utils/wardUtils';
+import { CustomTextField } from '../../components/common/CustomTextField';
 
 export const ManageComplaints: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-
+  
   const [loading, setLoading] = useState(true);
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [assignDialogComplaint, setAssignDialogComplaint] = useState<Complaint | null>(null);
   const [verifyModalComplaint, setVerifyModalComplaint] = useState<Complaint | null>(null);
+
+  // Filters
+  const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('ALL');
+  const [priorityFilter, setPriorityFilter] = useState('ALL');
+  const [statusFilter, setStatusFilter] = useState('ALL');
 
   const fetchComplaints = async () => {
     setLoading(true);
@@ -54,7 +50,7 @@ export const ManageComplaints: React.FC = () => {
     fetchComplaints();
   }, []);
 
-  const handleConfirmAssign = async (workerId: string, workerName: string, priority: ComplaintPriority) => {
+  const handleConfirmAssign = async (workerId: string, workerName: string, priority: ComplaintPriority, dueDate?: string) => {
     if (!assignDialogComplaint || !user) return;
     try {
       const updated = await complaintService.assignWorker(
@@ -62,7 +58,8 @@ export const ManageComplaints: React.FC = () => {
         workerId,
         workerName,
         user.fullName,
-        priority
+        priority,
+        dueDate
       );
       setComplaints((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
       setAssignDialogComplaint(null);
@@ -94,189 +91,210 @@ export const ManageComplaints: React.FC = () => {
   const handleRejectComplaint = async (cId: string) => {
     if (!user) return;
     try {
-      const updated = await complaintService.updateComplaintStatus(
-        cId,
-        'REJECTED' as ComplaintStatus,
-        user.fullName,
-        'COUNCILLOR',
-        'Duplicate or out of municipal jurisdiction.'
-      );
+      const updated = await complaintService.updateComplaintStatus(cId, 'REJECTED' as ComplaintStatus, user.fullName, 'COUNCILLOR', 'Duplicate or out of jurisdiction.');
       setComplaints((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
     } catch (e) {
       console.error(e);
     }
   };
 
-  if (loading) return <LoadingSpinner message="Fetching complaint records for triage..." />;
-
-  const displayedComplaints = (user?.role === 'COUNCILLOR' && user?.ward)
+  const wardComplaints = (user?.role === 'COUNCILLOR' && user?.ward)
     ? complaints.filter((c) => matchesWard(c.ward, user.ward))
     : complaints;
 
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  const stats = useMemo(() => {
+    let newC = 0, inProg = 0, dueToday = 0, overdue = 0;
+    wardComplaints.forEach(c => {
+       if (c.status === 'PENDING' || c.status === 'PENDING_REVIEW') newC++;
+       if (c.status === 'ASSIGNED' || c.status === 'IN_PROGRESS') inProg++;
+       if (c.dueDate && c.status !== 'RESOLVED' && c.status !== 'REJECTED') {
+          const dStr = c.dueDate.split('T')[0];
+          if (dStr === todayStr) dueToday++;
+          if (dStr < todayStr) overdue++;
+       }
+    });
+    return { newC, inProg, dueToday, overdue };
+  }, [wardComplaints, todayStr]);
+
+  const displayedComplaints = wardComplaints.filter(c => {
+    const s = search.toLowerCase();
+    const matchSearch = c.trackingNumber.toLowerCase().includes(s) || c.title.toLowerCase().includes(s) || c.description?.toLowerCase().includes(s) || c.locationAddress?.toLowerCase().includes(s);
+    const matchCat = categoryFilter === 'ALL' || c.category === categoryFilter;
+    const matchPri = priorityFilter === 'ALL' || c.priority === priorityFilter;
+    const matchStat = statusFilter === 'ALL' || c.status === statusFilter;
+    return matchSearch && matchCat && matchPri && matchStat;
+  }).sort((a,b) => new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime());
+
+  if (loading) return <LoadingSpinner message="Loading Dashboard & Complaints..." />;
+
   return (
     <Box>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: 600, color: '#202522', letterSpacing: '-0.015em' }}>
-          Ward Complaint Management & Triage
-        </Typography>
-        <Typography variant="body2" sx={{ color: '#68706B', mt: 0.5 }}>
-          Inspect resident grievances for <strong>{user?.ward || 'All Wards'}</strong>, dispatch qualified field personnel, and verify status updates.
-        </Typography>
+      {/* Header */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 700, color: '#202522' }}>
+            Good morning, {user?.fullName.split(' ')[0]}
+          </Typography>
+          <Typography variant="subtitle1" sx={{ color: '#68706B', mt: 0.5 }}>
+            {user?.ward || 'Central Headquarters'} — Smart Governance Control Center
+          </Typography>
+        </Box>
       </Box>
 
-      <Card elevation={0} sx={{ borderRadius: '8px', border: '1px solid #E5E8E4', backgroundColor: '#FFFFFF' }}>
+      {/* Stats Cards */}
+      <Grid container spacing={2} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+           <Card sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 2, border: '1px solid #E5E8E4', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', borderRadius: '12px' }}>
+              <Box sx={{ p: 1.5, bgcolor: '#EBF5FF', color: '#1E40AF', borderRadius: '8px' }}><AssessmentIcon/></Box>
+              <Box>
+                <Typography variant="h5" sx={{ fontWeight: 700, color: '#202522' }}>{stats.newC}</Typography>
+                <Typography variant="caption" sx={{ fontWeight: 600, color: '#68706B', textTransform: 'uppercase' }}>New Complaints</Typography>
+              </Box>
+           </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+           <Card sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 2, border: '1px solid #E5E8E4', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', borderRadius: '12px' }}>
+              <Box sx={{ p: 1.5, bgcolor: '#E8F3EE', color: '#1F4D3A', borderRadius: '8px' }}><AssignmentIcon/></Box>
+              <Box>
+                <Typography variant="h5" sx={{ fontWeight: 700, color: '#202522' }}>{stats.inProg}</Typography>
+                <Typography variant="caption" sx={{ fontWeight: 600, color: '#68706B', textTransform: 'uppercase' }}>In Progress</Typography>
+              </Box>
+           </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+           <Card sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 2, border: '1px solid #E5E8E4', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', borderRadius: '12px' }}>
+              <Box sx={{ p: 1.5, bgcolor: '#FEF3C7', color: '#92400E', borderRadius: '8px' }}><WarningAmberIcon/></Box>
+              <Box>
+                <Typography variant="h5" sx={{ fontWeight: 700, color: '#202522' }}>{stats.dueToday}</Typography>
+                <Typography variant="caption" sx={{ fontWeight: 600, color: '#68706B', textTransform: 'uppercase' }}>Due Today SLA</Typography>
+              </Box>
+           </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+           <Card sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 2, border: '1px solid #E5E8E4', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', borderRadius: '12px' }}>
+              <Box sx={{ p: 1.5, bgcolor: '#FDEDEC', color: '#E74C3C', borderRadius: '8px' }}><EventBusyIcon/></Box>
+              <Box>
+                <Typography variant="h5" sx={{ fontWeight: 700, color: '#202522' }}>{stats.overdue}</Typography>
+                <Typography variant="caption" sx={{ fontWeight: 600, color: '#68706B', textTransform: 'uppercase' }}>Overdue Tasks</Typography>
+              </Box>
+           </Card>
+        </Grid>
+      </Grid>
+
+      {/* Filters Area */}
+      <Box sx={{ mb: 3 }}>
+         <Typography variant="h6" sx={{ fontWeight: 600, color: '#202522', mb: 0.5 }}>Complaints Requiring Attention</Typography>
+         <Typography variant="body2" sx={{ color: '#68706B', mb: 2 }}>Review, prioritize and assign civic complaints safely.</Typography>
+
+         <Grid container spacing={2}>
+           <Grid item xs={12} md={4}>
+             <CustomTextField fullWidth placeholder="Search complaint ID, title, location..." value={search} onChange={e => setSearch(e.target.value)} size="small"/>
+           </Grid>
+           <Grid item xs={12} sm={4} md={2}>
+             <CustomTextField select fullWidth value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)} size="small">
+               <MenuItem value="ALL">All Categories</MenuItem>
+               {COMPLAINT_CATEGORIES.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
+             </CustomTextField>
+           </Grid>
+           <Grid item xs={12} sm={4} md={2}>
+             <CustomTextField select fullWidth value={priorityFilter} onChange={e => setPriorityFilter(e.target.value)} size="small">
+               <MenuItem value="ALL">All Priorities</MenuItem>
+               <MenuItem value="LOW">Low</MenuItem>
+               <MenuItem value="MEDIUM">Medium</MenuItem>
+               <MenuItem value="HIGH">High</MenuItem>
+               <MenuItem value="URGENT">Urgent</MenuItem>
+             </CustomTextField>
+           </Grid>
+           <Grid item xs={12} sm={4} md={2}>
+             <CustomTextField select fullWidth value={statusFilter} onChange={e => setStatusFilter(e.target.value)} size="small">
+               <MenuItem value="ALL">All Statuses</MenuItem>
+               {Object.keys(STATUS_COLORS).map(c => <MenuItem key={c} value={c}>{c.replace('_', ' ')}</MenuItem>)}
+             </CustomTextField>
+           </Grid>
+         </Grid>
+      </Box>
+
+      {/* Data Table */}
+      <Card elevation={0} sx={{ borderRadius: '12px', border: '1px solid #E5E8E4', bgcolor: '#FFF' }}>
         <TableContainer>
           <Table>
             <TableHead sx={{ bgcolor: '#F8F9F7' }}>
               <TableRow>
-                <TableCell sx={{ fontWeight: 600, color: '#202522', py: 1.5 }}>Tracking ID</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#202522', py: 1.5 }}>Complaint & Ward</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#202522', py: 1.5 }}>Citizen Contact</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#202522', py: 1.5 }}>Priority</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#202522', py: 1.5 }}>Assigned Worker</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#202522', py: 1.5 }}>Status</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 600, color: '#202522', py: 1.5 }}>Actions</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#68706B', py: 2 }}>Complaint ID</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#68706B', py: 2 }}>Title & Location</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#68706B', py: 2 }}>Category</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#68706B', py: 2 }}>SLA / Due</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#68706B', py: 2 }}>Assigned Technician</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#68706B', py: 2 }}>Status</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 600, color: '#68706B', py: 2 }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {displayedComplaints.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 6 }}>
-                    <Typography variant="body2" sx={{ color: '#68706B', fontWeight: 500 }}>
-                      No complaints submitted for {user?.ward || 'this ward'} yet.
-                    </Typography>
+                  <TableCell colSpan={7} align="center" sx={{ py: 8 }}>
+                    <Typography variant="body2" sx={{ color: '#68706B' }}>No complaints found matching your criteria.</Typography>
                   </TableCell>
                 </TableRow>
               ) : (
                 displayedComplaints.map((row) => (
-                  <TableRow key={row.id} hover sx={{ '&:hover': { bgcolor: '#F8F9F7' } }}>
+                  <TableRow key={row.id} hover sx={{ '&:hover': { bgcolor: '#F8F9F7' }, borderBottom: '1px solid #F3F5F2' }}>
                     <TableCell>
-                      <Chip label={row.trackingNumber} size="small" sx={{ fontWeight: 600, backgroundColor: '#E8EFE9', color: '#304B3A' }} />
+                      <Typography variant="body2" sx={{ fontWeight: 700, color: '#304B3A' }}>{row.trackingNumber}</Typography>
+                      {row.aiSuggestedCategory && !row.isAiCategoryAccepted && (
+                         <Chip label="AI Review" size="small" sx={{ mt: 0.5, height: '18px', fontSize: '10px', bgcolor: '#DCFCE7', color: '#166534', fontWeight: 600 }} />
+                      )}
                     </TableCell>
                     <TableCell>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#202522' }}>
-                        {row.title}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: '#68706B' }}>
-                        {row.category} • {row.ward}
-                      </Typography>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#202522' }}>{row.title}</Typography>
+                      <Typography variant="caption" sx={{ color: '#68706B', display: 'block', mt: 0.5 }}>{row.ward} • {row.locationAddress}</Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2" sx={{ fontWeight: 500, color: '#202522' }}>{row.citizenName}</Typography>
-                      <Typography variant="caption" sx={{ color: '#68706B' }}>
-                        {row.citizenPhone}
-                      </Typography>
+                      <Chip label={row.category.replace('_', ' ')} size="small" sx={{ bgcolor: '#F3F5F2', color: '#202522', fontWeight: 600, fontSize: '0.7rem' }} />
                     </TableCell>
                     <TableCell>
-                      <Chip
-                        label={row.priority}
-                        size="small"
-                        sx={{
-                          bgcolor: PRIORITY_COLORS[row.priority]?.bg || '#F8F9F7',
-                          color: PRIORITY_COLORS[row.priority]?.text || '#68706B',
-                          fontWeight: 600,
-                        }}
-                      />
+                      {row.dueDate ? (
+                         <Typography variant="caption" sx={{ fontWeight: 600, color: row.dueDate.split('T')[0] < todayStr ? '#E74C3C' : '#68706B' }}>
+                           {row.dueDate.split('T')[0]}
+                         </Typography>
+                      ) : <span style={{ color: '#68706B', fontSize: '12px' }}>—</span>}
                     </TableCell>
                     <TableCell>
                       {row.assignedWorkerName ? (
-                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#304B3A' }}>
-                          {row.assignedWorkerName}
-                        </Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#496A57' }}>{row.assignedWorkerName}</Typography>
                       ) : (
-                        <Chip label="Unassigned" size="small" sx={{ backgroundColor: '#FDF2F2', color: '#B45D59', fontWeight: 600 }} />
+                        <Typography variant="caption" sx={{ color: '#B45D59', fontWeight: 600, bgcolor: '#FDE8E8', px: 1, py: 0.5, borderRadius: '4px' }}>Unassigned</Typography>
                       )}
                     </TableCell>
                     <TableCell>
-                      {row.status === 'RESOLVED' ? (
-                        <Chip label="Resolved" size="small" sx={{ bgcolor: '#E8EFE9', color: '#304B3A', fontWeight: 600 }} />
-                      ) : row.status === 'PENDING_APPROVAL' ? (
-                        <Chip label="Proof Verification Pending" size="small" sx={{ bgcolor: '#FEF3C7', color: '#92400E', fontWeight: 600 }} />
-                      ) : row.assignedWorkerName ? (
-                        <Chip
-                          label={`Assigned to ${row.assignedWorkerName.replace(/\(.*?\)/g, '').trim()}`}
-                          size="small"
-                          sx={{ bgcolor: '#EBF5FF', color: '#1E40AF', fontWeight: 600 }}
-                        />
+                      {row.status === 'PENDING_APPROVAL' ? (
+                        <Chip label="Review Proof" size="small" sx={{ bgcolor: '#FEF3C7', color: '#92400E', fontWeight: 600 }} />
                       ) : (
-                        <Chip
-                          label={row.status.replace('_', ' ')}
-                          size="small"
-                          sx={{ bgcolor: STATUS_COLORS[row.status]?.bg || '#F8F9F7', color: STATUS_COLORS[row.status]?.text || '#68706B', fontWeight: 600 }}
-                        />
+                        <Chip label={row.status.replace('_', ' ')} size="small" sx={{ bgcolor: STATUS_COLORS[row.status]?.bg || '#F8F9F7', color: STATUS_COLORS[row.status]?.text || '#68706B', fontWeight: 600 }} />
                       )}
                     </TableCell>
-                    <TableCell align="center">
-                      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-                        <Tooltip title="View Timeline & Details">
-                          <IconButton size="small" sx={{ color: '#496A57', '&:hover': { bgcolor: '#E8EFE9' } }} onClick={() => navigate(`/citizen/history/${row.id}`)}>
+                    <TableCell align="right">
+                      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                        <Tooltip title="View Full Timeline">
+                          <IconButton size="small" sx={{ color: '#68706B' }} onClick={() => navigate(`/citizen/history/${row.id}`)}>
                             <VisibilityIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-
                         {row.status === 'PENDING_APPROVAL' ? (
-                          <Button
-                            variant="contained"
-                            size="small"
-                            color="warning"
-                            startIcon={<VerifiedIcon />}
-                            onClick={() => setVerifyModalComplaint(row)}
-                            sx={{
-                              borderRadius: '6px',
-                              fontWeight: 700,
-                              textTransform: 'none',
-                              fontSize: '0.825rem',
-                              bgcolor: '#D97706',
-                              color: '#FFFFFF',
-                              '&:hover': { bgcolor: '#B45309' }
-                            }}
-                          >
-                            Verify Proof
-                          </Button>
-                        ) : row.assignedWorkerName ? (
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            startIcon={<BuildIcon />}
-                            onClick={() => setAssignDialogComplaint(row)}
-                            sx={{
-                              borderRadius: '6px',
-                              borderColor: '#2563EB',
-                              color: '#1E40AF',
-                              backgroundColor: '#EBF5FF',
-                              fontWeight: 600,
-                              textTransform: 'none',
-                              fontSize: '0.825rem',
-                              '&:hover': { backgroundColor: '#DBEAFE' }
-                            }}
-                          >
-                            Reassign ({row.assignedWorkerName.split(' ')[0]})
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="contained"
-                            size="small"
-                            startIcon={<BuildIcon />}
-                            onClick={() => setAssignDialogComplaint(row)}
-                            sx={{
-                              borderRadius: '6px',
-                              backgroundColor: '#496A57',
-                              fontWeight: 500,
-                              textTransform: 'none',
-                              fontSize: '0.825rem',
-                              '&:hover': { backgroundColor: '#304B3A' }
-                            }}
-                          >
-                            Triage & Assign
+                          <Button variant="contained" size="small" onClick={() => setVerifyModalComplaint(row)} sx={{ bgcolor: '#D97706', color: '#FFF', minWidth: '90px' }}>Verify</Button>
+                        ) : (row.status !== 'REJECTED' && row.status !== 'RESOLVED') && (
+                          <Button variant="outlined" size="small" onClick={() => setAssignDialogComplaint(row)} sx={{ color: '#496A57', borderColor: '#496A57', minWidth: '90px' }}>
+                            {row.assignedWorkerName ? 'Reassign' : 'Review'}
                           </Button>
                         )}
-
-                        {row.status !== 'REJECTED' && row.status !== 'RESOLVED' && (
-                          <Tooltip title="Reject Complaint">
-                            <IconButton size="small" color="error" onClick={() => handleRejectComplaint(row.id)}>
-                              <BlockIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
+                        {row.status === 'PENDING' && (
+                          <Tooltip title="Reject Duplicate">
+                             <IconButton size="small" sx={{ color: '#B45D59' }} onClick={() => handleRejectComplaint(row.id)}>
+                                <BlockIcon fontSize="small" />
+                             </IconButton>
+                           </Tooltip>
                         )}
                       </Box>
                     </TableCell>
@@ -288,15 +306,14 @@ export const ManageComplaints: React.FC = () => {
         </TableContainer>
       </Card>
 
-      {/* Assign Field Worker Modal */}
       <AssignWorkerModal
         open={Boolean(assignDialogComplaint)}
         complaint={assignDialogComplaint}
+        allComplaints={complaints}
         onClose={() => setAssignDialogComplaint(null)}
         onConfirm={handleConfirmAssign}
       />
 
-      {/* Councillor Verify Proof Modal */}
       <VerifyProofModal
         open={Boolean(verifyModalComplaint)}
         complaint={verifyModalComplaint}

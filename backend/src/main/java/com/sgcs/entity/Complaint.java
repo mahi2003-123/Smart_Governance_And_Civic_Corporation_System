@@ -79,6 +79,34 @@ public class Complaint {
     @Column(name = "delay_image", columnDefinition = "TEXT")
     private String delayImage;
 
+    // AI & Duplicate Tracking
+    @Column(name = "ai_suggested_category")
+    private String aiSuggestedCategory;
+
+    @Column(name = "ai_confidence")
+    private Double aiConfidence;
+    
+    @Column(name = "ai_model")
+    private String aiModel;
+
+    @Column(name = "ai_status")
+    private String aiStatus;
+
+    @Column(name = "is_ai_category_accepted")
+    private Boolean isAiCategoryAccepted;
+
+    @Column(name = "master_complaint_id")
+    private String masterComplaintId;
+
+    @Column(name = "possible_duplicate_id")
+    private String possibleDuplicateId;
+
+    @Column(name = "duplicate_similarity_score")
+    private Double duplicateSimilarityScore;
+
+    @Column(name = "is_duplicate_confirmed")
+    private Boolean isDuplicateConfirmed;
+
     @Embeddable
     public static class ComplaintComment {
         private String id;
@@ -277,6 +305,33 @@ public class Complaint {
 
     public String getDelayImage() { return delayImage; }
     public void setDelayImage(String delayImage) { this.delayImage = delayImage; }
+
+    public String getAiSuggestedCategory() { return aiSuggestedCategory; }
+    public void setAiSuggestedCategory(String aiSuggestedCategory) { this.aiSuggestedCategory = aiSuggestedCategory; }
+
+    public Double getAiConfidence() { return aiConfidence; }
+    public void setAiConfidence(Double aiConfidence) { this.aiConfidence = aiConfidence; }
+
+    public String getAiModel() { return aiModel; }
+    public void setAiModel(String aiModel) { this.aiModel = aiModel; }
+
+    public String getAiStatus() { return aiStatus; }
+    public void setAiStatus(String aiStatus) { this.aiStatus = aiStatus; }
+
+    public Boolean getIsAiCategoryAccepted() { return isAiCategoryAccepted; }
+    public void setIsAiCategoryAccepted(Boolean isAiCategoryAccepted) { this.isAiCategoryAccepted = isAiCategoryAccepted; }
+
+    public String getMasterComplaintId() { return masterComplaintId; }
+    public void setMasterComplaintId(String masterComplaintId) { this.masterComplaintId = masterComplaintId; }
+
+    public String getPossibleDuplicateId() { return possibleDuplicateId; }
+    public void setPossibleDuplicateId(String possibleDuplicateId) { this.possibleDuplicateId = possibleDuplicateId; }
+
+    public Double getDuplicateSimilarityScore() { return duplicateSimilarityScore; }
+    public void setDuplicateSimilarityScore(Double duplicateSimilarityScore) { this.duplicateSimilarityScore = duplicateSimilarityScore; }
+
+    public Boolean getIsDuplicateConfirmed() { return isDuplicateConfirmed; }
+    public void setIsDuplicateConfirmed(Boolean isDuplicateConfirmed) { this.isDuplicateConfirmed = isDuplicateConfirmed; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

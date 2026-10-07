@@ -1,15 +1,25 @@
 package com.sgcs.dto;
 
 import com.sgcs.entity.Proposal;
+import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 import java.util.List;
 
 public class ProposalDto {
     private String id;
+
+    @NotBlank(message = "Proposal title is required")
     private String title;
+
+    @NotBlank(message = "Proposal category is required")
     private String category;
+
+    @NotBlank(message = "Proposal description is required")
     private String description;
+
+    @NotBlank(message = "Ward is required")
     private String ward;
+
     private String authorName;
     private String authorRole;
     private Integer upvotes;

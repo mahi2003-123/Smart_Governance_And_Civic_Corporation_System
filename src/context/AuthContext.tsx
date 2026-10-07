@@ -19,7 +19,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<User>;
   register: (userData: Partial<User> & { password?: string }) => Promise<User>;
   logout: () => void;
-  updateProfile: (updatedData: Partial<User>) => void;
+  updateProfile: (updatedData: Partial<User>) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -28,7 +28,7 @@ export const AuthContext = createContext<AuthContextType>({
   login: async () => SUPER_ADMIN_USER,
   register: async () => SUPER_ADMIN_USER,
   logout: () => {},
-  updateProfile: () => {},
+  updateProfile: async () => {},
 });
 
 export const useAuth = () => {
@@ -78,9 +78,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('sgcs_auth_token');
   };
 
-  const updateProfile = (updatedData: Partial<User>) => {
+  const updateProfile = async (updatedData: Partial<User>) => {
     if (user) {
-      setUser({ ...user, ...updatedData });
+      const updatedUser = await authService.updateProfile(updatedData);
+      setUser(updatedUser);
+      localStorage.setItem('sgcs_auth_user', JSON.stringify(updatedUser));
     }
   };
 

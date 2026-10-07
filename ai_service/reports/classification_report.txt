@@ -1,0 +1,17 @@
+Accuracy: 1.0000
+Macro F1: 1.0000
+Weighted F1: 1.0000
+
+Classification Report:
+                  precision    recall  f1-score   support
+
+        DRAINAGE       1.00      1.00      1.00         9
+    PUBLIC_SPACE       1.00      1.00      1.00        10
+            ROAD       1.00      1.00      1.00        10
+    STREET_LIGHT       1.00      1.00      1.00         9
+WASTE_MANAGEMENT       1.00      1.00      1.00        11
+    WATER_SUPPLY       1.00      1.00      1.00         9
+
+        accuracy                           1.00        58
+       macro avg       1.00      1.00      1.00        58
+    weighted avg       1.00      1.00      1.00        58

@@ -1,10 +1,15 @@
 package com.sgcs.controller;
 
 import com.sgcs.entity.Proposal;
+import com.sgcs.exception.BadRequestException;
+import com.sgcs.security.UserPrincipal;
 import com.sgcs.service.ProposalService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,6 +22,14 @@ public class ProposalController {
     @Autowired
     private ProposalService proposalService;
 
+    private UserPrincipal getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof UserPrincipal principal) {
+            return principal;
+        }
+        return null;
+    }
+
     @GetMapping
     public ResponseEntity<List<Proposal>> getAllProposals(@RequestParam(required = false) String ward) {
         if (ward != null && !ward.isEmpty()) {
@@ -26,66 +39,51 @@ public class ProposalController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createProposal(@RequestBody Proposal proposal) {
-        try {
-            Proposal created = proposalService.createProposal(proposal);
-            return ResponseEntity.status(HttpStatus.CREATED).body(created);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+    public ResponseEntity<Proposal> createProposal(@Valid @RequestBody Proposal proposal) {
+        UserPrincipal principal = getCurrentUser();
+        if (principal != null) {
+            proposal.setAuthorName(principal.getFullName());
+            proposal.setAuthorRole(principal.getRole());
         }
-    }
-
-    private com.sgcs.security.UserPrincipal getCurrentUser() {
-        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.getPrincipal() instanceof com.sgcs.security.UserPrincipal principal) {
-            return principal;
-        }
-        return null;
+        Proposal created = proposalService.createProposal(proposal);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PostMapping("/{id}/vote")
-    public ResponseEntity<?> voteProposal(@PathVariable String id, @RequestBody Map<String, String> body) {
-        try {
-            com.sgcs.security.UserPrincipal principal = getCurrentUser();
-            String userId = principal != null ? principal.getId() : body.get("userId");
-            String voteType = body.getOrDefault("voteType", "UP");
-            Proposal updated = proposalService.voteProposal(id, userId, voteType);
-            return ResponseEntity.ok(updated);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+    public ResponseEntity<Proposal> voteProposal(@PathVariable String id, @RequestBody(required = false) Map<String, String> body) {
+        UserPrincipal principal = getCurrentUser();
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+
+        String voteType = (body != null && body.containsKey("voteType")) ? body.get("voteType") : "UP";
+        Proposal updated = proposalService.voteProposal(id, principal.getId(), voteType);
+        return ResponseEntity.ok(updated);
     }
 
     @PostMapping({"/{id}/comment", "/{id}/comments"})
-    public ResponseEntity<?> addComment(@PathVariable String id, @RequestBody Map<String, String> body) {
-        try {
-            String content = body.get("content");
-            String authorName = body.getOrDefault("authorName", "Citizen Resident");
-            String authorRole = body.getOrDefault("authorRole", "CITIZEN");
+    public ResponseEntity<Proposal> addComment(@PathVariable String id, @RequestBody Map<String, String> body) {
+        UserPrincipal principal = getCurrentUser();
+        String content = body != null ? body.get("content") : null;
+        String authorName = (principal != null) ? principal.getFullName() : (body != null ? body.getOrDefault("authorName", "Resident") : "Resident");
+        String authorRole = (principal != null) ? principal.getRole() : (body != null ? body.getOrDefault("authorRole", "CITIZEN") : "CITIZEN");
 
-            if (content == null || content.trim().isEmpty()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Comment content cannot be empty"));
-            }
-
-            Proposal updated = proposalService.addComment(id, authorName, authorRole, content.trim());
-            return ResponseEntity.ok(updated);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        if (content == null || content.trim().isEmpty()) {
+            throw new BadRequestException("Comment content cannot be empty");
         }
+
+        Proposal updated = proposalService.addComment(id, authorName, authorRole, content.trim());
+        return ResponseEntity.ok(updated);
     }
 
     @PatchMapping({"/{id}/review", "/{id}/status"})
-    public ResponseEntity<?> reviewProposal(@PathVariable String id, @RequestBody Map<String, String> body) {
-        try {
-            String status = body.get("status");
-            String notes = body.get("notes");
-            if (notes == null) {
-                notes = body.get("councillorNotes");
-            }
-            Proposal updated = proposalService.updateStatus(id, status, notes);
-            return ResponseEntity.ok(updated);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+    public ResponseEntity<Proposal> reviewProposal(@PathVariable String id, @RequestBody Map<String, String> body) {
+        String status = body != null ? body.get("status") : null;
+        String notes = body != null ? body.get("notes") : null;
+        if (notes == null && body != null) {
+            notes = body.get("councillorNotes");
         }
+        Proposal updated = proposalService.updateStatus(id, status, notes);
+        return ResponseEntity.ok(updated);
     }
 }

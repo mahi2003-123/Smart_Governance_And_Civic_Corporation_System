@@ -28,7 +28,10 @@ export const authService = {
       if (err.response && err.response.status >= 400 && err.response.status < 500) {
         throw new Error('Invalid email or password.');
       }
-      throw new Error('Could not connect to SGCS backend database server.');
+      if (!err.response) {
+        throw new Error('Could not connect to SGCS backend server. Please verify the backend is running on port 5000.');
+      }
+      throw new Error('An unexpected error occurred. Please try again later.');
     }
   },
 
@@ -58,7 +61,10 @@ export const authService = {
       if (err.response && err.response.data && err.response.data.error) {
         throw new Error(err.response.data.error);
       }
-      throw new Error(err.message || 'Failed to complete registration in PostgreSQL database.');
+      if (!err.response) {
+        throw new Error('Could not connect to SGCS backend. Please check if the server is running on port 5000.');
+      }
+      throw new Error(err.message || 'Failed to complete registration.');
     }
   },
 
@@ -74,6 +80,21 @@ export const authService = {
       // Return null on auth profile error
     }
     return null;
+  },
+
+  updateProfile: async (userData: Partial<User>): Promise<User> => {
+    try {
+      const res = await api.put('/auth/profile', userData);
+      if (res.data && res.data.user) {
+        return res.data.user;
+      }
+      throw new Error('Update failed. Unexpected response from server.');
+    } catch (err: any) {
+      if (err.response && err.response.data && err.response.data.error) {
+        throw new Error(err.response.data.error);
+      }
+      throw new Error(err.message || 'Failed to update profile.');
+    }
   },
 };
 

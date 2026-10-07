@@ -15,16 +15,16 @@ export interface User {
 }
 
 export type ComplaintPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
-export type ComplaintStatus = 'PENDING' | 'ASSIGNED' | 'IN_PROGRESS' | 'PENDING_APPROVAL' | 'RESOLVED' | 'REJECTED';
+export type ComplaintStatus = 'PENDING' | 'ASSIGNED' | 'IN_PROGRESS' | 'PENDING_APPROVAL' | 'RESOLVED' | 'REJECTED' | 'LINKED';
 export type ComplaintCategory = 
-  | 'Roads & Potholes'
-  | 'Street Lighting'
-  | 'Water Supply'
-  | 'Waste Management'
-  | 'Sewage & Drainage'
-  | 'Parks & Recreation'
-  | 'Public Safety'
-  | 'Other';
+  | 'WASTE_MANAGEMENT'
+  | 'ROAD'
+  | 'STREET_LIGHT'
+  | 'WATER_SUPPLY'
+  | 'DRAINAGE'
+  | 'PUBLIC_SPACE'
+  | 'Other'
+  | string;
 
 export interface TimelineItem {
   id: string;
@@ -75,6 +75,13 @@ export interface Complaint {
   completionImage?: string;
   timeline: TimelineItem[];
   comments: Comment[];
+  aiSuggestedCategory?: string;
+  aiConfidence?: number;
+  isAiCategoryAccepted?: boolean;
+  masterComplaintId?: string;
+  possibleDuplicateId?: string;
+  duplicateSimilarityScore?: number;
+  isDuplicateConfirmed?: boolean;
   createdAt: string;
   updatedAt: string;
 }

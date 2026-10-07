@@ -9,7 +9,8 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TableRow
+  TableRow,
+  Chip
 } from '@mui/material';
 import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
 import RateReviewOutlinedIcon from '@mui/icons-material/RateReviewOutlined';
@@ -337,7 +338,8 @@ export const CouncillorDashboard: React.FC = () => {
             <TableHead>
               <TableRow>
                 <TableCell>Tracking ID</TableCell>
-                <TableCell>Citizen & Title</TableCell>
+                <TableCell>Citizen & Complaint</TableCell>
+                <TableCell>AI Insights</TableCell>
                 <TableCell>Priority</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell align="center">Action</TableCell>
@@ -346,7 +348,7 @@ export const CouncillorDashboard: React.FC = () => {
             <TableBody>
               {actionQueueList.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 5, color: '#68706B' }}>
+                  <TableCell colSpan={6} align="center" sx={{ py: 5, color: '#68706B' }}>
                     No pending complaints or worker verification requests in your ward queue.
                   </TableCell>
                 </TableRow>
@@ -366,6 +368,19 @@ export const CouncillorDashboard: React.FC = () => {
                           {row.citizenName} • {row.ward}
                         </Typography>
                       </Box>
+                    </TableCell>
+                    <TableCell>
+                      {row.aiSuggestedCategory && !row.isAiCategoryAccepted ? (
+                        <Chip label={`AI: ${row.aiSuggestedCategory}`} size="small" color="primary" sx={{ fontSize: '0.7rem' }} />
+                      ) : (
+                        <Chip label={row.category} size="small" sx={{ fontSize: '0.7rem' }} />
+                      )}
+                      
+                      {row.possibleDuplicateId && !row.isDuplicateConfirmed && (
+                        <Typography variant="caption" display="block" color="#92400E" mt={0.5}>
+                          Dup? {row.possibleDuplicateId}
+                        </Typography>
+                      )}
                     </TableCell>
                     <TableCell sx={{ color: row.priority === 'HIGH' ? '#B45D59' : '#68706B', fontWeight: 500 }}>
                       {row.priority}
@@ -439,6 +454,7 @@ export const CouncillorDashboard: React.FC = () => {
       <AssignWorkerModal
         open={Boolean(assignModalComplaint)}
         complaint={assignModalComplaint}
+        allComplaints={complaints}
         onClose={() => setAssignModalComplaint(null)}
         onConfirm={handleConfirmAssign}
       />

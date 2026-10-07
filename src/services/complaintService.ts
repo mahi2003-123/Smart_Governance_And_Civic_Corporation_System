@@ -95,6 +95,8 @@ export const complaintService = {
     citizenName: string;
     citizenPhone: string;
     images?: string[];
+    aiSuggestedCategory?: string;
+    aiConfidence?: number;
   }): Promise<Complaint> => {
     try {
       const apiPayload = {
@@ -309,6 +311,34 @@ export const complaintService = {
     } catch (err: any) {
       console.error('[SGCS Frontend] Add comment error:', err);
       throw new Error(err.response?.data?.error || err.message || 'Failed to post comment.');
+    }
+  },
+
+  reviewAiCategory: async (id: string, category: string): Promise<Complaint> => {
+    try {
+      const res = await api.post(`/complaints/${id}/ai-category`, { category });
+      return {
+        ...res.data,
+        images: Array.isArray(res.data.images) ? res.data.images : (res.data.images ? res.data.images.split(',') : []),
+        comments: Array.isArray(res.data.comments) ? res.data.comments : [],
+        timeline: Array.isArray(res.data.timeline) ? res.data.timeline : [],
+      };
+    } catch (err: any) {
+      throw new Error(err.response?.data?.error || err.message || 'Failed to update category.');
+    }
+  },
+
+  linkDuplicate: async (id: string, masterId: string, isDuplicate: boolean): Promise<Complaint> => {
+    try {
+      const res = await api.post(`/complaints/${id}/link-duplicate`, { masterId, isDuplicate: isDuplicate.toString() });
+      return {
+        ...res.data,
+        images: Array.isArray(res.data.images) ? res.data.images : (res.data.images ? res.data.images.split(',') : []),
+        comments: Array.isArray(res.data.comments) ? res.data.comments : [],
+        timeline: Array.isArray(res.data.timeline) ? res.data.timeline : [],
+      };
+    } catch (err: any) {
+      throw new Error(err.response?.data?.error || err.message || 'Failed to link duplicate.');
     }
   }
 };

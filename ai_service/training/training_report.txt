@@ -1,0 +1,5 @@
+=== SGCS AI Training Report ===
+
+Best Model: TF-IDF + Logistic Regression
+Test Accuracy: 0.9980
+Full Results JSON is saved in training_results.json

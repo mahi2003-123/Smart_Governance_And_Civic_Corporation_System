@@ -1,0 +1,29 @@
+# Server Configuration
+server.port=5000
+server.servlet.context-path=/
+
+# PostgreSQL Datasource Configuration
+spring.datasource.url=jdbc:postgresql://localhost:5432/sgcs_db
+spring.datasource.username=postgres
+spring.datasource.password=${DB_PASSWORD:changeme}
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# JPA & Hibernate Settings
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+
+# JWT Configuration
+sgcs.app.jwtSecret=${JWT_SECRET:changeme_secure_jwt_secret_key_placeholder_for_development}
+sgcs.app.jwtExpirationMs=86400000
+
+# Logging Levels
+logging.level.org.springframework.web=INFO
+logging.level.org.hibernate=INFO
+logging.level.com.sgcs=DEBUG
+
+# Twilio Configuration
+twilio.account-sid=${TWILIO_ACCOUNT_SID:}
+twilio.auth-token=${TWILIO_AUTH_TOKEN:}
+twilio.from-number=${TWILIO_FROM_NUMBER:}

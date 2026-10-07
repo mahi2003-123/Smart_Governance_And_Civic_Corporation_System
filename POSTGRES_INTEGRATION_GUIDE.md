@@ -34,12 +34,12 @@ This guide provides step-by-step instructions to set up, connect, initialize, an
    ```sql
    CREATE DATABASE sgcs_db;
    ```
-3. Open `backend/src/main/resources/application.properties` and update your PostgreSQL username and password:
+3. Set the environment variable `DB_PASSWORD` and `JWT_SECRET` prior to running the server:
 
 ```ini
 spring.datasource.url=jdbc:postgresql://localhost:5432/sgcs_db
 spring.datasource.username=postgres
-spring.datasource.password=1102003
+spring.datasource.password=${DB_PASSWORD}
 ```
 
 ---

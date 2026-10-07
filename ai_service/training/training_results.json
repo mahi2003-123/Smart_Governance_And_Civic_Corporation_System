@@ -1,0 +1,294 @@
+{
+    "dataset_stats": {
+        "total_rows": 5072,
+        "train_size": 4056,
+        "val_size": 508,
+        "test_size": 508,
+        "category_distribution": {
+            "ROAD": 1017,
+            "WASTE_MANAGEMENT": 1015,
+            "WATER_SUPPLY": 1010,
+            "DRAINAGE": 1010,
+            "STREET_LIGHT": 1010,
+            "PUBLIC_SPACE": 10
+        }
+    },
+    "models_evaluated": [
+        {
+            "Model": "TF-IDF + Logistic Regression",
+            "Accuracy": 1.0,
+            "Macro F1": 1.0,
+            "Weighted F1": 1.0,
+            "PerCategory": {
+                "ROAD": {
+                    "Precision": 1.0,
+                    "Recall": 1.0,
+                    "F1": 1.0
+                },
+                "WATER_SUPPLY": {
+                    "Precision": 1.0,
+                    "Recall": 1.0,
+                    "F1": 1.0
+                },
+                "WASTE_MANAGEMENT": {
+                    "Precision": 1.0,
+                    "Recall": 1.0,
+                    "F1": 1.0
+                },
+                "DRAINAGE": {
+                    "Precision": 1.0,
+                    "Recall": 1.0,
+                    "F1": 1.0
+                },
+                "STREET_LIGHT": {
+                    "Precision": 1.0,
+                    "Recall": 1.0,
+                    "F1": 1.0
+                },
+                "PUBLIC_SPACE": {
+                    "Precision": 1.0,
+                    "Recall": 1.0,
+                    "F1": 1.0
+                }
+            }
+        },
+        {
+            "Model": "TF-IDF + Linear SVM",
+            "Accuracy": 1.0,
+            "Macro F1": 1.0,
+            "Weighted F1": 1.0,
+            "PerCategory": {
+                "ROAD": {
+                    "Precision": 1.0,
+                    "Recall": 1.0,
+                    "F1": 1.0
+                },
+                "WATER_SUPPLY": {
+                    "Precision": 1.0,
+                    "Recall": 1.0,
+                    "F1": 1.0
+                },
+                "WASTE_MANAGEMENT": {
+                    "Precision": 1.0,
+                    "Recall": 1.0,
+                    "F1": 1.0
+                },
+                "DRAINAGE": {
+                    "Precision": 1.0,
+                    "Recall": 1.0,
+                    "F1": 1.0
+                },
+                "STREET_LIGHT": {
+                    "Precision": 1.0,
+                    "Recall": 1.0,
+                    "F1": 1.0
+                },
+                "PUBLIC_SPACE": {
+                    "Precision": 1.0,
+                    "Recall": 1.0,
+                    "F1": 1.0
+                }
+            }
+        },
+        {
+            "Model": "Sentence Transformer + SVM",
+            "Accuracy": 0.9980314960629921,
+            "Macro F1": 0.9983497945412511,
+            "Weighted F1": 0.9980314478188939,
+            "PerCategory": {
+                "ROAD": {
+                    "Precision": 1.0,
+                    "Recall": 1.0,
+                    "F1": 1.0
+                },
+                "WATER_SUPPLY": {
+                    "Precision": 1.0,
+                    "Recall": 0.9900990099009901,
+                    "F1": 0.9950248756218906
+                },
+                "WASTE_MANAGEMENT": {
+                    "Precision": 1.0,
+                    "Recall": 1.0,
+                    "F1": 1.0
+                },
+                "DRAINAGE": {
+                    "Precision": 0.9901960784313726,
+                    "Recall": 1.0,
+                    "F1": 0.9950738916256158
+                },
+                "STREET_LIGHT": {
+                    "Precision": 1.0,
+                    "Recall": 1.0,
+                    "F1": 1.0
+                },
+                "PUBLIC_SPACE": {
+                    "Precision": 1.0,
+                    "Recall": 1.0,
+                    "F1": 1.0
+                }
+            }
+        }
+    ],
+    "best_model": {
+        "name": "TF-IDF + Logistic Regression",
+        "macro_f1": 1.0,
+        "reason": "Highest Macro F1-score across validation set."
+    },
+    "confusion_matrix": {
+        "ROAD": {
+            "ROAD": 102,
+            "WATER_SUPPLY": 0,
+            "WASTE_MANAGEMENT": 0,
+            "DRAINAGE": 0,
+            "STREET_LIGHT": 0,
+            "PUBLIC_SPACE": 0
+        },
+        "WATER_SUPPLY": {
+            "ROAD": 0,
+            "WATER_SUPPLY": 101,
+            "WASTE_MANAGEMENT": 0,
+            "DRAINAGE": 0,
+            "STREET_LIGHT": 0,
+            "PUBLIC_SPACE": 0
+        },
+        "WASTE_MANAGEMENT": {
+            "ROAD": 0,
+            "WATER_SUPPLY": 0,
+            "WASTE_MANAGEMENT": 102,
+            "DRAINAGE": 0,
+            "STREET_LIGHT": 0,
+            "PUBLIC_SPACE": 0
+        },
+        "DRAINAGE": {
+            "ROAD": 0,
+            "WATER_SUPPLY": 0,
+            "WASTE_MANAGEMENT": 0,
+            "DRAINAGE": 101,
+            "STREET_LIGHT": 0,
+            "PUBLIC_SPACE": 0
+        },
+        "STREET_LIGHT": {
+            "ROAD": 0,
+            "WATER_SUPPLY": 0,
+            "WASTE_MANAGEMENT": 0,
+            "DRAINAGE": 0,
+            "STREET_LIGHT": 100,
+            "PUBLIC_SPACE": 0
+        },
+        "PUBLIC_SPACE": {
+            "ROAD": 0,
+            "WATER_SUPPLY": 0,
+            "WASTE_MANAGEMENT": 0,
+            "DRAINAGE": 0,
+            "STREET_LIGHT": 1,
+            "PUBLIC_SPACE": 1
+        }
+    },
+    "realistic_tests": [
+        {
+            "text": "Large pothole near the college gate causing accidents",
+            "expected": "ROAD",
+            "predicted": "ROAD",
+            "confidence": 0.3594286546288956,
+            "correct": true
+        },
+        {
+            "text": "No water in the taps since yesterday morning in ward 4",
+            "expected": "WATER_SUPPLY",
+            "predicted": "STREET_LIGHT",
+            "confidence": 0.28550974768512166,
+            "correct": false
+        },
+        {
+            "text": "Garbage truck didn't come to pick up trash, it's smelling very bad",
+            "expected": "WASTE_MANAGEMENT",
+            "predicted": "WASTE_MANAGEMENT",
+            "confidence": 0.47659902269229826,
+            "correct": true
+        },
+        {
+            "text": "Sewage water is overflowing on the main street",
+            "expected": "DRAINAGE",
+            "predicted": "DRAINAGE",
+            "confidence": 0.40488197883793486,
+            "correct": true
+        },
+        {
+            "text": "Street lights are not working and it is very dark",
+            "expected": "STREET_LIGHT",
+            "predicted": "STREET_LIGHT",
+            "confidence": 0.5129666380187535,
+            "correct": true
+        },
+        {
+            "text": "The local park has broken benches and uncut grass",
+            "expected": "PUBLIC_SPACE",
+            "predicted": "PUBLIC_SPACE",
+            "confidence": 0.448452260931485,
+            "correct": true
+        },
+        {
+            "text": "Deep crater in the middle of the highway",
+            "expected": "ROAD",
+            "predicted": "ROAD",
+            "confidence": 0.72960994379608,
+            "correct": true
+        },
+        {
+            "text": "Drinking water pipeline has burst, water is leaking everywhere",
+            "expected": "WATER_SUPPLY",
+            "predicted": "WATER_SUPPLY",
+            "confidence": 0.9166590907972745,
+            "correct": true
+        },
+        {
+            "text": "People are dumping solid waste near the river bank",
+            "expected": "WASTE_MANAGEMENT",
+            "predicted": "WASTE_MANAGEMENT",
+            "confidence": 0.7241026455353525,
+            "correct": true
+        },
+        {
+            "text": "Storm drain gets clogged every time it rains",
+            "expected": "DRAINAGE",
+            "predicted": "DRAINAGE",
+            "confidence": 0.6928275333536733,
+            "correct": true
+        },
+        {
+            "text": "Pole 42 bulb is burnt out completely",
+            "expected": "STREET_LIGHT",
+            "predicted": "STREET_LIGHT",
+            "confidence": 0.8363856424906649,
+            "correct": true
+        },
+        {
+            "text": "Gym equipment at community center needs repair",
+            "expected": "PUBLIC_SPACE",
+            "predicted": "PUBLIC_SPACE",
+            "confidence": 0.36322096735445947,
+            "correct": true
+        },
+        {
+            "text": "The road is broken off at the edges",
+            "expected": "ROAD",
+            "predicted": "ROAD",
+            "confidence": 0.7388187668584043,
+            "correct": true
+        },
+        {
+            "text": "Gutter block near the fish market",
+            "expected": "DRAINAGE",
+            "predicted": "DRAINAGE",
+            "confidence": 0.4881071492382099,
+            "correct": true
+        },
+        {
+            "text": "Foul smell from public garbage bin not emptied for weeks",
+            "expected": "WASTE_MANAGEMENT",
+            "predicted": "WASTE_MANAGEMENT",
+            "confidence": 0.7259051173577048,
+            "correct": true
+        }
+    ]
+}

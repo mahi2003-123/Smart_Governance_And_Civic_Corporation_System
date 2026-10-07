@@ -32,6 +32,7 @@ import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import { adminService } from '../../services/adminService';
 import { User, UserRole, Ward } from '../../types';
 import { ROLE_LABELS } from '../../utils/constants';
+import { COMPLAINT_CATEGORIES } from '../../constants';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader';
 import { FilterBar, FilterOption } from '../../components/admin/FilterBar';
@@ -448,15 +449,7 @@ export const UserManagement: React.FC = () => {
                     onChange={(e) => setFormData({ ...formData, ward: e.target.value })}
                     fullWidth
                   >
-                    {[
-                      'Public Works Dept',
-                      'Water & Drainage Dept',
-                      'Electrical Maintenance',
-                      'Sanitation & Waste Management',
-                      'Roads & Civil Infrastructure',
-                      'Public Lighting & Power',
-                      'Parks & Environment',
-                    ].map((spec) => (
+                    {COMPLAINT_CATEGORIES.map((spec) => (
                       <MenuItem key={spec} value={spec}>
                         {spec}
                       </MenuItem>

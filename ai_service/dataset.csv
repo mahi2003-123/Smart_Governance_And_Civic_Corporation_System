@@ -1,0 +1,80 @@
+text,category
+"Waste has not been collected",WASTE_MANAGEMENT
+"Garbage is overflowing near the bus stop",WASTE_MANAGEMENT
+"No one has collected trash for three days",WASTE_MANAGEMENT
+"Dumpster is full and smelling bad",WASTE_MANAGEMENT
+"Need garbage vehicle in our area",WASTE_MANAGEMENT
+"Waste scattered all over the street",WASTE_MANAGEMENT
+"Garbage truck did not come this week",WASTE_MANAGEMENT
+"Too much trash near the park entrance",WASTE_MANAGEMENT
+"Please clear the waste bins",WASTE_MANAGEMENT
+"Garbage pile is causing health issues",WASTE_MANAGEMENT
+
+"There is a pothole on the road",ROAD
+"The road near the school is damaged",ROAD
+"Huge pothole near the college gate",ROAD
+"Road is broken and needs repair",ROAD
+"Large pothole causing traffic issues",ROAD
+"The main street has dangerous potholes",ROAD
+"Asphalt is completely ruined here",ROAD
+"Please fix the broken road",ROAD
+"Pothole is causing accidents",ROAD
+"Bad road condition near market",ROAD
+
+"The street light is not working",STREET_LIGHT
+"Road light has been broken for a week",STREET_LIGHT
+"Complete darkness on this street at night",STREET_LIGHT
+"Street lamp post is damaged",STREET_LIGHT
+"Streetlight bulbs are fused",STREET_LIGHT
+"No lighting near the walking tracks",STREET_LIGHT
+"Street lights are flickering constantly",STREET_LIGHT
+"Pole light is out in our ward",STREET_LIGHT
+"Need new street lights installed",STREET_LIGHT
+"Broken light post on main avenue",STREET_LIGHT
+
+"There is no water supply",WATER_SUPPLY
+"Water pipe is leaking",WATER_SUPPLY
+"Drinking water is dirty and muddy",WATER_SUPPLY
+"No water coming from taps since morning",WATER_SUPPLY
+"Water supply connection broke",WATER_SUPPLY
+"Low water pressure in our house",WATER_SUPPLY
+"Public tap is leaking continuously",WATER_SUPPLY
+"Main water pipeline has burst",WATER_SUPPLY
+"Sewage mixed with drinking water",WATER_SUPPLY
+"Water scarcity in the residential area",WATER_SUPPLY
+
+"The drain is blocked",DRAINAGE
+"Drain water is overflowing on the road",DRAINAGE
+"Sewage is continuously overflowing",DRAINAGE
+"Open manhole is dangerous",DRAINAGE
+"Blocked gutter causing bad smell",DRAINAGE
+"Drainage pipe is clogged",DRAINAGE
+"Sewage water entering houses",DRAINAGE
+"Please clean the choked drain",DRAINAGE
+"Public drain is overflowing with waste",DRAINAGE
+"Cover missing from the drain hole",DRAINAGE
+
+"Park needs cleaning",PUBLIC_SPACE
+"Public park equipment is damaged",PUBLIC_SPACE
+"Benches in the park are broken",PUBLIC_SPACE
+"Children's play area is not maintained",PUBLIC_SPACE
+"Tree fell down near the walking path",PUBLIC_SPACE
+"Public garden is full of dry leaves",PUBLIC_SPACE
+"Gym equipment in park is broken",PUBLIC_SPACE
+"Fencing around the park is broken",PUBLIC_SPACE
+"Public square is very dirty",PUBLIC_SPACE
+"Community hall doors are damaged",PUBLIC_SPACE
+
+"deep pothole",ROAD
+"deep pathole",ROAD
+"pathole",ROAD
+"tar",ROAD
+"tarred",ROAD
+"street is broken",ROAD
+"pit on the road",ROAD
+"pathole",ROAD
+"waste inside the public pond",WASTE_MANAGEMENT
+"clean the pond",WASTE_MANAGEMENT
+"garbage in the pond",WASTE_MANAGEMENT
+"pond is polluted with waste",WASTE_MANAGEMENT
+"clean the lake",WASTE_MANAGEMENT

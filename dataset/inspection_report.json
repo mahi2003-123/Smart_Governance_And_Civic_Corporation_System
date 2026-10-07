@@ -1,0 +1,129 @@
+{
+  "complaints_text.csv": {
+    "size_bytes": 2342424,
+    "rows": 45000,
+    "columns": [
+      "complaint_text",
+      "category"
+    ],
+    "text_cols": [
+      "complaint_text"
+    ],
+    "cat_cols": [
+      "category"
+    ],
+    "text_sample": [
+      "Utility_Excavation",
+      "Light_Burnt_Out on Wooden Pole",
+      "While passing by metro station exit yesterday, I noticed a severe case of constant dripping from connection point. It looked quite dangerous and seemed like it had been neglected for quite some time, so I decided to raise a formal report."
+    ],
+    "cat_dist": {
+      "Road Damage": 9000,
+      "Streetlight Fault": 9000,
+      "Water Leakage": 9000,
+      "Drainage Blockage": 9000,
+      "Garbage": 9000
+    },
+    "duplicate_count": 39797,
+    "text_duplicate_count": 39797
+  },
+  "complaints_text_backup.csv": {
+    "size_bytes": 1299100,
+    "rows": 40000,
+    "columns": [
+      "complaint_text",
+      "category"
+    ],
+    "text_cols": [
+      "complaint_text"
+    ],
+    "cat_cols": [
+      "category"
+    ],
+    "text_sample": [
+      "Water_main",
+      "Pavement_Defect",
+      "Light_On_all_the_time on Metal Pole"
+    ],
+    "cat_dist": {
+      "Water Leakage": 8000,
+      "Road Damage": 8000,
+      "Streetlight Fault": 8000,
+      "Drainage Blockage": 8000,
+      "Garbage": 8000
+    },
+    "duplicate_count": 39797,
+    "text_duplicate_count": 39797
+  },
+  "complaints_text_cleaned.csv": {
+    "size_bytes": 2369524,
+    "rows": 45000,
+    "columns": [
+      "complaint_text",
+      "category"
+    ],
+    "text_cols": [
+      "complaint_text"
+    ],
+    "cat_cols": [
+      "category"
+    ],
+    "text_sample": [
+      "Utility Excavation",
+      "Light Burnt Out on Wooden Pole",
+      "While passing by metro station exit yesterday, I noticed a severe case of constant dripping from connection point. It looked quite dangerous and seemed like it had been neglected for quite some time, so I decided to raise a formal report."
+    ],
+    "cat_dist": {
+      "Road Damage": 9000,
+      "Streetlight Fault": 9000,
+      "Water Leakage": 9000,
+      "Drainage Blockage": 9000,
+      "Garbage": 9000
+    },
+    "duplicate_count": 39800,
+    "text_duplicate_count": 39800
+  },
+  "manual_complaints_5000.csv": {
+    "size_bytes": 1043348,
+    "rows": 5000,
+    "columns": [
+      "complaint_text",
+      "category"
+    ],
+    "text_cols": [
+      "complaint_text"
+    ],
+    "cat_cols": [
+      "category"
+    ],
+    "text_sample": [
+      "How long do we have to tolerate this subside pavement dangerous for pedestrians footpath?! This is an absolute failure of civic maintenance. Fix it immediately without any more excuses!",
+      "It has been observed that valve chamber completely flooded is present footpath. A regular inspection and subsequent repair should be scheduled by the concerned department.",
+      "Could you please look into the leaking control valve spraying water near the bus stop? Your timely assistance in getting this resolved would be highly appreciated by everyone in the neighborhood."
+    ],
+    "cat_dist": {
+      "Road Damage": 1000,
+      "Water Leakage": 1000,
+      "Garbage": 1000,
+      "Drainage Blockage": 1000,
+      "Streetlight Fault": 1000
+    },
+    "duplicate_count": 0,
+    "text_duplicate_count": 0
+  },
+  "sgcs": {
+    "rows": 73,
+    "columns": [
+      "text",
+      "category"
+    ],
+    "cat_dist": {
+      "ROAD": 18,
+      "WASTE_MANAGEMENT": 15,
+      "STREET_LIGHT": 10,
+      "WATER_SUPPLY": 10,
+      "DRAINAGE": 10,
+      "PUBLIC_SPACE": 10
+    }
+  }
+}

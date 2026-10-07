@@ -58,4 +58,23 @@ public class NotificationService {
     public void deleteAllNotifications() {
         notificationRepository.deleteAll();
     }
+
+    @Autowired
+    private com.sgcs.repository.UserDeviceTokenRepository userDeviceTokenRepository;
+
+    public void registerDeviceToken(String userId, String fcmToken, String deviceType, String deviceName) {
+        java.util.Optional<com.sgcs.entity.UserDeviceToken> existingOpt = userDeviceTokenRepository.findByFcmToken(fcmToken);
+        if (existingOpt.isPresent()) {
+            com.sgcs.entity.UserDeviceToken existing = existingOpt.get();
+            existing.setUserId(userId);
+            existing.setDeviceType(deviceType);
+            existing.setDeviceName(deviceName);
+            existing.setActive(true);
+            existing.setUpdatedAt(java.time.LocalDateTime.now());
+            userDeviceTokenRepository.save(existing);
+        } else {
+            com.sgcs.entity.UserDeviceToken token = new com.sgcs.entity.UserDeviceToken(userId, fcmToken, deviceType, deviceName);
+            userDeviceTokenRepository.save(token);
+        }
+    }
 }

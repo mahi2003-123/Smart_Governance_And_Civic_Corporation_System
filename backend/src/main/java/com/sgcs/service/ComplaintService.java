@@ -2,6 +2,8 @@ package com.sgcs.service;
 
 import com.sgcs.entity.Complaint;
 import com.sgcs.entity.Notification;
+import com.sgcs.exception.ResourceNotFoundException;
+import org.springframework.beans.factory.annotation.Value;
 import com.sgcs.repository.ComplaintRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -10,9 +12,16 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.ArrayList;
+import java.util.HashMap;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.ResponseEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class ComplaintService {
+    private static final Logger logger = LoggerFactory.getLogger(ComplaintService.class);
 
     private static final List<String> VALID_STATUSES = List.of("PENDING", "ASSIGNED", "IN_PROGRESS", "PENDING_APPROVAL", "RESOLVED", "REJECTED");
 
@@ -25,8 +34,26 @@ public class ComplaintService {
     @Autowired
     private NotificationService notificationService;
 
+    @Autowired
+    private FirebaseNotificationService firebaseNotificationService;
+
+    @Autowired
+    private TwilioSmsService twilioSmsService;
+
+    @Autowired
+    private com.sgcs.repository.UserRepository userRepository;
+
+    @Value("${ai.service.url:http://127.0.0.1:8000}")
+    private String aiServiceUrl;
+
     public List<Complaint> getAllComplaints() {
         return complaintRepository.findAllByOrderByCreatedAtDesc();
+    }
+
+    public List<Complaint> getActiveComplaints() {
+        return complaintRepository.findAll().stream()
+            .filter(c -> List.of("PENDING", "ASSIGNED", "IN_PROGRESS").contains(c.getStatus().toUpperCase()))
+            .toList();
     }
 
     public Optional<Complaint> getComplaintById(String id) {
@@ -128,6 +155,162 @@ public class ComplaintService {
             "/councillor/dashboard"
         ));
 
+        // Background AI Processing (Synchronous for simplicity but failing gracefully)
+        complaint.setAiStatus("PENDING");
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            
+            // 1. Classification
+            Map<String, String> aiRequest = new HashMap<>();
+            aiRequest.put("complaint_text", saved.getDescription());
+            try {
+                org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+                headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+                org.springframework.http.HttpEntity<Map<String, String>> aiEntity = new org.springframework.http.HttpEntity<>(aiRequest, headers);
+                
+                ResponseEntity<Map> aiResponse = restTemplate.postForEntity(aiServiceUrl + "/predict", aiEntity, Map.class);
+                if (aiResponse.getStatusCode().is2xxSuccessful() && aiResponse.getBody() != null) {
+                    Map<String, Object> body = aiResponse.getBody();
+                    saved.setAiSuggestedCategory((String) body.get("category"));
+                    Object conf = body.get("confidence");
+                    if (conf instanceof Number) {
+                        saved.setAiConfidence(((Number) conf).doubleValue());
+                    }
+                    if (body.get("model") != null) {
+                        saved.setAiModel((String) body.get("model"));
+                    }
+                    saved.setAiStatus("COMPLETED");
+                } else {
+                    saved.setAiStatus("UNAVAILABLE");
+                }
+            } catch (Exception ex) {
+                logger.error("AI Classification failed: " + ex.getMessage());
+                saved.setAiStatus("UNAVAILABLE");
+            }
+
+            // 2. Duplicate Detection
+            final String currentComplaintId = saved.getId();
+            List<Complaint> activeComplaints = getActiveComplaints().stream()
+                .filter(c -> !c.getId().equals(currentComplaintId))
+                .toList();
+                
+            if (!activeComplaints.isEmpty()) {
+                Map<String, Object> dupReq = new HashMap<>();
+                dupReq.put("new_complaint", complaint.getDescription());
+                dupReq.put("new_ward", complaint.getWard());
+                dupReq.put("new_location", complaint.getLocationAddress());
+                dupReq.put("new_category", (complaint.getCategory() != null && !complaint.getCategory().equalsIgnoreCase("Other")) ? complaint.getCategory() : (saved.getAiSuggestedCategory() != null ? saved.getAiSuggestedCategory() : ""));
+                dupReq.put("new_created_at", complaint.getCreatedAt() != null ? complaint.getCreatedAt().toString() : java.time.LocalDateTime.now().toString());
+
+                List<Map<String, String>> existingList = new ArrayList<>();
+                for (Complaint ac : activeComplaints) {
+                    Map<String, String> item = new HashMap<>();
+                    item.put("id", ac.getId());
+                    item.put("text", ac.getDescription());
+                    item.put("ward", ac.getWard());
+                    item.put("location", ac.getLocationAddress());
+                    
+                    String acCat = (ac.getCategory() != null && !ac.getCategory().equalsIgnoreCase("Other")) ? ac.getCategory() : (ac.getAiSuggestedCategory() != null ? ac.getAiSuggestedCategory() : "");
+                    item.put("category", acCat);
+                    item.put("status", ac.getStatus() != null ? ac.getStatus() : "");
+                    item.put("created_at", ac.getCreatedAt() != null ? ac.getCreatedAt().toString() : "");
+                    existingList.add(item);
+                }
+                dupReq.put("existing_complaints", existingList);
+                
+                try {
+                    org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+                    headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+                    org.springframework.http.HttpEntity<Map<String, Object>> dupEntity = new org.springframework.http.HttpEntity<>(dupReq, headers);
+                    
+                    ResponseEntity<Map> dupRes = restTemplate.postForEntity(aiServiceUrl + "/ai/duplicate-check", dupEntity, Map.class);
+                    if (dupRes.getStatusCode().is2xxSuccessful() && dupRes.getBody() != null) {
+                        Map<String, Object> body = dupRes.getBody();
+                        String possId = (String) body.get("possible_duplicate_id");
+                        Object sim = body.get("similarity");
+                        if (possId != null) {
+                            saved.setPossibleDuplicateId(possId);
+                            if (sim instanceof Number) {
+                                saved.setDuplicateSimilarityScore(((Number) sim).doubleValue());
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    logger.error("AI Duplicate Check failed: " + ex.getMessage());
+                }
+            }
+            
+            saved = complaintRepository.save(saved);
+        } catch (Exception e) {
+            logger.error("AI Service completely unavailable or failed: " + e.getMessage());
+        }
+
+        return saved;
+    }
+
+    public Complaint reviewAiCategory(String id, String category, String councillorId, String councillorName) {
+        Complaint complaint = complaintRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
+                
+        String oldCategory = complaint.getCategory();
+        complaint.setCategory(category);
+        complaint.setIsAiCategoryAccepted(true);
+        
+        complaint.getTimeline().add(0, new Complaint.ComplaintTimelineItem(
+            "Category Confirmed",
+            "Category set to " + category,
+            councillorName,
+            "COUNCILLOR",
+            complaint.getStatus()
+        ));
+        
+        Complaint saved = complaintRepository.save(complaint);
+        auditService.logActivity(
+            councillorId, councillorName, "COUNCILLOR", "CATEGORY_CHANGED", "COMPLAINT", saved.getTrackingNumber(),
+            "Category changed from " + oldCategory + " to " + category + " (AI Suggested: " + saved.getAiSuggestedCategory() + ")"
+        );
+        return saved;
+    }
+
+    public Complaint linkDuplicate(String id, String masterId, boolean isDuplicate, String councillorId, String councillorName) {
+        Complaint complaint = complaintRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
+                
+        complaint.setIsDuplicateConfirmed(isDuplicate);
+        if (isDuplicate) {
+            complaint.setMasterComplaintId(masterId);
+            Complaint master = complaintRepository.findById(masterId).orElse(null);
+            if (master != null) {
+                complaint.setStatus("LINKED");
+                
+                complaint.getTimeline().add(0, new Complaint.ComplaintTimelineItem(
+                    "Linked to Master Ticket",
+                    "This complaint was linked to an existing issue: " + master.getTrackingNumber(),
+                    councillorName,
+                    "COUNCILLOR",
+                    "LINKED"
+                ));
+                
+                // Notify Citizen
+                if (complaint.getCitizenId() != null) {
+                    notificationService.createNotification(new Notification(
+                        complaint.getCitizenId(),
+                        "Complaint Linked",
+                        "Your complaint has been linked to an existing civic issue #" + master.getTrackingNumber(),
+                        "COMPLAINT",
+                        "/citizen/history/" + complaint.getId()
+                    ));
+                }
+            }
+        } else {
+            complaint.setMasterComplaintId(null);
+        }
+        
+        Complaint saved = complaintRepository.save(complaint);
+        auditService.logActivity(
+            councillorId, councillorName, "COUNCILLOR", "DUPLICATE_LINKED", "COMPLAINT", saved.getTrackingNumber(),
+            isDuplicate ? ("Linked to master ticket: " + masterId) : "Marked as separate complaint"
+        );
         return saved;
     }
 
@@ -137,7 +320,7 @@ public class ComplaintService {
         }
 
         Complaint complaint = complaintRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Complaint not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
 
         String oldStatus = complaint.getStatus();
         String newStat = status.toUpperCase().trim();
@@ -169,8 +352,9 @@ public class ComplaintService {
 
     public Complaint assignWorker(String id, Map<String, String> body) {
         Complaint complaint = complaintRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Complaint not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
         
+        String oldWorkerId = complaint.getAssignedWorkerId();
         String workerId = body.get("workerId");
         String workerName = body.get("workerName");
         String priority = body.get("priority");
@@ -229,7 +413,38 @@ public class ComplaintService {
                 "TASK",
                 "/worker/assigned"
             ));
+            
+            if ("URGENT".equalsIgnoreCase(saved.getPriority())) {
+                
+                userRepository.findById(workerId).ifPresent(user -> {
+                    String phone = user.getPhone();
+                    if (phone != null && !phone.trim().isEmpty()) {
+                        // Sending exact Twilio-approved Trial string to bypass country restrictions
+                        String smsBody = "sms_appointment_reminders";
+                        
+                        boolean smsSent = twilioSmsService.sendSms(phone, smsBody);
+                        if (smsSent) {
+                            auditService.logActivity(workerId, user.getFullName(), "WORKER", "URGENT SMS Sent", "NOTIFICATION", saved.getTrackingNumber(), "Twilio SMS delivered successfully to " + phone);
+                        } else {
+                            auditService.logActivity(workerId, user.getFullName(), "WORKER", "URGENT SMS Failed", "NOTIFICATION", saved.getTrackingNumber(), "Twilio SMS failed to send to " + phone);
+                        }
+                    } else {
+                        auditService.logActivity(workerId, user.getFullName(), "WORKER", "URGENT SMS Failed", "NOTIFICATION", saved.getTrackingNumber(), "Worker has no valid phone number registered.");
+                    }
+                });
+            }
         }
+        
+        if (oldWorkerId != null && workerId != null && !oldWorkerId.equalsIgnoreCase(workerId)) {
+            notificationService.createNotification(new Notification(
+                oldWorkerId,
+                "Task Transferred",
+                "Work order #" + saved.getTrackingNumber() + " has been transferred to another technician.",
+                "TASK",
+                "/worker/assigned"
+            ));
+        }
+
         if (saved.getCitizenId() != null) {
             notificationService.createNotification(new Notification(
                 saved.getCitizenId(),
@@ -245,7 +460,7 @@ public class ComplaintService {
 
     public Complaint startTask(String id, String workerId, String workerName) {
         Complaint complaint = complaintRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Complaint not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
 
         complaint.setStatus("IN_PROGRESS");
         if (complaint.getAssignedDate() == null) {
@@ -283,7 +498,7 @@ public class ComplaintService {
         }
 
         Complaint complaint = complaintRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Complaint not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
 
         complaint.setStatus("PENDING_APPROVAL");
         if (notes != null && !notes.trim().isEmpty()) {
@@ -333,7 +548,7 @@ public class ComplaintService {
 
     public Complaint approveTask(String id, String councillorId, String councillorName) {
         Complaint complaint = complaintRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Complaint not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
 
         complaint.setStatus("RESOLVED");
         String cName = councillorName != null && !councillorName.trim().isEmpty() ? councillorName : "Ward Councillor";
@@ -375,7 +590,7 @@ public class ComplaintService {
 
     public Complaint rejectTaskProof(String id, String councillorId, String councillorName, String feedback) {
         Complaint complaint = complaintRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Complaint not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
 
         complaint.setStatus("IN_PROGRESS");
         String fb = (feedback != null && !feedback.trim().isEmpty()) ? feedback.trim() : "Proof insufficient";
@@ -419,7 +634,7 @@ public class ComplaintService {
 
     public Complaint reportDelay(String id, String workerId, String workerName, String reason, String notes, String delayImage) {
         Complaint complaint = complaintRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Complaint not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
 
         complaint.setDelayReason(reason);
         complaint.setDelayNotes(notes);
@@ -455,7 +670,7 @@ public class ComplaintService {
 
     public Complaint addComment(String id, String authorName, String authorRole, String content, String authorAvatar) {
         Complaint complaint = complaintRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Complaint not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
 
         Complaint.ComplaintComment comment = new Complaint.ComplaintComment(authorName, authorRole, content, authorAvatar);
         complaint.getComments().add(comment);
@@ -473,6 +688,9 @@ public class ComplaintService {
     }
 
     public void deleteComplaint(String id) {
+        if (!complaintRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Complaint not found with id: " + id);
+        }
         complaintRepository.deleteById(id);
     }
 

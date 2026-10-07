@@ -3,6 +3,7 @@ package com.sgcs.controller;
 import com.sgcs.entity.Notification;
 import com.sgcs.security.UserPrincipal;
 import com.sgcs.service.NotificationService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,10 +30,10 @@ public class NotificationController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getNotifications() {
+    public ResponseEntity<List<Notification>> getNotifications() {
         UserPrincipal user = getCurrentUser();
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Unauthorized"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         List<Notification> list = notificationService.getNotificationsForUser(user.getId(), user.getRole(), user.getWard());
@@ -40,33 +41,44 @@ public class NotificationController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createNotification(@RequestBody Notification notification) {
-        try {
-            Notification created = notificationService.createNotification(notification);
-            return ResponseEntity.status(HttpStatus.CREATED).body(created);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        }
+    public ResponseEntity<Notification> createNotification(@Valid @RequestBody Notification notification) {
+        Notification created = notificationService.createNotification(notification);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PatchMapping("/{id}/read")
-    public ResponseEntity<?> markAsRead(@PathVariable String id) {
-        try {
-            Notification updated = notificationService.markAsRead(id);
-            return ResponseEntity.ok(updated);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        }
+    public ResponseEntity<Notification> markAsRead(@PathVariable String id) {
+        Notification updated = notificationService.markAsRead(id);
+        return ResponseEntity.ok(updated);
     }
 
     @PatchMapping("/read-all")
-    public ResponseEntity<?> markAllAsRead() {
+    public ResponseEntity<Map<String, String>> markAllAsRead() {
         UserPrincipal user = getCurrentUser();
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Unauthorized"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         notificationService.markAllAsReadForUser(user.getId(), user.getRole(), user.getWard());
         return ResponseEntity.ok(Map.of("message", "All notifications marked as read"));
+    }
+
+    @PostMapping("/device-token")
+    public ResponseEntity<Map<String, String>> registerDeviceToken(@RequestBody Map<String, String> body) {
+        UserPrincipal user = getCurrentUser();
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
+        String token = body.get("fcmToken");
+        String deviceType = body.get("deviceType");
+        String deviceName = body.get("deviceName");
+        
+        if (token == null || token.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "fcmToken is required"));
+        }
+        
+        notificationService.registerDeviceToken(user.getId(), token.trim(), deviceType, deviceName);
+        return ResponseEntity.ok(Map.of("message", "Device token registered successfully"));
     }
 }

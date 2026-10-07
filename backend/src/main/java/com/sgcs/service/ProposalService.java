@@ -1,6 +1,8 @@
 package com.sgcs.service;
 
 import com.sgcs.entity.Proposal;
+import com.sgcs.exception.BadRequestException;
+import com.sgcs.exception.ResourceNotFoundException;
 import com.sgcs.repository.ProposalRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -50,14 +52,15 @@ public class ProposalService {
         return saved;
     }
 
-    @Autowired
-    private NotificationService notificationService;
-
     public Proposal voteProposal(String id, String userId, String type) {
-        Proposal proposal = proposalRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Proposal not found: " + id));
+        if (userId == null || userId.trim().isEmpty() || "user_anon".equalsIgnoreCase(userId.trim())) {
+            throw new BadRequestException("Authentication required. Anonymous voting is prohibited.");
+        }
 
-        String voterKey = (userId != null && !userId.isEmpty()) ? userId : "user_anon";
+        Proposal proposal = proposalRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Proposal not found: " + id));
+
+        String voterKey = userId.trim();
         String previousVote = proposal.getUserVotes().get(voterKey);
 
         int up = proposal.getUpvotes() == null ? 0 : proposal.getUpvotes();
@@ -103,7 +106,7 @@ public class ProposalService {
 
     public Proposal addComment(String id, String authorName, String authorRole, String content) {
         Proposal proposal = proposalRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Proposal not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Proposal not found: " + id));
 
         Proposal.ProposalComment comment = new Proposal.ProposalComment(authorName, authorRole, content);
         proposal.getComments().add(comment);
@@ -113,7 +116,7 @@ public class ProposalService {
 
     public Proposal updateStatus(String id, String status, String notes) {
         Proposal proposal = proposalRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Proposal not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Proposal not found: " + id));
 
         proposal.setStatus(status);
         if (notes != null) {

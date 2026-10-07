@@ -26,6 +26,9 @@ public class User {
 
     private String ward;
 
+    @Column(name = "specialization")
+    private String specialization;
+
     @Column(name = "status")
     private String status = "ACTIVE"; // ACTIVE, INACTIVE
 
@@ -45,6 +48,7 @@ public class User {
         this.phone = phone;
         this.role = role;
         this.ward = ward;
+        this.specialization = null;
         this.status = "ACTIVE";
         this.createdAt = LocalDateTime.now();
     }
@@ -69,6 +73,9 @@ public class User {
 
     public String getWard() { return ward; }
     public void setWard(String ward) { this.ward = ward; }
+
+    public String getSpecialization() { return specialization; }
+    public void setSpecialization(String specialization) { this.specialization = specialization; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

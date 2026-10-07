@@ -41,6 +41,8 @@ import { useAuth } from '../../hooks/useAuth';
 import { complaintService } from '../../services/complaintService';
 import { notificationService } from '../../services/notificationService';
 import { Complaint, ComplaintStatus } from '../../types';
+import { requestFirebaseNotificationPermission, registerTokenWithBackend, onMessageListener } from '../../utils/firebase';
+import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import { STATUS_COLORS, PRIORITY_COLORS } from '../../constants';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { HeaderBreadcrumb } from '../../components/layout/HeaderBreadcrumb';
@@ -68,6 +70,9 @@ export const WorkerDashboard: React.FC = () => {
   const [selectedTask, setSelectedTask] = useState<Complaint | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [tabValue, setTabValue] = useState(0);
+
+  const [fcmNotification, setFcmNotification] = useState<any>(null);
+  const [fcmEnabled, setFcmEnabled] = useState(false);
 
   // Read status tracking
   const [readTaskIds, setReadTaskIds] = useState<Set<string>>(() => {
@@ -140,6 +145,33 @@ export const WorkerDashboard: React.FC = () => {
   useEffect(() => {
     fetchTasks();
   }, [user]);
+
+  useEffect(() => {
+    if (Notification.permission === 'granted') {
+      setFcmEnabled(true);
+    }
+  }, []);
+
+  const handleEnablePush = async () => {
+    if (!user) return;
+    const token = await requestFirebaseNotificationPermission();
+    if (token) {
+      setFcmEnabled(true);
+      const authToken = localStorage.getItem('sgcs_token') || '';
+      await registerTokenWithBackend(token, authToken);
+      // Restart task fetching just in case urgency came in
+      fetchTasks();
+    }
+  };
+
+  useEffect(() => {
+    if (fcmEnabled) {
+      onMessageListener((payload: any) => {
+        setFcmNotification(payload);
+        fetchTasks();
+      });
+    }
+  }, [fcmEnabled]);
 
   const toggleMarkAsRead = (taskId: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -345,6 +377,44 @@ export const WorkerDashboard: React.FC = () => {
         onAction={() => setTabValue(0)}
         gradientBackground="#1F4D3A"
       />
+
+      {fcmNotification && (
+        <Alert
+          severity="error"
+          icon={<NotificationsActiveIcon fontSize="inherit" />}
+          onClose={() => setFcmNotification(null)}
+          sx={{
+            mb: 3,
+            borderRadius: '8px',
+            border: '2px solid #DC2626',
+            backgroundColor: '#FEF2F2',
+            color: '#991B1B',
+            fontWeight: 700,
+            cursor: 'pointer',
+            '& .MuiAlert-icon': { color: '#DC2626' }
+          }}
+          onClick={() => {
+            setFcmNotification(null);
+            fetchTasks();
+          }}
+        >
+          {fcmNotification?.notification?.title}: {fcmNotification?.notification?.body}
+        </Alert>
+      )}
+
+      {!fcmEnabled && (
+        <Alert
+          severity="info"
+          action={
+            <Button color="inherit" size="small" onClick={handleEnablePush} sx={{ fontWeight: 600 }}>
+              Enable
+            </Button>
+          }
+          sx={{ mb: 3, borderRadius: '8px' }}
+        >
+          <strong>Enable Push Notifications</strong> for this device! To receive urgent tasks on your <strong>mobile phone</strong>, you must log into this dashboard on your phone's browser and click Enable here. (Firebase uses device tokens, not SMS).
+        </Alert>
+      )}
 
       {overdueTasks.length > 0 && (
         <Alert

@@ -1,0 +1,19 @@
+{
+  "register_citizen": 201,
+  "citizen_token": true,
+  "submit_complaint_status": 201,
+  "complaint_id": "cmp_1791352824436",
+  "ai_sug": "PUBLIC_SPACE",
+  "ai_conf": 0.3745,
+  "ai_mod": "TF-IDF + Logistic Regression",
+  "ai_stat": "COMPLETED",
+  "register_councillor": 400,
+  "register_worker": 201,
+  "ai_confirm": 401,
+  "task_start": 200,
+  "task_complete": 200,
+  "approve": 401,
+  "final_status": "PENDING_APPROVAL",
+  "final_cat": "Other",
+  "final_worker": null
+}

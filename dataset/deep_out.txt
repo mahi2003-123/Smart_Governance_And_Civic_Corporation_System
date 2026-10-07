@@ -1,0 +1,24 @@
+
+==== complaints_text.csv ====
+Total Rows: 45000
+Nulls in text: 0
+Exact Duplicates (entire row): 39797
+Exact Duplicates (text only): 39797
+Short complaints (<3 words): 29649
+Long complaints (>50 words): 535
+Avg words: 5.02
+Numbers only: 0
+URLs found: 0
+HTML tags found: 0
+
+==== manual_complaints_5000.csv ====
+Total Rows: 5000
+Nulls in text: 0
+Exact Duplicates (entire row): 0
+Exact Duplicates (text only): 0
+Short complaints (<3 words): 0
+Long complaints (>50 words): 535
+Avg words: 30.92
+Numbers only: 0
+URLs found: 0
+HTML tags found: 0

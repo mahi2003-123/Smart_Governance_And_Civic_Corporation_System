@@ -12,13 +12,12 @@ export const WARDS_LIST = [
 ];
 
 export const COMPLAINT_CATEGORIES: ComplaintCategory[] = [
-  'Roads & Potholes',
-  'Street Lighting',
-  'Water Supply',
-  'Waste Management',
-  'Sewage & Drainage',
-  'Parks & Recreation',
-  'Public Safety',
+  'ROAD',
+  'WASTE_MANAGEMENT',
+  'STREET_LIGHT',
+  'WATER_SUPPLY',
+  'DRAINAGE',
+  'PUBLIC_SPACE',
   'Other'
 ];
 

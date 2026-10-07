@@ -1,8 +1,11 @@
 package com.sgcs.controller;
 
 import com.sgcs.entity.Complaint;
+import com.sgcs.exception.BadRequestException;
+import com.sgcs.exception.ResourceNotFoundException;
 import com.sgcs.security.UserPrincipal;
 import com.sgcs.service.ComplaintService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,8 +50,7 @@ public class ComplaintController {
 
         if (citizenId != null && !citizenId.isEmpty()) {
             if ("CITIZEN".equalsIgnoreCase(role) && !principal.getId().equals(citizenId)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Map.of("error", "Access denied: You can only view your own complaints"));
+                throw new AccessDeniedException("Access denied: You can only view your own complaints");
             }
             return ResponseEntity.ok(complaintService.getComplaintsByCitizen(citizenId));
         }
@@ -56,14 +58,12 @@ public class ComplaintController {
         if (ward != null && !ward.isEmpty()) {
             if (!"ADMIN".equalsIgnoreCase(role)) {
                 if (principal.getWard() != null && !ward.equalsIgnoreCase(principal.getWard())) {
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                            .body(Map.of("error", "Access denied: You can only view complaints for your assigned ward"));
+                    throw new AccessDeniedException("Access denied: You can only view complaints for your assigned ward");
                 }
             }
             return ResponseEntity.ok(complaintService.getComplaintsByWard(ward));
         }
 
-        // Default filters based on caller role if no explicit param passed
         if ("CITIZEN".equalsIgnoreCase(role)) {
             return ResponseEntity.ok(complaintService.getComplaintsByCitizen(principal.getId()));
         } else if ("COUNCILLOR".equalsIgnoreCase(role)) {
@@ -82,18 +82,13 @@ public class ComplaintController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Unauthorized"));
         }
 
-        var opt = complaintService.getComplaintById(id);
-        if (opt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
+        Complaint complaint = complaintService.getComplaintById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found: " + id));
 
-        Complaint complaint = opt.get();
         String role = principal.getRole();
-
         if ("CITIZEN".equalsIgnoreCase(role)) {
             if (!principal.getId().equals(complaint.getCitizenId()) && !id.equalsIgnoreCase(complaint.getTrackingNumber())) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Map.of("error", "Access denied: You can only view your own complaints"));
+                throw new AccessDeniedException("Access denied: You can only view your own complaints");
             }
         }
 
@@ -101,7 +96,7 @@ public class ComplaintController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createComplaint(@RequestBody Complaint complaint) {
+    public ResponseEntity<Complaint> createComplaint(@Valid @RequestBody Complaint complaint) {
         UserPrincipal principal = getCurrentUser();
         if (principal != null && "CITIZEN".equalsIgnoreCase(principal.getRole())) {
             complaint.setCitizenId(principal.getId());
@@ -110,215 +105,197 @@ public class ComplaintController {
             }
         }
 
-        try {
-            Complaint created = complaintService.createComplaint(complaint);
-            return ResponseEntity.status(HttpStatus.CREATED).body(created);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        }
+        Complaint created = complaintService.createComplaint(complaint);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PatchMapping("/{id}/status")
-    public ResponseEntity<?> updateStatus(@PathVariable String id, @RequestBody Map<String, String> body) {
+    public ResponseEntity<Complaint> updateStatus(@PathVariable String id, @RequestBody Map<String, String> body) {
         UserPrincipal principal = getCurrentUser();
         if (principal == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Unauthorized"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        var opt = complaintService.getComplaintById(id);
-        if (opt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Complaint not found"));
-        }
+        Complaint complaint = complaintService.getComplaintById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
 
-        Complaint complaint = opt.get();
         String role = principal.getRole();
-
         boolean isAdmin = "ADMIN".equalsIgnoreCase(role);
         boolean isAssignedWorker = principal.getId().equals(complaint.getAssignedWorkerId());
         boolean isWardCouncillor = "COUNCILLOR".equalsIgnoreCase(role) && principal.getWard() != null && principal.getWard().equalsIgnoreCase(complaint.getWard());
 
         if (!isAdmin && !isAssignedWorker && !isWardCouncillor) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "Access denied: Only assigned worker, ward councillor, or admin can update status"));
+            throw new AccessDeniedException("Access denied: Only assigned worker, ward councillor, or admin can update status");
         }
 
-        try {
-            String status = body.get("status");
-            Complaint updated = complaintService.updateStatus(id, status);
-            return ResponseEntity.ok(updated);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
-        }
+        String status = body != null ? body.get("status") : null;
+        Complaint updated = complaintService.updateStatus(id, status);
+        return ResponseEntity.ok(updated);
     }
 
     @PostMapping("/{id}/assign")
-    public ResponseEntity<?> assignWorker(@PathVariable String id, @RequestBody Map<String, String> body) {
+    public ResponseEntity<Complaint> assignWorker(@PathVariable String id, @RequestBody Map<String, String> body) {
         UserPrincipal principal = getCurrentUser();
         if (principal == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Unauthorized"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        var opt = complaintService.getComplaintById(id);
-        if (opt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Complaint not found"));
-        }
+        Complaint complaint = complaintService.getComplaintById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
 
-        Complaint complaint = opt.get();
         String role = principal.getRole();
-
         boolean isAdmin = "ADMIN".equalsIgnoreCase(role);
         boolean isCouncillor = "COUNCILLOR".equalsIgnoreCase(role);
 
         if (!isAdmin && !isCouncillor) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "Access denied: Only ward councillor or admin can assign workers"));
+            throw new AccessDeniedException("Access denied: Only ward councillor or admin can assign workers");
         }
 
-        try {
-            Complaint updated = complaintService.assignWorker(id, body);
-            return ResponseEntity.ok(updated);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        }
+        Complaint updated = complaintService.assignWorker(id, body);
+        return ResponseEntity.ok(updated);
     }
 
     @PostMapping("/{id}/start")
-    public ResponseEntity<?> startTask(@PathVariable String id) {
+    public ResponseEntity<Complaint> startTask(@PathVariable String id) {
         UserPrincipal principal = getCurrentUser();
         if (principal == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Unauthorized"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        try {
-            Complaint updated = complaintService.startTask(id, principal.getId(), principal.getFullName());
-            return ResponseEntity.ok(updated);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        }
+        Complaint updated = complaintService.startTask(id, principal.getId(), principal.getFullName());
+        return ResponseEntity.ok(updated);
     }
 
     @PostMapping("/{id}/complete")
-    public ResponseEntity<?> completeTask(@PathVariable String id, @RequestBody Map<String, String> body) {
+    public ResponseEntity<Complaint> completeTask(@PathVariable String id, @RequestBody Map<String, String> body) {
         UserPrincipal principal = getCurrentUser();
         if (principal == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Unauthorized"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        try {
-            String notes = body.get("notes");
-            String afterImage = body.get("afterImage") != null ? body.get("afterImage") : body.get("completionImage");
-            String beforeImage = body.get("beforeImage");
+        String notes = body != null ? body.get("notes") : null;
+        String afterImage = body != null ? (body.get("afterImage") != null ? body.get("afterImage") : body.get("completionImage")) : null;
+        String beforeImage = body != null ? body.get("beforeImage") : null;
 
-            Complaint updated = complaintService.completeTask(id, principal.getId(), principal.getFullName(), notes, afterImage, beforeImage);
-            return ResponseEntity.ok(updated);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        }
+        Complaint updated = complaintService.completeTask(id, principal.getId(), principal.getFullName(), notes, afterImage, beforeImage);
+        return ResponseEntity.ok(updated);
     }
 
     @PostMapping("/{id}/approve")
-    public ResponseEntity<?> approveTask(@PathVariable String id) {
+    public ResponseEntity<Complaint> approveTask(@PathVariable String id) {
         UserPrincipal principal = getCurrentUser();
         if (principal == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Unauthorized"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        try {
-            Complaint updated = complaintService.approveTask(id, principal.getId(), principal.getFullName());
-            return ResponseEntity.ok(updated);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        }
+        Complaint updated = complaintService.approveTask(id, principal.getId(), principal.getFullName());
+        return ResponseEntity.ok(updated);
     }
 
     @PostMapping("/{id}/reject-proof")
-    public ResponseEntity<?> rejectTaskProof(@PathVariable String id, @RequestBody(required = false) Map<String, String> body) {
+    public ResponseEntity<Complaint> rejectTaskProof(@PathVariable String id, @RequestBody(required = false) Map<String, String> body) {
         UserPrincipal principal = getCurrentUser();
         if (principal == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Unauthorized"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        try {
-            String feedback = body != null ? body.get("feedback") : "Evidence insufficient";
-            Complaint updated = complaintService.rejectTaskProof(id, principal.getId(), principal.getFullName(), feedback);
-            return ResponseEntity.ok(updated);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        }
+        String feedback = body != null ? body.get("feedback") : "Evidence insufficient";
+        Complaint updated = complaintService.rejectTaskProof(id, principal.getId(), principal.getFullName(), feedback);
+        return ResponseEntity.ok(updated);
     }
 
     @PostMapping("/{id}/delay")
-    public ResponseEntity<?> reportDelay(@PathVariable String id, @RequestBody Map<String, String> body) {
+    public ResponseEntity<Complaint> reportDelay(@PathVariable String id, @RequestBody Map<String, String> body) {
         UserPrincipal principal = getCurrentUser();
         if (principal == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Unauthorized"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        try {
-            String reason = body.get("reason");
-            String notes = body.get("notes");
-            String delayImage = body.get("delayImage");
+        String reason = body != null ? body.get("reason") : null;
+        String notes = body != null ? body.get("notes") : null;
+        String delayImage = body != null ? body.get("delayImage") : null;
 
-            Complaint updated = complaintService.reportDelay(id, principal.getId(), principal.getFullName(), reason, notes, delayImage);
-            return ResponseEntity.ok(updated);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        }
+        Complaint updated = complaintService.reportDelay(id, principal.getId(), principal.getFullName(), reason, notes, delayImage);
+        return ResponseEntity.ok(updated);
     }
 
     @PostMapping({"/{id}/comment", "/{id}/comments"})
-    public ResponseEntity<?> addComment(@PathVariable String id, @RequestBody Map<String, String> body) {
+    public ResponseEntity<Complaint> addComment(@PathVariable String id, @RequestBody Map<String, String> body) {
         UserPrincipal principal = getCurrentUser();
         if (principal == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Unauthorized"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        try {
-            String content = body.get("content");
-            String authorName = body.get("authorName") != null ? body.get("authorName") : principal.getFullName();
-            String authorRole = body.get("authorRole") != null ? body.get("authorRole") : principal.getRole();
-            String authorAvatar = body.get("authorAvatar");
+        String content = body != null ? body.get("content") : null;
+        String authorName = body != null && body.get("authorName") != null ? body.get("authorName") : principal.getFullName();
+        String authorRole = body != null && body.get("authorRole") != null ? body.get("authorRole") : principal.getRole();
+        String authorAvatar = body != null ? body.get("authorAvatar") : null;
 
-            if (content == null || content.trim().isEmpty()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Comment content cannot be empty"));
-            }
-
-            Complaint updated = complaintService.addComment(id, authorName, authorRole, content.trim(), authorAvatar);
-            return ResponseEntity.ok(updated);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        if (content == null || content.trim().isEmpty()) {
+            throw new BadRequestException("Comment content cannot be empty");
         }
+
+        Complaint updated = complaintService.addComment(id, authorName, authorRole, content.trim(), authorAvatar);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteComplaint(@PathVariable String id) {
         UserPrincipal principal = getCurrentUser();
         if (principal == null || !"ADMIN".equalsIgnoreCase(principal.getRole())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied: Only admin can delete complaints"));
+            throw new AccessDeniedException("Access denied: Only admin can delete complaints");
         }
-        try {
-            complaintService.deleteComplaint(id);
-            return ResponseEntity.ok(Map.of("message", "Complaint deleted successfully", "id", id));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        }
+
+        complaintService.deleteComplaint(id);
+        return ResponseEntity.ok(Map.of("message", "Complaint deleted successfully", "id", id));
     }
 
     @DeleteMapping
     public ResponseEntity<?> deleteAllComplaints(@RequestBody(required = false) Map<String, String> body) {
         UserPrincipal principal = getCurrentUser();
         if (principal == null || !"ADMIN".equalsIgnoreCase(principal.getRole())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied: Only admin can delete all complaints"));
+            throw new AccessDeniedException("Access denied: Only admin can delete all complaints");
         }
 
         if (body == null || !"DELETE_ALL".equals(body.get("confirm"))) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "Confirmation 'DELETE_ALL' required in body to delete all complaints"));
+            throw new BadRequestException("Confirmation 'DELETE_ALL' required in body to delete all complaints");
         }
 
         complaintService.deleteAllComplaints();
         return ResponseEntity.ok(Map.of("message", "All complaints cleared successfully"));
+    }
+
+    @PostMapping("/{id}/ai-category")
+    public ResponseEntity<?> reviewAiCategory(@PathVariable String id, @RequestBody Map<String, String> body) {
+        UserPrincipal principal = getCurrentUser();
+        if (principal == null || (!"COUNCILLOR".equalsIgnoreCase(principal.getRole()) && !"ADMIN".equalsIgnoreCase(principal.getRole()))) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Only councillor or admin can review AI category"));
+        }
+        
+        String category = body.get("category");
+        if (category == null || category.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Category is required"));
+        }
+        
+        Complaint updated = complaintService.reviewAiCategory(id, category, principal.getId(), principal.getFullName());
+        return ResponseEntity.ok(updated);
+    }
+
+    @PostMapping("/{id}/link-duplicate")
+    public ResponseEntity<?> linkDuplicate(@PathVariable String id, @RequestBody Map<String, String> body) {
+        UserPrincipal principal = getCurrentUser();
+        if (principal == null || (!"COUNCILLOR".equalsIgnoreCase(principal.getRole()) && !"ADMIN".equalsIgnoreCase(principal.getRole()))) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Only councillor or admin can link duplicates"));
+        }
+        
+        boolean isDuplicate = Boolean.parseBoolean(body.get("isDuplicate"));
+        String masterId = body.get("masterId");
+        
+        if (isDuplicate && (masterId == null || masterId.trim().isEmpty())) {
+            return ResponseEntity.badRequest().body(Map.of("error", "masterId is required if isDuplicate is true"));
+        }
+        
+        Complaint updated = complaintService.linkDuplicate(id, masterId, isDuplicate, principal.getId(), principal.getFullName());
+        return ResponseEntity.ok(updated);
     }
 }

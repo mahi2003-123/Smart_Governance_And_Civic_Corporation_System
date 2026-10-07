@@ -21,7 +21,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { WardSelector } from '../../components/common/WardSelector';
 
 export const Profile: React.FC = () => {
-  const { user, updateUser } = useAuth();
+  const { user, updateProfile } = useAuth();
 
   const [fullName, setFullName] = useState(user?.fullName || 'Rahul Sharma');
   const [email] = useState(user?.email || 'citizen@sgcs.gov.in');
@@ -50,8 +50,8 @@ export const Profile: React.FC = () => {
     setSuccess(false);
 
     try {
-      if (updateUser) {
-        updateUser({
+      if (updateProfile) {
+        await updateProfile({
           fullName: fullName.trim(),
           phone: phone.trim(),
           address: address.trim(),

@@ -34,3 +34,7 @@ pnpm-debug.log*
 *.sw?
 .DS_Store
 Thumbs.db
+
+*_log.txt
+*_results.json
+git_error.txt

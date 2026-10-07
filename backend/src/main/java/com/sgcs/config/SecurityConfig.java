@@ -47,13 +47,35 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/admin/users", "/api/admin/wards").hasAnyAuthority("ADMIN", "ROLE_ADMIN", "COUNCILLOR", "ROLE_COUNCILLOR")
-                .requestMatchers("/api/admin/**").hasAnyAuthority("ADMIN", "ROLE_ADMIN")
-                .requestMatchers(HttpMethod.POST, "/api/complaints", "/api/complaints/**").hasAnyAuthority("CITIZEN", "ROLE_CITIZEN", "COUNCILLOR", "ROLE_COUNCILLOR", "WORKER", "ROLE_WORKER", "ADMIN", "ROLE_ADMIN")
-                .requestMatchers(HttpMethod.POST, "/api/proposals", "/api/proposals/**", "/api/notifications", "/api/notifications/**").hasAnyAuthority("CITIZEN", "ROLE_CITIZEN", "COUNCILLOR", "ROLE_COUNCILLOR", "WORKER", "ROLE_WORKER", "ADMIN", "ROLE_ADMIN")
-                .requestMatchers(HttpMethod.POST, "/api/notices/**").hasAnyAuthority("COUNCILLOR", "ROLE_COUNCILLOR", "WORKER", "ROLE_WORKER", "ADMIN", "ROLE_ADMIN")
-                .requestMatchers(HttpMethod.PATCH, "/api/complaints/**", "/api/proposals/**", "/api/notices/**", "/api/notifications/**").hasAnyAuthority("CITIZEN", "ROLE_CITIZEN", "COUNCILLOR", "ROLE_COUNCILLOR", "WORKER", "ROLE_WORKER", "ADMIN", "ROLE_ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/complaints/**", "/api/proposals/**", "/api/notices/**", "/api/notifications/**").hasAnyAuthority("COUNCILLOR", "ROLE_COUNCILLOR", "WORKER", "ROLE_WORKER", "ADMIN", "ROLE_ADMIN")
+
+                // Section 2: Bulk Delete Endpoints (ADMIN only)
+                .requestMatchers(HttpMethod.DELETE, "/api/complaints", "/api/proposals", "/api/notices", "/api/notifications").hasRole("ADMIN")
+
+                // Admin Endpoints
+                .requestMatchers(HttpMethod.GET, "/api/admin/users", "/api/admin/wards").hasAnyRole("ADMIN", "COUNCILLOR")
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                // Complaints Endpoints
+                .requestMatchers(HttpMethod.POST, "/api/complaints", "/api/complaints/**").hasAnyRole("CITIZEN", "COUNCILLOR", "WORKER", "ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/complaints/**").hasAnyRole("CITIZEN", "COUNCILLOR", "WORKER", "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/complaints/**").hasAnyRole("COUNCILLOR", "WORKER", "ADMIN")
+
+                // Proposals Endpoints
+                .requestMatchers(HttpMethod.POST, "/api/proposals", "/api/proposals/**").hasAnyRole("CITIZEN", "COUNCILLOR", "WORKER", "ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/proposals/**").hasAnyRole("CITIZEN", "COUNCILLOR", "WORKER", "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/proposals/**").hasAnyRole("COUNCILLOR", "WORKER", "ADMIN")
+
+                // Notices Endpoints
+                .requestMatchers(HttpMethod.POST, "/api/notices", "/api/notices/**").hasAnyRole("COUNCILLOR", "WORKER", "ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/notices/**").hasAnyRole("COUNCILLOR", "WORKER", "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/notices/**").hasAnyRole("COUNCILLOR", "WORKER", "ADMIN")
+
+                // Notifications Endpoints
+                .requestMatchers(HttpMethod.POST, "/api/notifications", "/api/notifications/**").hasAnyRole("CITIZEN", "COUNCILLOR", "WORKER", "ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/notifications/**").hasAnyRole("CITIZEN", "COUNCILLOR", "WORKER", "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/notifications/**").hasAnyRole("COUNCILLOR", "WORKER", "ADMIN")
+
+                // Authenticated GET requests
                 .requestMatchers(HttpMethod.GET, "/api/complaints/**", "/api/proposals/**", "/api/notices/**", "/api/notifications/**").authenticated()
                 .anyRequest().authenticated()
             );

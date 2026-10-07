@@ -10,6 +10,7 @@ public class UserDto {
     private String phone;
     private String role;
     private String ward;
+    private String specialization;
     private LocalDateTime createdAt;
 
     public UserDto() {}
@@ -21,6 +22,7 @@ public class UserDto {
         this.phone = user.getPhone();
         this.role = user.getRole();
         this.ward = user.getWard();
+        this.specialization = user.getSpecialization();
         this.createdAt = user.getCreatedAt();
     }
 
@@ -41,6 +43,9 @@ public class UserDto {
 
     public String getWard() { return ward; }
     public void setWard(String ward) { this.ward = ward; }
+
+    public String getSpecialization() { return specialization; }
+    public void setSpecialization(String specialization) { this.specialization = specialization; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

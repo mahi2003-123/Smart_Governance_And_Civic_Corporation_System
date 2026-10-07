@@ -1,0 +1,20 @@
+{
+    "model_version": "sgcs-complaint-classifier-v1",
+    "training_date": "2026-10-04T10:57:53.549420",
+    "dataset_filename": "bmc_raw_complaints.csv",
+    "number_of_training_samples": 456,
+    "number_of_validation_samples": 58,
+    "number_of_test_samples": 58,
+    "categories": [
+        "WASTE_MANAGEMENT",
+        "ROAD",
+        "STREET_LIGHT",
+        "WATER_SUPPLY",
+        "DRAINAGE",
+        "PUBLIC_SPACE"
+    ],
+    "algorithm": "TF-IDF + Logistic Regression",
+    "accuracy": 1.0,
+    "macro_f1": 1.0,
+    "weighted_f1": 1.0
+}

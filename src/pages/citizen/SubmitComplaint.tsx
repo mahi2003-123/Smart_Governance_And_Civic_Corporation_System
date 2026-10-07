@@ -4,29 +4,26 @@ import {
   Typography,
   TextField,
   Button,
-  MenuItem,
   Stack,
   Alert,
   Paper,
-  InputAdornment,
+  InputAdornment
 } from '@mui/material';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import AssignmentTurnedInOutlinedIcon from '@mui/icons-material/AssignmentTurnedInOutlined';
-import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { complaintService } from '../../services/complaintService';
 import { WardSelector } from '../../components/common/WardSelector';
 import { ImageUpload } from '../../components/common/ImageUpload';
-import { ComplaintCategory, ComplaintPriority } from '../../types';
+import { ComplaintPriority } from '../../types';
 
 export const SubmitComplaint: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState<ComplaintCategory>('Roads & Potholes');
   const [description, setDescription] = useState('');
   const [ward, setWard] = useState(user?.ward || 'Ward 1 - Central Town');
   const [locationAddress, setLocationAddress] = useState('');
@@ -38,21 +35,8 @@ export const SubmitComplaint: React.FC = () => {
   const [submittedData, setSubmittedData] = useState<{
     trackingNumber: string;
     ward: string;
-    category: string;
     date: string;
-    status: string;
   } | null>(null);
-
-  const categories: ComplaintCategory[] = [
-    'Roads & Potholes',
-    'Water Supply',
-    'Waste Management',
-    'Sewage & Drainage',
-    'Street Lighting',
-    'Parks & Recreation',
-    'Public Safety',
-    'Other',
-  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,7 +56,7 @@ export const SubmitComplaint: React.FC = () => {
     try {
       const created = await complaintService.createComplaint({
         title: title.trim(),
-        category,
+        category: 'Other', // Temporary generic category, AI engine assigns actual category to councillor backlog
         description: description.trim(),
         ward,
         locationAddress: locationAddress.trim(),
@@ -86,13 +70,11 @@ export const SubmitComplaint: React.FC = () => {
       setSubmittedData({
         trackingNumber: created.trackingNumber,
         ward: created.ward,
-        category: created.category,
         date: new Date(created.createdAt).toLocaleDateString('en-US', {
           month: 'short',
           day: 'numeric',
           year: 'numeric',
-        }),
-        status: created.status,
+        })
       });
     } catch {
       setError('Failed to submit complaint. Please try again.');
@@ -130,104 +112,37 @@ export const SubmitComplaint: React.FC = () => {
           >
             <CheckCircleOutlinedIcon sx={{ fontSize: 36 }} />
           </Box>
-
           <Typography variant="h2" sx={{ fontWeight: 600, color: '#202522', mb: 1, fontSize: '1.5rem' }}>
             Grievance Registered Successfully
           </Typography>
           <Typography variant="body1" sx={{ color: '#68706B', mb: 4 }}>
             Your complaint has been submitted and routed to your municipal ward councillor for inspection.
           </Typography>
-
-          <Paper
-            elevation={0}
-            sx={{
-              p: 3,
-              borderRadius: '6px',
-              backgroundColor: '#F8F9F7',
-              border: '1px solid #E5E8E4',
-              mb: 4,
-              textAlign: 'left',
-            }}
-          >
-            <Box sx={{ textAlign: 'center', mb: 2.5, pb: 2, borderBottom: '1px solid #E5E8E4' }}>
+          <Paper elevation={0} sx={{ p: 3, borderRadius: '6px', backgroundColor: '#F8F9F7', border: '1px solid #E5E8E4', mb: 4, textAlign: 'left' }}>
+             <Box sx={{ textAlign: 'center', mb: 2.5, pb: 2, borderBottom: '1px solid #E5E8E4' }}>
               <Typography variant="caption" sx={{ color: '#68706B', fontWeight: 600, display: 'block', mb: 0.5, letterSpacing: '0.05em' }}>
                 COMPLAINT REFERENCE NUMBER
               </Typography>
               <Typography variant="h3" sx={{ fontWeight: 600, color: '#496A57', letterSpacing: '0.04em' }}>
                 {submittedData.trackingNumber}
               </Typography>
-            </Box>
-
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, fontSize: '0.875rem' }}>
-              <Box>
-                <Typography variant="caption" sx={{ color: '#68706B', display: 'block' }}>
-                  Municipal Ward
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 500, color: '#202522' }}>
-                  {submittedData.ward}
-                </Typography>
-              </Box>
-
-              <Box>
-                <Typography variant="caption" sx={{ color: '#68706B', display: 'block' }}>
-                  Category
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 500, color: '#202522' }}>
-                  {submittedData.category}
-                </Typography>
-              </Box>
-
-              <Box>
-                <Typography variant="caption" sx={{ color: '#68706B', display: 'block' }}>
-                  Submission Date
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 500, color: '#202522' }}>
-                  {submittedData.date}
-                </Typography>
-              </Box>
-
-              <Box>
-                <Typography variant="caption" sx={{ color: '#68706B', display: 'block' }}>
-                  Current Status
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: '#B58A45' }}>
-                  SUBMITTED / PENDING
-                </Typography>
-              </Box>
-            </Box>
+             </Box>
+             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, fontSize: '0.875rem' }}>
+               <Box>
+                 <Typography variant="caption" sx={{ color: '#68706B', display: 'block' }}>Municipal Ward</Typography>
+                 <Typography variant="body2" sx={{ fontWeight: 500, color: '#202522' }}>{submittedData.ward}</Typography>
+               </Box>
+               <Box>
+                 <Typography variant="caption" sx={{ color: '#68706B', display: 'block' }}>Submitted On</Typography>
+                 <Typography variant="body2" sx={{ fontWeight: 500, color: '#202522' }}>{submittedData.date}</Typography>
+               </Box>
+             </Box>
           </Paper>
-
           <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, justifyContent: 'center' }}>
-            <Button
-              variant="contained"
-              startIcon={<SearchOutlinedIcon />}
-              onClick={() => navigate(`/citizen/track?ref=${submittedData.trackingNumber}`)}
-              sx={{
-                borderRadius: '8px',
-                backgroundColor: '#496A57',
-                color: '#FFFFFF',
-                fontWeight: 500,
-                px: 3,
-                py: 1,
-                '&:hover': { backgroundColor: '#304B3A' },
-              }}
-            >
+            <Button variant="contained" onClick={() => navigate(`/citizen/track?ref=${submittedData.trackingNumber}`)} sx={{ backgroundColor: '#496A57' }}>
               Track Status
             </Button>
-
-            <Button
-              variant="outlined"
-              onClick={() => navigate('/citizen/complaints')}
-              sx={{
-                borderRadius: '8px',
-                borderColor: '#E5E8E4',
-                color: '#202522',
-                fontWeight: 500,
-                px: 3,
-                py: 1,
-                '&:hover': { borderColor: '#496A57', backgroundColor: '#F3F5F2' },
-              }}
-            >
+            <Button variant="outlined" onClick={() => navigate('/citizen/complaints')} sx={{ borderColor: '#E5E8E4', color: '#202522' }}>
               My Complaints
             </Button>
           </Box>
@@ -256,19 +171,11 @@ export const SubmitComplaint: React.FC = () => {
       <Box
         component="form"
         onSubmit={handleSubmit}
-        sx={{
-          p: { xs: 3, sm: 5 },
-          borderRadius: '8px',
-          border: '1px solid #E5E8E4',
-          backgroundColor: '#FFFFFF',
-        }}
+        sx={{ p: { xs: 3, sm: 5 }, borderRadius: '8px', border: '1px solid #E5E8E4', backgroundColor: '#FFFFFF' }}
       >
         <Stack spacing={3}>
-          {/* Title */}
           <TextField
             fullWidth
-            id="complaint-title-input"
-            name="title"
             label="Complaint Title *"
             placeholder="e.g. Deep Pothole near Central Market Gate"
             value={title}
@@ -277,39 +184,10 @@ export const SubmitComplaint: React.FC = () => {
             slotProps={{ inputLabel: { shrink: true } }}
           />
 
-          {/* Category & Ward */}
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2.5 }}>
-            <TextField
-              select
-              fullWidth
-              id="complaint-category-field"
-              label="Complaint Category"
-              value={category}
-              onChange={(e) => setCategory(e.target.value as ComplaintCategory)}
-              required
-            >
-              {categories.map((cat) => (
-                <MenuItem key={cat} value={cat}>
-                  {cat}
-                </MenuItem>
-              ))}
-            </TextField>
-
-            <WardSelector
-              value={ward}
-              onChange={(val) => setWard(val)}
-              label="Ward Jurisdiction"
-              required
-              helperText="Select municipal ward for this complaint"
-            />
-          </Box>
-
-          {/* Description */}
           <TextField
             fullWidth
             multiline
             rows={4}
-            id="complaint-description-field"
             label="Grievance Description"
             placeholder="Describe the condition in detail, including street landmarks, severity, and any public safety hazard..."
             value={description}
@@ -317,10 +195,18 @@ export const SubmitComplaint: React.FC = () => {
             required
           />
 
-          {/* Location Address */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr' }, gap: 2.5 }}>
+            <WardSelector
+              value={ward}
+              onChange={(val) => setWard(val)}
+              label="Ward Jurisdiction *"
+              required
+              helperText="Select municipal ward for this complaint"
+            />
+          </Box>
+
           <TextField
             fullWidth
-            id="complaint-location-field"
             label="Specific Location / Street Address"
             placeholder="e.g. Opposite City Bank, Main Street"
             value={locationAddress}
@@ -337,7 +223,6 @@ export const SubmitComplaint: React.FC = () => {
             }}
           />
 
-          {/* Photo Attachment UI */}
           <ImageUpload
             images={images}
             onChange={(newImages) => setImages(newImages)}
@@ -346,7 +231,6 @@ export const SubmitComplaint: React.FC = () => {
             helperText="Upload clear images of the site condition"
           />
 
-          {/* Submit Button */}
           <Button
             type="submit"
             disabled={loading}
