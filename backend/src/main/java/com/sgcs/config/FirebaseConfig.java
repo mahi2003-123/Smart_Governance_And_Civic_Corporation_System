@@ -41,14 +41,21 @@ public class FirebaseConfig {
                             .setCredentials(GoogleCredentials.fromStream(credentialsStream))
                             .build();
 
-                    FirebaseApp.initializeApp(options);
-                    System.out.println("FirebaseApp initialized successfully.");
+                    FirebaseApp app = FirebaseApp.initializeApp(options);
+                    String projectId = app.getOptions().getProjectId();
+                    
+                    if (projectId != null && !projectId.equals("sgcs-civic-system")) {
+                        throw new IllegalStateException("Firebase credentials are for project '" + projectId + "', but expected 'sgcs-civic-system'");
+                    }
+                    
+                    System.out.println("FirebaseApp initialized successfully for project sgcs-civic-system.");
                 } else {
-                    System.err.println("Warning: Firebase credentials not found. FCM notifications will fail. Please set GOOGLE_APPLICATION_CREDENTIALS or firebase.admin.credentials.json or firebase.admin.credentials.file.");
+                    throw new IllegalStateException("Firebase Admin JSON credentials are missing. Please provide FIREBASE_CREDENTIALS_FILE setting.");
                 }
             }
-        } catch (IOException e) {
-            System.err.println("Error initializing FirebaseApp: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Error initializing FirebaseApp: Failed to load valid Firebase credentials. (Cause: " + e.getMessage() + ")");
+            throw new IllegalStateException("Failed to initialize Firebase Admin SDK", e);
         }
     }
 }

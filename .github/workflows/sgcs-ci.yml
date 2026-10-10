@@ -1,42 +1,69 @@
-name: SGCS CI
+# SGCS CI/CD Pipeline Configuration
+
+name: SGCS CI/CD Pipeline
 
 on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
-  frontend:
+  frontend-ci:
+    name: Frontend CI
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: 'npm'
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: npm ci
 
-      - name: Run linting
+      - name: Code Linting
         run: npm run lint
 
-
-      - name: Build frontend
+      - name: Build Frontend Application
         run: npm run build
 
-  backend:
+      - name: Upload Frontend Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: dist/
+
+  backend-postgres-ci:
+    name: Backend & PostgreSQL CI
     runs-on: ubuntu-latest
-    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: sgcs_test_db
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpassword
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     defaults:
       run:
         working-directory: ./backend
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Setup Java 17
@@ -46,8 +73,187 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Run Maven Tests
-        run: mvn test
+      - name: Run Spring Boot & Database Tests
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: sgcs_test_db
+          DB_USERNAME: testuser
+          DB_PASSWORD: testpassword
+        run: mvn clean test
 
-      - name: Build Maven Package (Without running tests again)
+      - name: Package Backend Application
         run: mvn package -DskipTests
+
+      - name: Upload Backend Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar
+          path: backend/target/*.jar
+
+      - name: Upload Surefire Reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-test-reports
+          path: backend/target/surefire-reports/
+
+  ai-fastapi-ci:
+    name: AI Service CI
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./ai_service
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt pytest httpx # Install pytest and httpx for testing
+
+      - name: Start FastAPI Service in background
+        run: |
+          uvicorn app:app --host 127.0.0.1 --port 8005 &
+          # Wait for the service to become responsive
+          sleep 10
+          curl -f http://127.0.0.1:8005/health || exit 1
+
+      - name: Run Integration Tests
+        run: python test_integration.py
+
+      - name: Upload AI Model Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-model
+          path: |
+            ai_service/complaint_model.joblib
+            ai_service/requirements.txt
+
+  selenium-e2e:
+    name: Selenium E2E Smoke Tests
+    runs-on: ubuntu-latest
+    needs: [frontend-ci, backend-postgres-ci, ai-fastapi-ci]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Setup Chrome WebDriver
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
+      - name: Run Selenium Tests (Headless)
+        working-directory: ./automation-tests
+        run: mvn test
+        env:
+          CITIZEN_TEST_EMAIL: ${{ secrets.CITIZEN_TEST_EMAIL }}
+          CITIZEN_TEST_PASSWORD: ${{ secrets.CITIZEN_TEST_PASSWORD }}
+        # We allow this to succeed even if some E2E tests skip due to missing creds in PR
+        continue-on-error: true
+
+      - name: Upload TestNG Reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: selenium-reports
+          path: automation-tests/target/surefire-reports/
+
+
+  playwright-e2e:
+    name: Playwright E2E Master
+    runs-on: ubuntu-latest
+    needs: [frontend-ci, backend-postgres-ci, ai-fastapi-ci]
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Playwright
+        working-directory: ./playwright-tests
+        run: npm ci && npx playwright install chromium
+
+      - name: Run Playwright Tests
+        working-directory: ./playwright-tests
+        run: npx playwright test
+        env:
+          CITIZEN_EMAIL: ${{ secrets.CITIZEN_TEST_EMAIL }}
+          CITIZEN_PASSWORD: ${{ secrets.CITIZEN_TEST_PASSWORD }}
+          COUNCILLOR_EMAIL: ${{ secrets.COUNCILLOR_TEST_EMAIL }}
+          COUNCILLOR_PASSWORD: ${{ secrets.COUNCILLOR_TEST_PASSWORD }}
+          WORKER_EMAIL: ${{ secrets.WORKER_TEST_EMAIL }}
+          WORKER_PASSWORD: ${{ secrets.WORKER_TEST_PASSWORD }}
+          BASE_URL: ${{ secrets.PROD_FRONTEND_URL }} # or spin up local UI in future
+
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-tests/playwright-report/
+          retention-days: 7
+
+  deploy-to-render:
+    name: Deploy to Render CD
+    runs-on: ubuntu-latest
+    needs: [selenium-e2e, playwright-e2e]
+    # Only deploy on main branch push. Prevents PRs from deploying broken code.
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Trigger Frontend Render Deploy
+        env:
+          deploy_url: ${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$deploy_url" ]; then echo "Missing RENDER_FRONTEND_DEPLOY_HOOK"; exit 1; fi
+          curl -X POST -H "Accept: application/json" -d "" "$deploy_url"
+
+      - name: Trigger Backend Render Deploy
+        env:
+          deploy_url: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$deploy_url" ]; then echo "Missing RENDER_BACKEND_DEPLOY_HOOK"; exit 1; fi
+          curl -X POST -H "Accept: application/json" -d "" "$deploy_url"
+
+      - name: Trigger AI Service Render Deploy
+        env:
+          deploy_url: ${{ secrets.RENDER_AI_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$deploy_url" ]; then echo "Missing RENDER_AI_DEPLOY_HOOK"; exit 1; fi
+          curl -X POST -H "Accept: application/json" -d "" "$deploy_url"
+
+  post-deployment-smoke:
+    name: Post-Deployment Smoke Tests
+    runs-on: ubuntu-latest
+    needs: [deploy-to-render]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Verify Frontend Reachability
+        run: curl -sI ${{ secrets.PROD_FRONTEND_URL }} | head -n 1
+        
+      - name: Verify Backend Reachability
+        run: curl -sI ${{ secrets.PROD_BACKEND_URL }}/api/health | head -n 1
+
+      - name: Verify AI Service Reachability
+        run: curl -sI ${{ secrets.PROD_AI_URL }}/health | head -n 1

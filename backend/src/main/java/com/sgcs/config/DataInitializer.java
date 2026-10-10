@@ -56,21 +56,17 @@ public class DataInitializer implements CommandLineRunner {
         }
 
         // Seed/Update ONLY Super Admin Accounts
-        User admin = userRepository.findByEmailIgnoreCase("admin@gnail.com")
-            .orElseGet(() -> new User("usr_super_admin", "Municipal Super Admin", "admin@gnail.com", "", "9876543210", "ADMIN", "All Wards"));
-        admin.setPassword(passwordEncoder.encode("admin12345"));
-        admin.setFullName("Municipal Super Admin");
-        admin.setRole("ADMIN");
-        admin.setWard("All Wards");
-        userRepository.save(admin);
+        if (userRepository.findByEmailIgnoreCase("admin@gnail.com").isEmpty()) {
+            User admin = new User("usr_super_admin", "Municipal Super Admin", "admin@gnail.com", "", "9876543210", "ADMIN", "All Wards");
+            admin.setPassword(passwordEncoder.encode("admin12345"));
+            userRepository.save(admin);
+        }
 
-        User adminAlt = userRepository.findByEmailIgnoreCase("admin@gmail.com")
-            .orElseGet(() -> new User("usr_super_admin_alt", "Municipal Super Admin", "admin@gmail.com", "", "9876543210", "ADMIN", "All Wards"));
-        adminAlt.setPassword(passwordEncoder.encode("admin12345"));
-        adminAlt.setFullName("Municipal Super Admin");
-        adminAlt.setRole("ADMIN");
-        adminAlt.setWard("All Wards");
-        userRepository.save(adminAlt);
+        if (userRepository.findByEmailIgnoreCase("admin@gmail.com").isEmpty()) {
+            User adminAlt = new User("usr_super_admin_alt", "Municipal Super Admin", "admin@gmail.com", "", "9876543210", "ADMIN", "All Wards");
+            adminAlt.setPassword(passwordEncoder.encode("admin12345"));
+            userRepository.save(adminAlt);
+        }
 
         System.out.println("✅ Super Admin account verified in PostgreSQL. Database is clean and ready for user registration.");
     }

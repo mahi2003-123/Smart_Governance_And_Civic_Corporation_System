@@ -110,28 +110,8 @@ export const WorkerDashboard: React.FC = () => {
       
       // STRICT FILTERING: Only show tasks specifically assigned to THIS logged in worker
       const myTasks = allData.filter((c) => {
-        if (!user) return false;
-
-        // 1. Match exact worker ID or email
-        if (c.assignedWorkerId && (
-          c.assignedWorkerId === user.id ||
-          c.assignedWorkerId === user.email ||
-          user.id.includes(c.assignedWorkerId) ||
-          c.assignedWorkerId.includes(user.id)
-        )) {
-          return true;
-        }
-
-        // 2. Match worker Name (handles formats like "Suryan (Field Technician)" vs "Suryan")
-        if (c.assignedWorkerName && user.fullName) {
-          const cleanAssignedName = c.assignedWorkerName.toLowerCase().replace(/\(.*?\)/g, '').trim();
-          const cleanUserName = user.fullName.toLowerCase().trim();
-          if (cleanAssignedName.length > 1 && (cleanAssignedName.includes(cleanUserName) || cleanUserName.includes(cleanAssignedName))) {
-            return true;
-          }
-        }
-
-        return false;
+        if (!user || !c.assignedWorkerId) return false;
+        return c.assignedWorkerId === user.id;
       });
 
       setAssignedTasks(myTasks);
@@ -157,8 +137,7 @@ export const WorkerDashboard: React.FC = () => {
     const token = await requestFirebaseNotificationPermission();
     if (token) {
       setFcmEnabled(true);
-      const authToken = localStorage.getItem('sgcs_token') || '';
-      await registerTokenWithBackend(token, authToken);
+      await registerTokenWithBackend(token);
       // Restart task fetching just in case urgency came in
       fetchTasks();
     }
@@ -398,7 +377,7 @@ export const WorkerDashboard: React.FC = () => {
             fetchTasks();
           }}
         >
-          {fcmNotification?.notification?.title}: {fcmNotification?.notification?.body}
+          {fcmNotification?.data?.title || fcmNotification?.notification?.title}: {fcmNotification?.data?.body || fcmNotification?.notification?.body}
         </Alert>
       )}
 
@@ -582,8 +561,8 @@ export const WorkerDashboard: React.FC = () => {
                         size="small"
                         sx={{
                           fontWeight: 700,
-                          backgroundColor: PRIORITY_COLORS[task.priority]?.bg || '#F8F9F7',
-                          color: PRIORITY_COLORS[task.priority]?.text || '#68706B',
+                          backgroundColor: (PRIORITY_COLORS[(task.priority ?? 'MEDIUM').toUpperCase()] ?? PRIORITY_COLORS.MEDIUM).bg,
+                          color: (PRIORITY_COLORS[(task.priority ?? 'MEDIUM').toUpperCase()] ?? PRIORITY_COLORS.MEDIUM).text,
                         }}
                       />
                       <Chip
@@ -591,8 +570,8 @@ export const WorkerDashboard: React.FC = () => {
                         size="small"
                         sx={{
                           fontWeight: 700,
-                          backgroundColor: STATUS_COLORS[task.status]?.bg || '#F8F9F7',
-                          color: STATUS_COLORS[task.status]?.text || '#68706B',
+                          backgroundColor: (STATUS_COLORS[task.status] ?? STATUS_COLORS.PENDING).bg,
+                          color: (STATUS_COLORS[task.status] ?? STATUS_COLORS.PENDING).text,
                         }}
                       />
                     </Box>
@@ -763,8 +742,8 @@ export const WorkerDashboard: React.FC = () => {
 
                   <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
                     <Chip label={selectedTask.category} size="small" sx={{ fontWeight: 600, backgroundColor: '#E8EFE9', color: '#304B3A' }} />
-                    <Chip label={selectedTask.priority} size="small" sx={{ fontWeight: 600, backgroundColor: PRIORITY_COLORS[selectedTask.priority]?.bg, color: PRIORITY_COLORS[selectedTask.priority]?.text }} />
-                    <Chip label={selectedTask.status.replace('_', ' ')} size="small" sx={{ fontWeight: 600, backgroundColor: STATUS_COLORS[selectedTask.status]?.bg, color: STATUS_COLORS[selectedTask.status]?.text }} />
+                    <Chip label={selectedTask.priority} size="small" sx={{ fontWeight: 600, backgroundColor: (PRIORITY_COLORS[(selectedTask.priority ?? 'MEDIUM').toUpperCase()] ?? PRIORITY_COLORS.MEDIUM).bg, color: (PRIORITY_COLORS[(selectedTask.priority ?? 'MEDIUM').toUpperCase()] ?? PRIORITY_COLORS.MEDIUM).text }} />
+                    <Chip label={selectedTask.status.replace('_', ' ')} size="small" sx={{ fontWeight: 600, backgroundColor: (STATUS_COLORS[selectedTask.status] ?? STATUS_COLORS.PENDING).bg, color: (STATUS_COLORS[selectedTask.status] ?? STATUS_COLORS.PENDING).text }} />
                   </Box>
 
                   <Typography variant="caption" sx={{ color: '#68706B', fontWeight: 700, display: 'block', mb: 0.5 }}>

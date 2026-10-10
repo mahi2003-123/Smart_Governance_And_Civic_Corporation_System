@@ -23,7 +23,7 @@ export const COMPLAINT_CATEGORIES: ComplaintCategory[] = [
 
 export const COMPLAINT_PRIORITIES: ComplaintPriority[] = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
 
-export const STATUS_COLORS: Record<ComplaintStatus, { bg: string; text: string }> = {
+export const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   PENDING: { bg: '#FDF2E9', text: '#E67E22' },
   ASSIGNED: { bg: '#EBF5FF', text: '#1E40AF' },
   IN_PROGRESS: { bg: '#E8F3EE', text: '#1F4D3A' },
@@ -32,7 +32,7 @@ export const STATUS_COLORS: Record<ComplaintStatus, { bg: string; text: string }
   REJECTED: { bg: '#FDEDEC', text: '#E74C3C' }
 };
 
-export const PRIORITY_COLORS: Record<ComplaintPriority, { bg: string; text: string }> = {
+export const PRIORITY_COLORS: Record<string, { bg: string; text: string }> = {
   LOW: { bg: '#F2F7F4', text: '#5F7367' },
   MEDIUM: { bg: '#E8F3EE', text: '#1F4D3A' },
   HIGH: { bg: '#FDF2E9', text: '#E67E22' },

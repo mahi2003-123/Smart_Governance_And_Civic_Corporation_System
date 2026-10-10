@@ -29,7 +29,7 @@ export const authService = {
         throw new Error('Invalid email or password.');
       }
       if (!err.response) {
-        throw new Error('Could not connect to SGCS backend server. Please verify the backend is running on port 5000.');
+        throw new Error('Network error or server unavailable. Please try again later.');
       }
       throw new Error('An unexpected error occurred. Please try again later.');
     }
@@ -62,7 +62,7 @@ export const authService = {
         throw new Error(err.response.data.error);
       }
       if (!err.response) {
-        throw new Error('Could not connect to SGCS backend. Please check if the server is running on port 5000.');
+        throw new Error('Network error or server unavailable. Please try again later.');
       }
       throw new Error(err.message || 'Failed to complete registration.');
     }

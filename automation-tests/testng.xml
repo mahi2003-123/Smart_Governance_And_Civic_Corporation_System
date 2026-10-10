@@ -1,0 +1,10 @@
+<suite name="SGCS Automation Test Suite" verbose="1">
+    <test name="SGCS Basic API and UI Tests">
+        <classes>
+            <class name="com.sgcs.automation.tests.AuthTest"/>
+            <class name="com.sgcs.automation.tests.AiModuleApiTest"/>
+            <class name="com.sgcs.automation.tests.RbacSecurityTest"/>
+            <class name="com.sgcs.automation.tests.E2EComplaintTest"/>
+        </classes>
+    </test>
+</suite>

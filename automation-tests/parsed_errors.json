@@ -1,0 +1,28 @@
+ ], RemoteException
+[ERROR] Tests run: 9, Failures: 6, Errors: 0, Skipped: 0, Time elapsed: 368.0 s <<< FAILURE! -- in TestSuite
+[ERROR] com.sgcs.automation.tests.AuthTest.testValidLogin -- Time elapsed: 11.15 s <<< FAILURE!
+Login element not found or timeout: Expected condition failed: waiting for visibility of element located by By.cssSelector: input[type='email'] (tried for 10 second(s) with 500 milliseconds interval)
+[ERROR] com.sgcs.automation.tests.AiModuleApiTest.testAiPredictionRoad -- Time elapsed: 0.032 s <<< FAILURE!
+[ERROR] com.sgcs.automation.tests.AiModuleApiTest.testAiPredictionWaterSupply -- Time elapsed: 0.013 s <<< FAILURE!
+[ERROR] com.sgcs.automation.tests.AiModuleApiTest.testDuplicateDetectionDifferentWard -- Time elapsed: 0.006 s <<< FAILURE!
+[ERROR] com.sgcs.automation.tests.AiModuleApiTest.testDuplicateDetectionResolvedIgnored -- Time elapsed: 0.006 s <<< FAILURE!
+[ERROR] com.sgcs.automation.tests.AiModuleApiTest.testDuplicateDetectionStrongCandidate -- Time elapsed: 0.007 s <<< FAILURE!
+[ERROR] Failures: 
+[ERROR]   AiModuleApiTest.testAiPredictionRoad:33->sendPostRequest:26 AI Service returned non-200 code expected [200] but found [422]
+[ERROR]   AiModuleApiTest.testAiPredictionWaterSupply:41->sendPostRequest:26 AI Service returned non-200 code expected [200] but found [422]
+[ERROR]   AiModuleApiTest.testDuplicateDetectionDifferentWard:65->sendPostRequest:26 AI Service returned non-200 code expected [200] but found [404]
+[ERROR]   AiModuleApiTest.testDuplicateDetectionResolvedIgnored:77->sendPostRequest:26 AI Service returned non-200 code expected [200] but found [404]
+[ERROR]   AiModuleApiTest.testDuplicateDetectionStrongCandidate:53->sendPostRequest:26 AI Service returned non-200 code expected [200] but found [404]
+[ERROR]   AuthTest.testValidLogin:17 Login element not found or timeout: Expected condition failed: waiting for visibility of element located by By.cssSelector: input[type='email'] (tried for 10 second(s) with 500 milliseconds interval)
+[ERROR] Tests run: 9, Failures: 6, Errors: 0, Skipped: 0
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.2.3:test (default-test) on project sgcs-selenium-tests: There are test failures.
+[ERROR] 
+[ERROR] Please refer to C:\Users\LOQ\Documents\mca_project\sgcs_main\automation-tests\target\surefire-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

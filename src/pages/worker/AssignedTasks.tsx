@@ -254,8 +254,8 @@ export const AssignedTasks: React.FC = () => {
                     label={task.priority}
                     size="small"
                     sx={{
-                      bgcolor: PRIORITY_COLORS[task.priority].bg,
-                      color: PRIORITY_COLORS[task.priority].text,
+                      bgcolor: (PRIORITY_COLORS[(task.priority ?? 'MEDIUM').toUpperCase()] ?? PRIORITY_COLORS.MEDIUM).bg,
+                      color: (PRIORITY_COLORS[(task.priority ?? 'MEDIUM').toUpperCase()] ?? PRIORITY_COLORS.MEDIUM).text,
                       fontWeight: 700,
                     }}
                   />
@@ -264,8 +264,8 @@ export const AssignedTasks: React.FC = () => {
                   label={task.status.replace('_', ' ')}
                   size="small"
                   sx={{
-                    bgcolor: STATUS_COLORS[task.status].bg,
-                    color: STATUS_COLORS[task.status].text,
+                    bgcolor: (STATUS_COLORS[task.status] ?? STATUS_COLORS.PENDING).bg,
+                    color: (STATUS_COLORS[task.status] ?? STATUS_COLORS.PENDING).text,
                     fontWeight: 700,
                   }}
                 />

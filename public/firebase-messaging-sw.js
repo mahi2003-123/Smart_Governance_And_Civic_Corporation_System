@@ -1,7 +1,8 @@
 importScripts('https://www.gstatic.com/firebasejs/9.2.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.2.0/firebase-messaging-compat.js');
 
-const firebaseConfig = {
+const urlParams = new URLSearchParams(location.search);
+let firebaseConfig = {
   apiKey: "dummy-api-key",
   authDomain: "dummy-project.firebaseapp.com",
   projectId: "dummy-project",
@@ -10,21 +11,25 @@ const firebaseConfig = {
   appId: "1:123456789:web:abcdef"
 };
 
-// We don't inject environment variables into this static file easily without a bundler plugin,
-// so for this MCA project, we can just gracefully fail or rely on foreground if configs are missing.
-// Alternatively, replace these placeholders before deployment.
+try {
+  if (urlParams.has('config')) {
+    firebaseConfig = JSON.parse(decodeURIComponent(urlParams.get('config')));
+  }
+} catch(e) {
+  console.log("Failed to parse config from SW url", e);
+}
 
-try { // Wrap in try-catch in case config is invalid
+try {
     firebase.initializeApp(firebaseConfig);
     const messaging = firebase.messaging();
 
     messaging.onBackgroundMessage(function(payload) {
       console.log('Received background message ', payload);
       
-      const notificationTitle = payload.notification.title || '🚨 SGCS Urgent Task';
+      const notificationTitle = payload.data?.title || payload.notification?.title || '🚨 SGCS Urgent Task';
       const notificationOptions = {
-        body: payload.notification.body,
-        icon: '/vite.svg', // Default icon
+        body: payload.data?.body || payload.notification?.body || 'You have an urgent task.',
+        icon: '/vite.svg',
         data: payload.data
       };
 

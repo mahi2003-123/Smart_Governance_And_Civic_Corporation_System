@@ -1,0 +1,62 @@
+services:
+  # 1. Frontend Web Service
+  - type: web
+    name: sgcs-frontend
+    env: static
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    autoDeploy: false # Managed by GitHub Actions Hook
+    envVars:
+      - key: VITE_API_URL
+        value: https://sgcs-backend.onrender.com
+
+  # 2. Spring Boot Backend Web Service
+  - type: web
+    name: sgcs-backend
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    autoDeploy: false # Managed by GitHub Actions Hook
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: sgcs-postgres
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: sgcs-postgres
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: sgcs-postgres
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: sgcs-postgres
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: sgcs-postgres
+          property: password
+      - key: AI_SERVICE_URL
+        value: https://sgcs-ai-service.onrender.com
+      - key: JWT_SECRET
+        generateValue: true
+
+  # 3. FastAPI Service
+  - type: web
+    name: sgcs-ai-service
+    env: python
+    buildCommand: cd ai_service && pip install -r requirements.txt
+    startCommand: cd ai_service && uvicorn app:app --host 0.0.0.0 --port 10000
+    autoDeploy: false # Managed by GitHub Actions Hook
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+
+# 4. PostgreSQL Database
+databases:
+  - name: sgcs-postgres
+    databaseName: sgcs_db
+    user: sgcs_user
+    plan: free

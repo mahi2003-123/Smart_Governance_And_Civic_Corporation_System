@@ -98,6 +98,17 @@ export const ManageComplaints: React.FC = () => {
     }
   };
 
+  const handleMarkUrgent = async (cId: string) => {
+    if (!user) return;
+    try {
+      const updated = await complaintService.updateComplaintPriority(cId, 'URGENT' as ComplaintPriority);
+      setComplaints((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+    } catch (e: any) {
+      console.error(e);
+      alert(e.message || 'Failed to mark priority as URGENT');
+    }
+  };
+
   const wardComplaints = (user?.role === 'COUNCILLOR' && user?.ward)
     ? complaints.filter((c) => matchesWard(c.ward, user.ward))
     : complaints;
@@ -272,7 +283,7 @@ export const ManageComplaints: React.FC = () => {
                       {row.status === 'PENDING_APPROVAL' ? (
                         <Chip label="Review Proof" size="small" sx={{ bgcolor: '#FEF3C7', color: '#92400E', fontWeight: 600 }} />
                       ) : (
-                        <Chip label={row.status.replace('_', ' ')} size="small" sx={{ bgcolor: STATUS_COLORS[row.status]?.bg || '#F8F9F7', color: STATUS_COLORS[row.status]?.text || '#68706B', fontWeight: 600 }} />
+                        <Chip label={row.status.replace('_', ' ')} size="small" sx={{ bgcolor: (STATUS_COLORS[row.status] ?? STATUS_COLORS.PENDING).bg, color: (STATUS_COLORS[row.status] ?? STATUS_COLORS.PENDING).text, fontWeight: 600 }} />
                       )}
                     </TableCell>
                     <TableCell align="right">
@@ -288,6 +299,13 @@ export const ManageComplaints: React.FC = () => {
                           <Button variant="outlined" size="small" onClick={() => setAssignDialogComplaint(row)} sx={{ color: '#496A57', borderColor: '#496A57', minWidth: '90px' }}>
                             {row.assignedWorkerName ? 'Reassign' : 'Review'}
                           </Button>
+                        )}
+                        {row.priority !== 'URGENT' && row.status !== 'RESOLVED' && row.status !== 'REJECTED' && (
+                          <Tooltip title="Promote to URGENT">
+                            <IconButton size="small" sx={{ color: '#D97706' }} onClick={() => handleMarkUrgent(row.id)}>
+                               <WarningAmberIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
                         )}
                         {row.status === 'PENDING' && (
                           <Tooltip title="Reject Duplicate">

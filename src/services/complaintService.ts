@@ -156,6 +156,24 @@ export const complaintService = {
     }
   },
 
+  updateComplaintPriority: async (id: string, priority: ComplaintPriority): Promise<Complaint> => {
+    try {
+      const res = await api.patch(`/complaints/${id}/priority`, { priority });
+      if (res.data) {
+        return {
+          ...res.data,
+          images: Array.isArray(res.data.images) ? res.data.images : (res.data.images ? res.data.images.split(',') : []),
+          comments: Array.isArray(res.data.comments) ? res.data.comments : [],
+          timeline: Array.isArray(res.data.timeline) ? res.data.timeline : [],
+        };
+      }
+      throw new Error('Failed to update complaint priority.');
+    } catch (err: any) {
+      console.error('[SGCS Frontend] Priority update error:', err);
+      throw new Error(err.response?.data?.error || err.message || 'Failed to update priority.');
+    }
+  },
+
   assignWorker: async (id: string, workerId: string, workerName: string, assignerName: string, priority?: ComplaintPriority, dueDate?: string): Promise<Complaint> => {
     try {
       const res = await api.post(`/complaints/${id}/assign`, {
