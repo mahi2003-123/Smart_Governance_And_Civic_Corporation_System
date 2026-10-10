@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
-import axios from 'axios';
+import api from '../services/api';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "dummy-api-key",
@@ -37,8 +37,12 @@ export const requestFirebaseNotificationPermission = async () => {
   try {
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
+      const configStr = encodeURIComponent(JSON.stringify(firebaseConfig));
+      const swRegistration = await navigator.serviceWorker.register(`/firebase-messaging-sw.js?config=${configStr}&v=` + Date.now());
+      
       const currentToken = await getToken(messaging, { 
-        vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY 
+        vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
+        serviceWorkerRegistration: swRegistration
       });
       if (currentToken) {
         return currentToken;
@@ -56,17 +60,12 @@ export const requestFirebaseNotificationPermission = async () => {
   }
 };
 
-export const registerTokenWithBackend = async (token: string, tokenAuthKey: string) => {
+export const registerTokenWithBackend = async (token: string) => {
   try {
-    await axios.post('/api/notifications/device-token', {
+    await api.post('/notifications/device-token', {
       fcmToken: token,
       deviceType: 'WEB',
       deviceName: navigator.userAgent
-    }, {
-      headers: {
-        Authorization: `Bearer ${tokenAuthKey}`
-      },
-      baseURL: import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`
     });
   } catch (error) {
     console.error('Failed to register device token with backend', error);

@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.UUID;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.ResponseEntity;
 import org.slf4j.Logger;
@@ -37,8 +38,6 @@ public class ComplaintService {
     @Autowired
     private FirebaseNotificationService firebaseNotificationService;
 
-    @Autowired
-    private TwilioSmsService twilioSmsService;
 
     @Autowired
     private com.sgcs.repository.UserRepository userRepository;
@@ -69,32 +68,13 @@ public class ComplaintService {
     }
 
     public List<Complaint> getComplaintsForWorker(String workerId, String workerName, String workerEmail, String ward) {
-        List<Complaint> all = complaintRepository.findAllByOrderByCreatedAtDesc();
-        final String cleanName = workerName != null ? workerName.toLowerCase().replaceAll("\\(.*?\\)", "").trim() : "";
-        final String cleanEmail = workerEmail != null ? workerEmail.toLowerCase().trim() : "";
-        final String cleanId = workerId != null ? workerId.toLowerCase().trim() : "";
-
-        return all.stream().filter(c -> {
-            String assignedId = c.getAssignedWorkerId() != null ? c.getAssignedWorkerId().toLowerCase().trim() : "";
-            String assignedName = c.getAssignedWorkerName() != null ? c.getAssignedWorkerName().toLowerCase().replaceAll("\\(.*?\\)", "").trim() : "";
-
-            // 1. Direct match on worker ID or Email or Name in assignedWorkerId
-            if (!assignedId.isEmpty()) {
-                if (assignedId.equalsIgnoreCase(cleanId) || assignedId.equalsIgnoreCase(cleanEmail) ||
-                    (!cleanName.isEmpty() && (assignedId.contains(cleanName) || cleanName.contains(assignedId)))) {
-                    return true;
-                }
-            }
-
-            // 2. Direct match on assignedWorkerName
-            if (!assignedName.isEmpty() && !cleanName.isEmpty()) {
-                if (assignedName.contains(cleanName) || cleanName.contains(assignedName)) {
-                    return true;
-                }
-            }
-
-            return false;
-        }).toList();
+        if (workerId == null || workerId.trim().isEmpty()) {
+            return List.of();
+        }
+        String cleanId = workerId.trim();
+        return complaintRepository.findAllByOrderByCreatedAtDesc().stream()
+                .filter(c -> cleanId.equals(c.getAssignedWorkerId()))
+                .toList();
     }
 
     public List<Complaint> getComplaintsForWorker(String workerId, String workerName, String ward) {
@@ -103,7 +83,7 @@ public class ComplaintService {
 
     public Complaint createComplaint(Complaint complaint) {
         if (complaint.getId() == null || complaint.getId().isEmpty()) {
-            complaint.setId("cmp_" + System.currentTimeMillis());
+            complaint.setId("cmp_" + UUID.randomUUID().toString());
         }
         if (complaint.getTrackingNumber() == null || complaint.getTrackingNumber().isEmpty()) {
             complaint.setTrackingNumber("TRK-" + (100000 + (int)(Math.random() * 900000)));
@@ -173,8 +153,13 @@ public class ComplaintService {
                     Map<String, Object> body = aiResponse.getBody();
                     saved.setAiSuggestedCategory((String) body.get("category"));
                     Object conf = body.get("confidence");
+                    double parsedConf = 0.0;
                     if (conf instanceof Number) {
-                        saved.setAiConfidence(((Number) conf).doubleValue());
+                        parsedConf = ((Number) conf).doubleValue();
+                        saved.setAiConfidence(parsedConf);
+                    }
+                    if (parsedConf < 0.4) {
+                        saved.setAiSuggestedCategory("OTHER");
                     }
                     if (body.get("model") != null) {
                         saved.setAiModel((String) body.get("model"));
@@ -355,6 +340,7 @@ public class ComplaintService {
                 .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
         
         String oldWorkerId = complaint.getAssignedWorkerId();
+        String oldPriority = complaint.getPriority();
         String workerId = body.get("workerId");
         String workerName = body.get("workerName");
         String priority = body.get("priority");
@@ -411,27 +397,24 @@ public class ComplaintService {
                 "New Field Repair Task",
                 "You have been assigned work order #" + saved.getTrackingNumber() + " (" + saved.getTitle() + ")",
                 "TASK",
-                "/worker/assigned"
+                "/worker/tasks"
             ));
             
             if ("URGENT".equalsIgnoreCase(saved.getPriority())) {
+                boolean priorityChangedToUrgent = !"URGENT".equalsIgnoreCase(oldPriority);
+                boolean workerChanged = oldWorkerId == null || !oldWorkerId.equalsIgnoreCase(workerId);
                 
-                userRepository.findById(workerId).ifPresent(user -> {
-                    String phone = user.getPhone();
-                    if (phone != null && !phone.trim().isEmpty()) {
-                        // Sending exact Twilio-approved Trial string to bypass country restrictions
-                        String smsBody = "sms_appointment_reminders";
-                        
-                        boolean smsSent = twilioSmsService.sendSms(phone, smsBody);
-                        if (smsSent) {
-                            auditService.logActivity(workerId, user.getFullName(), "WORKER", "URGENT SMS Sent", "NOTIFICATION", saved.getTrackingNumber(), "Twilio SMS delivered successfully to " + phone);
-                        } else {
-                            auditService.logActivity(workerId, user.getFullName(), "WORKER", "URGENT SMS Failed", "NOTIFICATION", saved.getTrackingNumber(), "Twilio SMS failed to send to " + phone);
-                        }
-                    } else {
-                        auditService.logActivity(workerId, user.getFullName(), "WORKER", "URGENT SMS Failed", "NOTIFICATION", saved.getTrackingNumber(), "Worker has no valid phone number registered.");
-                    }
-                });
+                if (priorityChangedToUrgent || workerChanged) {
+                    firebaseNotificationService.sendUrgentTaskPushNotification(
+                        workerId, saved.getId(), saved.getTrackingNumber(), saved.getTitle(), saved.getWard(), saved.getLocationAddress()
+                    ).thenAccept(outcome -> {
+                        auditService.logActivity(workerId, workerName, "WORKER", "URGENT PUSH " + outcome, "NOTIFICATION", saved.getTrackingNumber(), "URGENT PUSH " + outcome);
+                    }).exceptionally(ex -> {
+                        logger.error("Push notification failed", ex);
+                        auditService.logActivity(workerId, workerName, "WORKER", "URGENT PUSH failed", "NOTIFICATION", saved.getTrackingNumber(), "URGENT PUSH failed: " + ex.getMessage());
+                        return null;
+                    });
+                }
             }
         }
         
@@ -441,8 +424,11 @@ public class ComplaintService {
                 "Task Transferred",
                 "Work order #" + saved.getTrackingNumber() + " has been transferred to another technician.",
                 "TASK",
-                "/worker/assigned"
+                "/worker/tasks"
             ));
+            if ("URGENT".equalsIgnoreCase(oldPriority)) {
+                firebaseNotificationService.sendTaskTransferredPushNotification(oldWorkerId, saved.getTrackingNumber(), saved.getTitle());
+            }
         }
 
         if (saved.getCitizenId() != null) {
@@ -625,10 +611,9 @@ public class ComplaintService {
                 "Rework Requested by Councillor",
                 "Councillor requested rework on #" + saved.getTrackingNumber() + ": " + fb,
                 "TASK",
-                "/worker/assigned"
+                "/worker/tasks"
             ));
         }
-
         return saved;
     }
 
@@ -696,5 +681,59 @@ public class ComplaintService {
 
     public void deleteAllComplaints() {
         complaintRepository.deleteAll();
+    }
+
+    public void checkPriorityAccess(Complaint complaint, String role, String ward) {
+        if ("COUNCILLOR".equalsIgnoreCase(role)) {
+            if (ward == null || !ward.equalsIgnoreCase(complaint.getWard())) {
+                throw new SecurityException("Access Denied: You do not have permission to modify this ward's complaint.");
+            }
+        } else if (!"ADMIN".equalsIgnoreCase(role)) {
+            throw new SecurityException("Access Denied: Only Admins or Ward Councillors can modify priority.");
+        }
+    }
+
+    public Complaint updatePriority(String id, String newPriority, String updatedById, String updatedByName, String updatedByRole, String userWard) {
+        if (newPriority == null || !List.of("LOW", "MEDIUM", "HIGH", "URGENT").contains(newPriority.toUpperCase().trim())) {
+            throw new IllegalArgumentException("Invalid priority: must be LOW, MEDIUM, HIGH, or URGENT");
+        }
+        Complaint complaint = complaintRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
+
+        checkPriorityAccess(complaint, updatedByRole, userWard);
+
+        String oldPriority = complaint.getPriority();
+        String priority = newPriority.toUpperCase().trim();
+        if (priority.equalsIgnoreCase(oldPriority)) {
+            return complaint;
+        }
+
+        complaint.setPriority(priority);
+        complaint.setUpdatedAt(LocalDateTime.now());
+
+        String timelineTitle = "URGENT".equals(priority) ? "Priority changed to URGENT" : "Priority Updated";
+        complaint.getTimeline().add(0, new Complaint.ComplaintTimelineItem(
+            timelineTitle,
+            "Priority changed from " + (oldPriority != null ? oldPriority : "None") + " to " + priority,
+            updatedByName != null ? updatedByName : "Admin",
+            updatedByRole,
+            complaint.getStatus()
+        ));
+
+        Complaint saved = complaintRepository.save(complaint);
+        auditService.logActivity(updatedById != null ? updatedById : "system", updatedByName, updatedByRole, "Updated Priority", "COMPLAINT", saved.getTrackingNumber(), "Priority changed to " + priority);
+
+        if ("URGENT".equals(priority) && saved.getAssignedWorkerId() != null && !"URGENT".equalsIgnoreCase(oldPriority)) {
+            firebaseNotificationService.sendUrgentTaskPushNotification(
+                saved.getAssignedWorkerId(), saved.getId(), saved.getTrackingNumber(), saved.getTitle(), saved.getWard(), saved.getLocationAddress()
+            ).thenAccept(outcome -> {
+                auditService.logActivity(saved.getAssignedWorkerId(), saved.getAssignedWorkerName(), "WORKER", "URGENT PUSH " + outcome, "NOTIFICATION", saved.getTrackingNumber(), "URGENT PUSH " + outcome);
+            }).exceptionally(ex -> {
+                logger.error("Push notification failed", ex);
+                auditService.logActivity(saved.getAssignedWorkerId(), saved.getAssignedWorkerName(), "WORKER", "URGENT PUSH failed", "NOTIFICATION", saved.getTrackingNumber(), "URGENT PUSH failed: " + ex.getMessage());
+                return null;
+            });
+        }
+        return saved;
     }
 }

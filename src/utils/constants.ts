@@ -24,14 +24,17 @@ export const COMPLAINT_CATEGORIES: ComplaintCategory[] = [
 
 export const COMPLAINT_PRIORITIES: ComplaintPriority[] = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
 
-export const STATUS_COLORS: Record<ComplaintStatus, { bg: string; text: string; muiColor: 'default' | 'warning' | 'info' | 'success' | 'error' }> = {
+export const STATUS_COLORS: Record<string, { bg: string; text: string; muiColor: 'default' | 'warning' | 'info' | 'success' | 'error' }> = {
   PENDING: { bg: '#FFF4E5', text: '#B76E00', muiColor: 'warning' },
+  ASSIGNED: { bg: '#EBF5FF', text: '#1E40AF', muiColor: 'info' },
   IN_PROGRESS: { bg: '#E8F4FD', text: '#1D6FBA', muiColor: 'info' },
+  PENDING_APPROVAL: { bg: '#FEF3C7', text: '#92400E', muiColor: 'warning' },
+  LINKED: { bg: '#E2E8F0', text: '#334155', muiColor: 'default' },
   RESOLVED: { bg: '#EDF7ED', text: '#1E4620', muiColor: 'success' },
   REJECTED: { bg: '#FDEEDC', text: '#A71D2A', muiColor: 'error' }
 };
 
-export const PRIORITY_COLORS: Record<ComplaintPriority, { bg: string; text: string }> = {
+export const PRIORITY_COLORS: Record<string, { bg: string; text: string }> = {
   LOW: { bg: '#F0F4F8', text: '#475569' },
   MEDIUM: { bg: '#E2E8F0', text: '#334155' },
   HIGH: { bg: '#FEF3C7', text: '#92400E' },

@@ -1,0 +1,25 @@
+{
+  "name": "playwright-tests",
+  "version": "1.0.0",
+  "description": "Playwright Automation Tests for SGCS",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:full": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:ai": "playwright test tests/ai/",
+    "test:e2e": "playwright test tests/e2e/master.spec.ts",
+    "test:e2e:headed": "playwright test tests/e2e/master.spec.ts --headed --workers=1",
+    "test:e2e:debug": "playwright test tests/e2e/master.spec.ts --debug --workers=1",
+    "test:e2e:report": "playwright show-report",
+    "report": "playwright show-report",
+    "codegen": "playwright codegen"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.42.1",
+    "@types/node": "^20.11.24",
+    "typescript": "^5.3.3"
+  }
+}

@@ -17,6 +17,7 @@ import {
   InputLabel,
   OutlinedInput,
   FormHelperText,
+  TextField,
 } from '@mui/material';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
@@ -247,92 +248,104 @@ export const Register: React.FC = () => {
 
             <Box component="form" onSubmit={handleRegister}>
               <Stack spacing={2.5}>
-                <FormControl fullWidth variant="outlined" error={Boolean(fieldErrors.fullName)}>
-                  <InputLabel id="reg-fn-label">Full Name *</InputLabel>
-                  <OutlinedInput
-                    id="register-fullname-field"
-                    label="Full Name *"
-                    placeholder="e.g. Rahul Sharma"
-                    value={fullName}
-                    onChange={(e) => {
-                      setFullName(e.target.value);
-                      if (fieldErrors.fullName) setFieldErrors((prev) => ({ ...prev, fullName: '' }));
-                    }}
-                    required
-                    startAdornment={
-                      <InputAdornment position="start">
-                        <PersonOutlinedIcon sx={{ color: fieldErrors.fullName ? '#d32f2f' : '#5F7367', fontSize: 18 }} />
-                      </InputAdornment>
+                <TextField
+                  id="register-fullname-field"
+                  label="Full Name"
+                  placeholder="e.g. Rahul Sharma"
+                  value={fullName}
+                  autoComplete="name"
+                  onChange={(e) => {
+                    setFullName(e.target.value);
+                    if (fieldErrors.fullName) setFieldErrors((prev) => ({ ...prev, fullName: '' }));
+                  }}
+                  required
+                  error={Boolean(fieldErrors.fullName)}
+                  helperText={fieldErrors.fullName}
+                  slotProps={{
+                    input: {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <PersonOutlinedIcon sx={{ color: fieldErrors.fullName ? '#d32f2f' : '#5F7367', fontSize: 18 }} />
+                        </InputAdornment>
+                      )
                     }
-                  />
-                  {fieldErrors.fullName && <FormHelperText error>{fieldErrors.fullName}</FormHelperText>}
-                </FormControl>
+                  }}
+                />
 
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
-                  <FormControl fullWidth variant="outlined" error={Boolean(fieldErrors.email)}>
-                    <InputLabel id="reg-email-label">Email Address *</InputLabel>
-                    <OutlinedInput
-                      id="register-email-field"
-                      label="Email Address *"
-                      type="email"
-                      placeholder="citizen@example.com"
-                      value={email}
-                      onChange={(e) => {
-                        setEmail(e.target.value);
-                        if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: '' }));
-                      }}
-                      required
-                      startAdornment={
-                        <InputAdornment position="start">
-                          <EmailOutlinedIcon sx={{ color: fieldErrors.email ? '#d32f2f' : '#5F7367', fontSize: 18 }} />
-                        </InputAdornment>
-                      }
-                    />
-                    {fieldErrors.email && <FormHelperText error>{fieldErrors.email}</FormHelperText>}
-                  </FormControl>
-
-                  <FormControl fullWidth variant="outlined" error={Boolean(fieldErrors.phone)}>
-                    <InputLabel id="reg-phone-label">Mobile Phone *</InputLabel>
-                    <OutlinedInput
-                      id="register-phone-field"
-                      label="Mobile Phone *"
-                      placeholder="9876543210"
-                      value={phone}
-                      onChange={(e) => {
-                        setPhone(e.target.value);
-                        if (fieldErrors.phone) setFieldErrors((prev) => ({ ...prev, phone: '' }));
-                      }}
-                      required
-                      startAdornment={
-                        <InputAdornment position="start">
-                          <PhoneOutlinedIcon sx={{ color: fieldErrors.phone ? '#d32f2f' : '#5F7367', fontSize: 18 }} />
-                        </InputAdornment>
-                      }
-                    />
-                    {fieldErrors.phone && <FormHelperText error>{fieldErrors.phone}</FormHelperText>}
-                  </FormControl>
-                </Box>
-
-                <FormControl fullWidth variant="outlined" error={Boolean(fieldErrors.address)}>
-                  <InputLabel id="reg-addr-label">Residential Address *</InputLabel>
-                  <OutlinedInput
-                    id="register-address-field"
-                    label="Residential Address *"
-                    placeholder="Flat No, Street, Neighborhood"
-                    value={address}
+                  <TextField
+                    id="register-email-field"
+                    label="Email Address"
+                    type="email"
+                    placeholder="citizen@example.com"
+                    value={email}
+                    autoComplete="email"
                     onChange={(e) => {
-                      setAddress(e.target.value);
-                      if (fieldErrors.address) setFieldErrors((prev) => ({ ...prev, address: '' }));
+                      setEmail(e.target.value);
+                      if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: '' }));
                     }}
                     required
-                    startAdornment={
-                      <InputAdornment position="start">
-                        <HomeOutlinedIcon sx={{ color: fieldErrors.address ? '#d32f2f' : '#5F7367', fontSize: 18 }} />
-                      </InputAdornment>
-                    }
+                    error={Boolean(fieldErrors.email)}
+                    helperText={fieldErrors.email}
+                    slotProps={{
+                      input: {
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <EmailOutlinedIcon sx={{ color: fieldErrors.email ? '#d32f2f' : '#5F7367', fontSize: 18 }} />
+                          </InputAdornment>
+                        )
+                      }
+                    }}
                   />
-                  {fieldErrors.address && <FormHelperText error>{fieldErrors.address}</FormHelperText>}
-                </FormControl>
+
+                  <TextField
+                    id="register-phone-field"
+                    label="Mobile Phone"
+                    placeholder="9876543210"
+                    value={phone}
+                    autoComplete="tel"
+                    onChange={(e) => {
+                      setPhone(e.target.value);
+                      if (fieldErrors.phone) setFieldErrors((prev) => ({ ...prev, phone: '' }));
+                    }}
+                    required
+                    error={Boolean(fieldErrors.phone)}
+                    helperText={fieldErrors.phone}
+                    slotProps={{
+                      input: {
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <PhoneOutlinedIcon sx={{ color: fieldErrors.phone ? '#d32f2f' : '#5F7367', fontSize: 18 }} />
+                          </InputAdornment>
+                        )
+                      }
+                    }}
+                  />
+                </Box>
+
+                <TextField
+                  id="register-address-field"
+                  label="Residential Address"
+                  placeholder="Flat No, Street, Neighborhood"
+                  value={address}
+                  autoComplete="street-address"
+                  onChange={(e) => {
+                    setAddress(e.target.value);
+                    if (fieldErrors.address) setFieldErrors((prev) => ({ ...prev, address: '' }));
+                  }}
+                  required
+                  error={Boolean(fieldErrors.address)}
+                  helperText={fieldErrors.address}
+                  slotProps={{
+                    input: {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <HomeOutlinedIcon sx={{ color: fieldErrors.address ? '#d32f2f' : '#5F7367', fontSize: 18 }} />
+                        </InputAdornment>
+                      )
+                    }
+                  }}
+                />
 
                 <WardSelector
                   value={ward}
@@ -340,62 +353,67 @@ export const Register: React.FC = () => {
                     setWard(val);
                     if (fieldErrors.ward) setFieldErrors((prev) => ({ ...prev, ward: '' }));
                   }}
-                  label="Assigned Municipal Ward *"
-                  required
+                  label="Assigned Municipal Ward"
                   helperText={fieldErrors.ward || 'Municipal ward assignment determines local councillor routing'}
                 />
 
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
-                  <FormControl fullWidth variant="outlined" error={Boolean(fieldErrors.password)}>
-                    <InputLabel id="reg-pass-label">Password *</InputLabel>
-                    <OutlinedInput
-                      id="register-password-field"
-                      label="Password *"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => {
-                        setPassword(e.target.value);
-                        if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: '' }));
-                      }}
-                      required
-                      startAdornment={
-                        <InputAdornment position="start">
-                          <LockOutlinedIcon sx={{ color: fieldErrors.password ? '#d32f2f' : '#5F7367', fontSize: 18 }} />
-                        </InputAdornment>
+                  <TextField
+                    id="register-password-field"
+                    label="Password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={password}
+                    autoComplete="new-password"
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: '' }));
+                    }}
+                    required
+                    error={Boolean(fieldErrors.password)}
+                    helperText={fieldErrors.password}
+                    slotProps={{
+                      input: {
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <LockOutlinedIcon sx={{ color: fieldErrors.password ? '#d32f2f' : '#5F7367', fontSize: 18 }} />
+                          </InputAdornment>
+                        ),
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton aria-label="Show password" onClick={() => setShowPassword(!showPassword)} edge="end" size="small" sx={{ color: '#5F7367' }}>
+                              {showPassword ? <VisibilityOffOutlinedIcon sx={{ fontSize: 18 }} /> : <VisibilityOutlinedIcon sx={{ fontSize: 18 }} />}
+                            </IconButton>
+                          </InputAdornment>
+                        )
                       }
-                      endAdornment={
-                        <InputAdornment position="end">
-                          <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" size="small" sx={{ color: '#5F7367' }}>
-                            {showPassword ? <VisibilityOffOutlinedIcon sx={{ fontSize: 18 }} /> : <VisibilityOutlinedIcon sx={{ fontSize: 18 }} />}
-                          </IconButton>
-                        </InputAdornment>
-                      }
-                    />
-                    {fieldErrors.password && <FormHelperText error>{fieldErrors.password}</FormHelperText>}
-                  </FormControl>
+                    }}
+                  />
 
-                  <FormControl fullWidth variant="outlined" error={Boolean(fieldErrors.confirmPassword)}>
-                    <InputLabel id="reg-confpass-label">Confirm Password *</InputLabel>
-                    <OutlinedInput
-                      id="register-confirmpassword-field"
-                      label="Confirm Password *"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
-                      value={confirmPassword}
-                      onChange={(e) => {
-                        setConfirmPassword(e.target.value);
-                        if (fieldErrors.confirmPassword) setFieldErrors((prev) => ({ ...prev, confirmPassword: '' }));
-                      }}
-                      required
-                      startAdornment={
-                        <InputAdornment position="start">
-                          <LockOutlinedIcon sx={{ color: fieldErrors.confirmPassword ? '#d32f2f' : '#5F7367', fontSize: 18 }} />
-                        </InputAdornment>
+                  <TextField
+                    id="register-confirmpassword-field"
+                    label="Confirm Password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    autoComplete="new-password"
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      if (fieldErrors.confirmPassword) setFieldErrors((prev) => ({ ...prev, confirmPassword: '' }));
+                    }}
+                    required
+                    error={Boolean(fieldErrors.confirmPassword)}
+                    helperText={fieldErrors.confirmPassword}
+                    slotProps={{
+                      input: {
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <LockOutlinedIcon sx={{ color: fieldErrors.confirmPassword ? '#d32f2f' : '#5F7367', fontSize: 18 }} />
+                          </InputAdornment>
+                        )
                       }
-                    />
-                    {fieldErrors.confirmPassword && <FormHelperText error>{fieldErrors.confirmPassword}</FormHelperText>}
-                  </FormControl>
+                    }}
+                  />
                 </Box>
 
                 <Box>

@@ -28,6 +28,11 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('sgcs_auth_token');
+      localStorage.removeItem('sgcs_user');
+      window.location.href = '/login';
+    }
     console.warn('[SGCS API Interceptor] Live backend error or offline. Falling back gracefully.', error.message);
     return Promise.reject(error);
   }

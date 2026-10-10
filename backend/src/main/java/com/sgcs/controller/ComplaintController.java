@@ -133,6 +133,18 @@ public class ComplaintController {
         return ResponseEntity.ok(updated);
     }
 
+    @PatchMapping("/{id}/priority")
+    public ResponseEntity<Complaint> updatePriority(@PathVariable String id, @RequestBody Map<String, String> body) {
+        UserPrincipal principal = getCurrentUser();
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String priority = body != null ? body.get("priority") : null;
+        Complaint updated = complaintService.updatePriority(id, priority, principal.getId(), principal.getFullName(), principal.getRole(), principal.getWard());
+        return ResponseEntity.ok(updated);
+    }
+
     @PostMapping("/{id}/assign")
     public ResponseEntity<Complaint> assignWorker(@PathVariable String id, @RequestBody Map<String, String> body) {
         UserPrincipal principal = getCurrentUser();

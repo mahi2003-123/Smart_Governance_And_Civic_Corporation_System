@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -64,7 +65,7 @@ public class AuthService {
             throw new BadRequestException("Email address is already registered in SGCS database.");
         }
 
-        String role = request.getRole() != null ? request.getRole() : "CITIZEN";
+        String role = "CITIZEN";
         String ward = request.getWard() != null ? request.getWard() : "Ward 1 - Central Town";
 
         // Enforce 1 Councillor per ward constraint
@@ -78,7 +79,7 @@ public class AuthService {
         }
 
         User user = new User();
-        user.setId("usr_" + System.currentTimeMillis());
+        user.setId("usr_" + UUID.randomUUID().toString());
         user.setFullName(request.getFullName().trim());
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(request.getPassword().trim()));

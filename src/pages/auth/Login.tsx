@@ -245,6 +245,8 @@ export const Login: React.FC = () => {
                     id="login-email-input"
                     label="Email Address"
                     placeholder="Enter registered email address"
+                    type="email"
+                    autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -263,6 +265,7 @@ export const Login: React.FC = () => {
                     label="Password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
+                    autoComplete="current-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -273,7 +276,7 @@ export const Login: React.FC = () => {
                     }
                     endAdornment={
                       <InputAdornment position="end">
-                        <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" size="small" sx={{ color: '#5F7367' }}>
+                        <IconButton aria-label="Show password" onClick={() => setShowPassword(!showPassword)} edge="end" size="small" sx={{ color: '#5F7367' }}>
                           {showPassword ? <VisibilityOffOutlinedIcon sx={{ fontSize: 18 }} /> : <VisibilityOutlinedIcon sx={{ fontSize: 18 }} />}
                         </IconButton>
                       </InputAdornment>

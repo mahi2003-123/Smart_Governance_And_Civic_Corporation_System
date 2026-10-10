@@ -38,3 +38,9 @@ Thumbs.db
 *_log.txt
 *_results.json
 git_error.txt
+
+# Firebase service accounts
+*firebase-adminsdk*.json
+serviceAccount*.json
+
+automation-tests/test_out.txt
