@@ -1,0 +1,13 @@
+node_modules/
+dist/
+dist-electron/
+.git/
+.env
+.env.local
+.vscode/
+firebase-admin*.json
+serviceAccount*.json
+backend/target/
+frontend/
+!backend/pom.xml
+!backend/src/
