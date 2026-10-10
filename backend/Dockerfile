@@ -1,8 +1,8 @@
 # Stage 1: Build the application using Maven
 FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
-COPY pom.xml .
-COPY src ./src
+COPY backend/pom.xml .
+COPY backend/src ./src
 # Compile and package the application into a JAR
 RUN mvn clean package -DskipTests
 
