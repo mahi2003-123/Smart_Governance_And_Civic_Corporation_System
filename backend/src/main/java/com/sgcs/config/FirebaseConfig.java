@@ -29,31 +29,87 @@ public class FirebaseConfig {
     public void initialize() {
         try {
             if (FirebaseApp.getApps().isEmpty()) {
+                System.out.println("--- Firebase Config Diagnostic Logging ---");
+                System.out.println("ENV GOOGLE_APPLICATION_CREDENTIALS: " + (System.getenv("GOOGLE_APPLICATION_CREDENTIALS") != null ? "CONFIGURED" : "NOT CONFIGURED"));
+                System.out.println("Property firebase.admin.credentials.json: " + (firebaseAdminCredentialsJson != null && !firebaseAdminCredentialsJson.trim().isEmpty() ? "CONFIGURED (Length: " + firebaseAdminCredentialsJson.length() + ")" : "NOT CONFIGURED"));
+                System.out.println("Property firebase.admin.credentials.file: " + (firebaseAdminCredentialsFile != null && !firebaseAdminCredentialsFile.trim().isEmpty() ? firebaseAdminCredentialsFile : "NOT CONFIGURED"));
+
+                if (firebaseAdminCredentialsFile != null && !firebaseAdminCredentialsFile.trim().isEmpty()) {
+                    java.io.File file = new java.io.File(firebaseAdminCredentialsFile);
+                    if (!file.exists()) {
+                        System.out.println("DIAGNOSTIC WARNING: The specified FIREBASE_CREDENTIALS_FILE path (" + firebaseAdminCredentialsFile + ") DOES NOT exist on the filesystem.");
+                    } else if (!file.canRead()) {
+                        System.out.println("DIAGNOSTIC WARNING: The specified FIREBASE_CREDENTIALS_FILE path exists, but is NOT READABLE (permission denied).");
+                    } else {
+                        System.out.println("DIAGNOSTIC SUCCESS: The specified FIREBASE_CREDENTIALS_FILE path exists and is readable.");
+                    }
+                }
+                
+                // Extra check for Render's default secret file mount (fallback if env var wasn't mapped)
+                java.io.File renderDefaultFallback = new java.io.File("/etc/secrets/firebase-admin.json");
+                if (renderDefaultFallback.exists() && renderDefaultFallback.canRead()) {
+                	System.out.println("DIAGNOSTIC INFO: Discovered raw secret file at standard Render mount path: /etc/secrets/firebase-admin.json");
+                }
+                System.out.println("------------------------------------------");
+
                 InputStream credentialsStream = null;
-
-                if (firebaseAdminCredentialsJson != null && !firebaseAdminCredentialsJson.trim().isEmpty()) {
-                    credentialsStream = new ByteArrayInputStream(firebaseAdminCredentialsJson.getBytes(StandardCharsets.UTF_8));
-                } else if (firebaseAdminCredentialsFile != null && !firebaseAdminCredentialsFile.trim().isEmpty()) {
-                    credentialsStream = new FileInputStream(firebaseAdminCredentialsFile);
-                } else if (System.getenv("GOOGLE_APPLICATION_CREDENTIALS") != null) {
-                    credentialsStream = new FileInputStream(System.getenv("GOOGLE_APPLICATION_CREDENTIALS"));
-                } 
-
-                if (credentialsStream != null) {
-                    FirebaseOptions options = FirebaseOptions.builder()
-                            .setCredentials(GoogleCredentials.fromStream(credentialsStream))
-                            .build();
-
-                    FirebaseApp app = FirebaseApp.initializeApp(options);
-                    String projectId = app.getOptions().getProjectId();
-                    
-                    if (projectId != null && !projectId.equals("sgcs-civic-system")) {
-                        throw new IllegalStateException("Firebase credentials are for project '" + projectId + "', but expected 'sgcs-civic-system'");
+                try {
+                    java.io.File credentialFile = null;
+                    if (firebaseAdminCredentialsFile != null && !firebaseAdminCredentialsFile.trim().isEmpty()) {
+                        credentialFile = new java.io.File(firebaseAdminCredentialsFile);
                     }
                     
-                    System.out.println("FirebaseApp initialized successfully for project sgcs-civic-system.");
-                } else {
-                    throw new IllegalStateException("Firebase Admin JSON credentials are missing. Please provide FIREBASE_CREDENTIALS_FILE setting.");
+                    java.io.File googleAppCredFile = null;
+                    String googleEnv = System.getenv("GOOGLE_APPLICATION_CREDENTIALS");
+                    if (googleEnv != null && !googleEnv.trim().isEmpty()) {
+                        googleAppCredFile = new java.io.File(googleEnv);
+                    }
+
+                    if (firebaseAdminCredentialsJson != null && !firebaseAdminCredentialsJson.trim().isEmpty()) {
+                        credentialsStream = new ByteArrayInputStream(firebaseAdminCredentialsJson.getBytes(StandardCharsets.UTF_8));
+                    } else if (credentialFile != null) {
+                        if (credentialFile.exists() && credentialFile.canRead()) {
+                            credentialsStream = new FileInputStream(credentialFile);
+                        } else {
+                            throw new IllegalStateException("Configured FIREBASE_CREDENTIALS_FILE (" + firebaseAdminCredentialsFile + ") does not exist or is not readable.");
+                        }
+                    } else if (renderDefaultFallback.exists() && renderDefaultFallback.canRead()) {
+                        // Automatically support Render secret files
+                        credentialsStream = new FileInputStream(renderDefaultFallback);
+                    } else if (googleAppCredFile != null && googleAppCredFile.exists() && googleAppCredFile.canRead()) {
+                        credentialsStream = new FileInputStream(googleAppCredFile);
+                    } 
+
+                    if (credentialsStream != null) {
+                        GoogleCredentials credentials = GoogleCredentials.fromStream(credentialsStream);
+                        
+                        // Strict safety validation ensuring correct Firebase Project BEFORE initializing!
+                        if (credentials instanceof com.google.auth.oauth2.ServiceAccountCredentials) {
+                            String projectId = ((com.google.auth.oauth2.ServiceAccountCredentials) credentials).getProjectId();
+                            if (projectId == null || projectId.trim().isEmpty() || !projectId.equals("sgcs-civic-system")) {
+                                throw new IllegalStateException("Firebase credentials are for project '" + projectId + "', but expected 'sgcs-civic-system'");
+                            }
+                        } else {
+                            throw new IllegalStateException("Invalid Firebase credentials provided. Must be a Service Account JSON.");
+                        }
+                        
+                        FirebaseOptions options = FirebaseOptions.builder()
+                                .setCredentials(credentials)
+                                .build();
+
+                        FirebaseApp.initializeApp(options);
+                        
+                        System.out.println("FirebaseApp initialized successfully for project sgcs-civic-system.");
+                    } else {
+                        System.err.println("Firebase Admin JSON credentials are missing. Please provide FIREBASE_CREDENTIALS_FILE or a valid configuration.");
+                        throw new IllegalStateException("Firebase Admin JSON credentials are missing. Please provide FIREBASE_CREDENTIALS_FILE setting.");
+                    }
+                } finally {
+                    if (credentialsStream != null) {
+                        try {
+                            credentialsStream.close();
+                        } catch (IOException ignored) {}
+                    }
                 }
             }
         } catch (Exception e) {
