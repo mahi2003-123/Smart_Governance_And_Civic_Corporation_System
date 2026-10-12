@@ -1,6 +1,7 @@
 package com.sgcs.config;
 
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,11 +20,32 @@ import org.springframework.context.annotation.Profile;
 @Profile("!test")
 public class FirebaseConfig {
 
+    public static final String EXPECTED_PROJECT_ID = "sgcs-civic-system";
+
     @Value("${firebase.admin.credentials.json:#{null}}")
     private String firebaseAdminCredentialsJson;
 
     @Value("${firebase.admin.credentials.file:#{null}}")
     private String firebaseAdminCredentialsFile;
+
+    /**
+     * Validates that the provided GoogleCredentials is a ServiceAccountCredentials instance,
+     * contains a non-empty project ID, and exactly matches the expected SGCS project ID.
+     */
+    public void validateCredentials(GoogleCredentials credentials) {
+        if (!(credentials instanceof ServiceAccountCredentials)) {
+            throw new IllegalStateException("Invalid Firebase credentials provided. Must be a Service Account JSON.");
+        }
+
+        String projectId = ((ServiceAccountCredentials) credentials).getProjectId();
+        if (projectId == null || projectId.trim().isEmpty()) {
+            throw new IllegalStateException("Firebase service-account project ID is missing in provided credentials.");
+        }
+
+        if (!EXPECTED_PROJECT_ID.equals(projectId.trim())) {
+            throw new IllegalStateException("Firebase credentials are for project '" + projectId + "', but expected '" + EXPECTED_PROJECT_ID + "'");
+        }
+    }
 
     @PostConstruct
     public void initialize() {
@@ -84,22 +106,16 @@ public class FirebaseConfig {
                         GoogleCredentials credentials = GoogleCredentials.fromStream(credentialsStream);
                         
                         // Strict safety validation ensuring correct Firebase Project BEFORE initializing!
-                        if (credentials instanceof com.google.auth.oauth2.ServiceAccountCredentials) {
-                            String projectId = ((com.google.auth.oauth2.ServiceAccountCredentials) credentials).getProjectId();
-                            if (projectId == null || projectId.trim().isEmpty() || !projectId.equals("sgcs-civic-system")) {
-                                throw new IllegalStateException("Firebase credentials are for project '" + projectId + "', but expected 'sgcs-civic-system'");
-                            }
-                        } else {
-                            throw new IllegalStateException("Invalid Firebase credentials provided. Must be a Service Account JSON.");
-                        }
+                        validateCredentials(credentials);
                         
                         FirebaseOptions options = FirebaseOptions.builder()
                                 .setCredentials(credentials)
+                                .setProjectId(EXPECTED_PROJECT_ID)
                                 .build();
 
                         FirebaseApp.initializeApp(options);
                         
-                        System.out.println("FirebaseApp initialized successfully for project sgcs-civic-system.");
+                        System.out.println("FirebaseApp initialized successfully for project " + EXPECTED_PROJECT_ID + ".");
                     } else {
                         System.err.println("Firebase Admin JSON credentials are missing. Please provide FIREBASE_CREDENTIALS_FILE or a valid configuration.");
                         throw new IllegalStateException("Firebase Admin JSON credentials are missing. Please provide FIREBASE_CREDENTIALS_FILE setting.");
