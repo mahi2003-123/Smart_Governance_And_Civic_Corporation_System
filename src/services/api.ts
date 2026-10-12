@@ -1,7 +1,16 @@
 import axios from 'axios';
 
-// Base API configuration with local PostgreSQL Express server fallback
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || `http://${window.location.hostname}:5000/api`;
+// Resolves base API URL, supporting VITE_API_BASE_URL with or without trailing /api
+const resolveApiBaseUrl = (): string => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (envUrl && typeof envUrl === 'string' && envUrl.trim() !== '') {
+    const sanitized = envUrl.trim().replace(/\/+$/, '');
+    return sanitized.endsWith('/api') ? sanitized : `${sanitized}/api`;
+  }
+  return `http://${window.location.hostname}:5000/api`;
+};
+
+const BASE_URL = resolveApiBaseUrl();
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -9,7 +18,7 @@ const api = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
-  timeout: 8000,
+  timeout: 15000,
 });
 
 // Request interceptor to attach bearer token
