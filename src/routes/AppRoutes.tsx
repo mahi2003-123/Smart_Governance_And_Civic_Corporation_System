@@ -45,8 +45,8 @@ export const AppRoutes: React.FC = () => {
   return (
     <Routes>
       {/* Public Auth Routes */}
-      <Route path="/" element={<PublicOnlyRoute><LandingPage /></PublicOnlyRoute>} />
-      <Route path="/landing" element={<PublicOnlyRoute><LandingPage /></PublicOnlyRoute>} />
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/landing" element={<LandingPage />} />
       <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
       <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
       <Route path="/forgot-password" element={<PublicOnlyRoute><ForgotPassword /></PublicOnlyRoute>} />

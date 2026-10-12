@@ -37,10 +37,19 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
+    const requestUrl = error.config?.url || '';
+    const isAuthAttempt = requestUrl.includes('/auth/login') || requestUrl.includes('/auth/register');
+
+    if (error.response && error.response.status === 401 && !isAuthAttempt) {
       localStorage.removeItem('sgcs_auth_token');
+      localStorage.removeItem('sgcs_auth_user');
       localStorage.removeItem('sgcs_user');
-      window.location.href = '/login';
+
+      const currentPath = window.location.pathname;
+      const isPublicRoute = ['/login', '/register', '/forgot-password', '/reset-password', '/', '/landing'].includes(currentPath);
+      if (!isPublicRoute) {
+        window.location.href = '/login';
+      }
     }
     console.warn('[SGCS API Interceptor] Live backend error or offline. Falling back gracefully.', error.message);
     return Promise.reject(error);

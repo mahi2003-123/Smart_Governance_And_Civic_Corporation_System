@@ -12,9 +12,10 @@ interface ProtectedRouteProps {
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const token = typeof window !== 'undefined' ? localStorage.getItem('sgcs_auth_token') : null;
 
   useEffect(() => {
-    if (!isAuthenticated || !user) return;
+    if (!isAuthenticated || !user || !token) return;
 
     const getDashboardPath = (role?: string) => {
       switch (role?.toUpperCase()) {
@@ -38,9 +39,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthenticated, user, token, navigate]);
 
-  if (!isAuthenticated || !user) {
+  if (!isAuthenticated || !user || !token) {
     return <Navigate to="/login" replace />;
   }
 

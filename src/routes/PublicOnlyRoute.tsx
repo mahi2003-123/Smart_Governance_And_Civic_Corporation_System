@@ -8,8 +8,9 @@ interface PublicOnlyRouteProps {
 
 export const PublicOnlyRoute: React.FC<PublicOnlyRouteProps> = ({ children }) => {
   const { user, isAuthenticated } = useAuth();
+  const token = typeof window !== 'undefined' ? localStorage.getItem('sgcs_auth_token') : null;
 
-  if (isAuthenticated && user) {
+  if (isAuthenticated && user && token) {
     const getDashboardPath = (role?: string) => {
       switch (role?.toUpperCase()) {
         case 'ADMIN':

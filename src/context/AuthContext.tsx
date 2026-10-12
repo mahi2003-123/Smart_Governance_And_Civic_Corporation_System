@@ -42,12 +42,18 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(() => {
     const saved = localStorage.getItem('sgcs_auth_user');
-    if (saved) {
+    const token = localStorage.getItem('sgcs_auth_token');
+    if (saved && token) {
       try {
         return JSON.parse(saved);
       } catch (e) {
         console.error(e);
       }
+    }
+    // Clean up orphaned session data if token is absent
+    if (!token && saved) {
+      localStorage.removeItem('sgcs_auth_user');
+      localStorage.removeItem('sgcs_user');
     }
     return null;
   });
@@ -57,6 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('sgcs_auth_user', JSON.stringify(user));
     } else {
       localStorage.removeItem('sgcs_auth_user');
+      localStorage.removeItem('sgcs_user');
     }
   }, [user]);
 
@@ -76,6 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     localStorage.removeItem('sgcs_auth_user');
     localStorage.removeItem('sgcs_auth_token');
+    localStorage.removeItem('sgcs_user');
   };
 
   const updateProfile = async (updatedData: Partial<User>) => {
@@ -86,11 +94,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const hasToken = typeof window !== 'undefined' ? !!localStorage.getItem('sgcs_auth_token') : false;
+
   return (
     <AuthContext.Provider
       value={{
         user,
-        isAuthenticated: !!user,
+        isAuthenticated: !!user && hasToken,
         login,
         register,
         logout,

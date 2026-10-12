@@ -68,7 +68,8 @@ export const Login: React.FC = () => {
     }
   };
 
-  if (isAuthenticated && user) {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('sgcs_auth_token') : null;
+  if (isAuthenticated && user && token) {
     return <Navigate to={getDashboardPath(user.role)} replace />;
   }
 
