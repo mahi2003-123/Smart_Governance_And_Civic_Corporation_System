@@ -1,13 +1,13 @@
 import axios from 'axios';
 
-// Resolves base API URL, supporting VITE_API_BASE_URL with or without trailing /api
+// Resolves base API URL, defaulting to production Render backend if unset
 const resolveApiBaseUrl = (): string => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
   if (envUrl && typeof envUrl === 'string' && envUrl.trim() !== '') {
     const sanitized = envUrl.trim().replace(/\/+$/, '');
     return sanitized.endsWith('/api') ? sanitized : `${sanitized}/api`;
   }
-  return `http://${window.location.hostname}:5000/api`;
+  return 'https://smart-governance-and-civic-corporation.onrender.com/api';
 };
 
 const BASE_URL = resolveApiBaseUrl();
@@ -18,7 +18,7 @@ const api = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
-  timeout: 15000,
+  timeout: 60000, // 60s timeout to gracefully support Render free-tier instance cold starts
 });
 
 // Request interceptor to attach bearer token
