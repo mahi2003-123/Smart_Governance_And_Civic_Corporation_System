@@ -4,7 +4,10 @@ import com.sgcs.entity.User;
 import com.sgcs.entity.Ward;
 import com.sgcs.repository.UserRepository;
 import com.sgcs.repository.WardRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,6 +17,7 @@ import java.util.List;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
+    private static final Logger logger = LoggerFactory.getLogger(DataInitializer.class);
 
     @Autowired
     private UserRepository userRepository;
@@ -27,6 +31,14 @@ public class DataInitializer implements CommandLineRunner {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    /** Admin email — set ADMIN_EMAIL in production environment. */
+    @Value("${admin.email:#{null}}")
+    private String adminEmail;
+
+    /** Admin password — set ADMIN_PASSWORD in production environment. */
+    @Value("${admin.password:#{null}}")
+    private String adminPassword;
+
     @Override
     public void run(String... args) throws Exception {
         // Drop restrictive PostgreSQL check constraints if present so all status and notification types persist
@@ -34,9 +46,9 @@ public class DataInitializer implements CommandLineRunner {
             jdbcTemplate.execute("ALTER TABLE complaints DROP CONSTRAINT IF EXISTS complaints_status_check");
             jdbcTemplate.execute("ALTER TABLE notifications DROP CONSTRAINT IF EXISTS notifications_type_check");
             jdbcTemplate.execute("ALTER TABLE complaint_timeline DROP CONSTRAINT IF EXISTS complaint_timeline_status_check");
-            System.out.println("✅ Adjusted PostgreSQL database table constraints.");
+            logger.info("Adjusted PostgreSQL database table constraints.");
         } catch (Exception e) {
-            System.out.println("Note on PostgreSQL constraint adjustment: " + e.getMessage());
+            logger.warn("Note on PostgreSQL constraint adjustment: {}", e.getMessage());
         }
 
         // Seed standard municipal Wards if empty
@@ -52,22 +64,33 @@ public class DataInitializer implements CommandLineRunner {
                 new Ward("w8", 8, "Ward 8 - Heritage Old City", "Unassigned", "", 36000)
             );
             wardRepository.saveAll(defaultWards);
-            System.out.println("✅ Initialized municipal wards structure.");
+            logger.info("Initialized municipal wards structure.");
         }
 
-        // Seed/Update ONLY Super Admin Accounts
-        if (userRepository.findByEmailIgnoreCase("admin@gnail.com").isEmpty()) {
-            User admin = new User("usr_super_admin", "Municipal Super Admin", "admin@gnail.com", "", "9876543210", "ADMIN", "All Wards");
-            admin.setPassword(passwordEncoder.encode("admin12345"));
-            userRepository.save(admin);
+        // Seed admin account only when ADMIN_EMAIL and ADMIN_PASSWORD are supplied
+        if (adminEmail != null && !adminEmail.trim().isEmpty()
+                && adminPassword != null && !adminPassword.trim().isEmpty()) {
+            if (userRepository.findByEmailIgnoreCase(adminEmail.trim()).isEmpty()) {
+                User admin = new User(
+                    "usr_env_admin",
+                    "Municipal Super Admin",
+                    adminEmail.trim(),
+                    "",
+                    "0000000000",
+                    "ADMIN",
+                    "All Wards"
+                );
+                admin.setPassword(passwordEncoder.encode(adminPassword.trim()));
+                userRepository.save(admin);
+                logger.info("Seeded admin account for: {}", adminEmail.trim());
+            } else {
+                logger.info("Admin account already exists for: {}. Skipping seed.", adminEmail.trim());
+            }
+        } else {
+            logger.warn("ADMIN_EMAIL / ADMIN_PASSWORD not set — no default admin will be seeded. " +
+                        "Create an admin account via the registration API or set these env vars.");
         }
 
-        if (userRepository.findByEmailIgnoreCase("admin@gmail.com").isEmpty()) {
-            User adminAlt = new User("usr_super_admin_alt", "Municipal Super Admin", "admin@gmail.com", "", "9876543210", "ADMIN", "All Wards");
-            adminAlt.setPassword(passwordEncoder.encode("admin12345"));
-            userRepository.save(adminAlt);
-        }
-
-        System.out.println("✅ Super Admin account verified in PostgreSQL. Database is clean and ready for user registration.");
+        logger.info("Database initialization complete.");
     }
 }

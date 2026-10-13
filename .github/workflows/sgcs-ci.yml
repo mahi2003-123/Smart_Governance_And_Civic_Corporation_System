@@ -101,10 +101,6 @@ jobs:
   ai-fastapi-ci:
     name: AI Service CI
     runs-on: ubuntu-latest
-    
-    defaults:
-      run:
-        working-directory: ./ai_service
 
     steps:
       - name: Checkout Code
@@ -115,11 +111,15 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
+          cache-dependency-path: ai_service/requirements.txt
 
       - name: Install Dependencies
-        run: pip install -r requirements.txt pytest httpx # Install pytest and httpx for testing
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ai_service/requirements.txt pytest httpx
 
       - name: Start FastAPI Service in background
+        working-directory: ./ai_service
         run: |
           uvicorn app:app --host 127.0.0.1 --port 8005 &
           # Wait for the service to become responsive
@@ -127,6 +127,7 @@ jobs:
           curl -f http://127.0.0.1:8005/health || exit 1
 
       - name: Run Integration Tests
+        working-directory: ./ai_service
         run: python test_integration.py
 
       - name: Upload AI Model Artifact
@@ -225,22 +226,31 @@ jobs:
         env:
           deploy_url: ${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK }}
         run: |
-          if [ -z "$deploy_url" ]; then echo "Missing RENDER_FRONTEND_DEPLOY_HOOK"; exit 1; fi
-          curl -X POST -H "Accept: application/json" -d "" "$deploy_url"
+          if [ -z "$deploy_url" ]; then
+            echo "::warning::RENDER_FRONTEND_DEPLOY_HOOK is not set — skipping frontend deploy."
+          else
+            curl -X POST -H "Accept: application/json" -d "" "$deploy_url"
+          fi
 
       - name: Trigger Backend Render Deploy
         env:
           deploy_url: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}
         run: |
-          if [ -z "$deploy_url" ]; then echo "Missing RENDER_BACKEND_DEPLOY_HOOK"; exit 1; fi
-          curl -X POST -H "Accept: application/json" -d "" "$deploy_url"
+          if [ -z "$deploy_url" ]; then
+            echo "::warning::RENDER_BACKEND_DEPLOY_HOOK is not set — skipping backend deploy."
+          else
+            curl -X POST -H "Accept: application/json" -d "" "$deploy_url"
+          fi
 
       - name: Trigger AI Service Render Deploy
         env:
           deploy_url: ${{ secrets.RENDER_AI_DEPLOY_HOOK }}
         run: |
-          if [ -z "$deploy_url" ]; then echo "Missing RENDER_AI_DEPLOY_HOOK"; exit 1; fi
-          curl -X POST -H "Accept: application/json" -d "" "$deploy_url"
+          if [ -z "$deploy_url" ]; then
+            echo "::warning::RENDER_AI_DEPLOY_HOOK is not set — skipping AI service deploy."
+          else
+            curl -X POST -H "Accept: application/json" -d "" "$deploy_url"
+          fi
 
   post-deployment-smoke:
     name: Post-Deployment Smoke Tests
@@ -250,10 +260,40 @@ jobs:
 
     steps:
       - name: Verify Frontend Reachability
-        run: curl -sI ${{ secrets.PROD_FRONTEND_URL }} | head -n 1
-        
-      - name: Verify Backend Reachability
-        run: curl -sI ${{ secrets.PROD_BACKEND_URL }}/api/health | head -n 1
+        run: |
+          if [ -z "${{ secrets.PROD_FRONTEND_URL }}" ]; then
+            echo "::warning::PROD_FRONTEND_URL not set — skipping frontend smoke test."
+          else
+            curl -sI ${{ secrets.PROD_FRONTEND_URL }} | head -n 1
+          fi
+
+      - name: Verify Backend Health (with retries for cold start)
+        run: |
+          if [ -z "${{ secrets.PROD_BACKEND_URL }}" ]; then
+            echo "::warning::PROD_BACKEND_URL not set — skipping backend health check."
+            exit 0
+          fi
+          BASE_URL="${{ secrets.PROD_BACKEND_URL }}"
+          BASE_URL="${BASE_URL%/}"
+          HEALTH_URL="${BASE_URL%/api}/api/health"
+          MAX_ATTEMPTS=12
+          SLEEP_SECONDS=10
+          for i in $(seq 1 $MAX_ATTEMPTS); do
+            echo "Health check attempt $i/$MAX_ATTEMPTS: $HEALTH_URL"
+            if curl -f -s -S --max-time 15 "$HEALTH_URL" > /dev/null; then
+              echo "Backend is UP (HTTP 200)."
+              exit 0
+            fi
+            echo "Health check failed (HTTP non-200 or timeout) — waiting ${SLEEP_SECONDS}s before retry..."
+            sleep $SLEEP_SECONDS
+          done
+          echo "Backend did not return 200 after $MAX_ATTEMPTS attempts. Deploy may have failed."
+          exit 1
 
       - name: Verify AI Service Reachability
-        run: curl -sI ${{ secrets.PROD_AI_URL }}/health | head -n 1
+        run: |
+          if [ -z "${{ secrets.PROD_AI_URL }}" ]; then
+            echo "::warning::PROD_AI_URL not set — skipping AI service smoke test."
+          else
+            curl -sI ${{ secrets.PROD_AI_URL }}/health | head -n 1
+          fi

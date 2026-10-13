@@ -1,22 +1,12 @@
 services:
-  # 1. Frontend Web Service
-  - type: web
-    name: sgcs-frontend
-    env: static
-    buildCommand: npm ci && npm run build
-    staticPublishPath: ./dist
-    autoDeploy: false # Managed by GitHub Actions Hook
-    envVars:
-      - key: VITE_API_URL
-        value: https://sgcs-backend.onrender.com
-
-  # 2. Spring Boot Backend Web Service
+  # 1. Spring Boot Backend Web Service
   - type: web
     name: sgcs-backend
     env: docker
     dockerfilePath: ./backend/Dockerfile
-    dockerContext: ./backend
-    autoDeploy: false # Managed by GitHub Actions Hook
+    dockerContext: .         # Root context so COPY backend/... works inside Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true
     envVars:
       - key: DB_HOST
         fromDatabase:
@@ -38,23 +28,29 @@ services:
         fromDatabase:
           name: sgcs-postgres
           property: password
-      - key: AI_SERVICE_URL
-        value: https://sgcs-ai-service.onrender.com
       - key: JWT_SECRET
         generateValue: true
+      - key: AI_SERVICE_URL
+        value: https://sgcs-ai-service.onrender.com
+      # Set these in the Render dashboard (not committed):
+      # - key: CORS_ALLOWED_ORIGINS      e.g. https://sgcs.vercel.app
+      # - key: ADMIN_EMAIL               e.g. admin@yourdomain.com
+      # - key: ADMIN_PASSWORD            strong secret
+      # - key: FIREBASE_ENABLED          true  (optional, only if Firebase creds are supplied)
+      # - key: FIREBASE_CREDENTIALS_JSON  (optional, paste the service-account JSON)
 
-  # 3. FastAPI Service
+  # 2. FastAPI AI Service
   - type: web
     name: sgcs-ai-service
     env: python
     buildCommand: cd ai_service && pip install -r requirements.txt
     startCommand: cd ai_service && uvicorn app:app --host 0.0.0.0 --port 10000
-    autoDeploy: false # Managed by GitHub Actions Hook
+    autoDeploy: true
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
 
-# 4. PostgreSQL Database
+# 3. PostgreSQL Database
 databases:
   - name: sgcs-postgres
     databaseName: sgcs_db

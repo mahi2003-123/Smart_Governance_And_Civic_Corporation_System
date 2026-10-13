@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.ResponseEntity;
 import org.slf4j.Logger;
@@ -38,9 +39,12 @@ public class ComplaintService {
     @Autowired
     private FirebaseNotificationService firebaseNotificationService;
 
-
     @Autowired
     private com.sgcs.repository.UserRepository userRepository;
+
+    @Autowired
+    @Qualifier("aiRestTemplate")
+    private RestTemplate restTemplate;
 
     @Value("${ai.service.url:http://127.0.0.1:8000}")
     private String aiServiceUrl;
@@ -93,6 +97,10 @@ public class ComplaintService {
             complaint.setStatus("PENDING");
         }
 
+        if (complaint.getCategory() == null || complaint.getCategory().isEmpty()) {
+            complaint.setCategory("OTHER");
+        }
+
         if (complaint.getPriority() == null || complaint.getPriority().isEmpty()) {
             complaint.setPriority("MEDIUM");
         }
@@ -114,6 +122,7 @@ public class ComplaintService {
             "PENDING"
         ));
 
+        // First save: persists the complaint immediately — AI enrichment comes after
         Complaint saved = complaintRepository.save(complaint);
 
         auditService.logActivity(
@@ -135,11 +144,9 @@ public class ComplaintService {
             "/councillor/dashboard"
         ));
 
-        // Background AI Processing (Synchronous for simplicity but failing gracefully)
-        complaint.setAiStatus("PENDING");
+        // AI enrichment — complaint creation MUST NOT fail if the AI service is unavailable
+        saved.setAiStatus("PENDING");
         try {
-            RestTemplate restTemplate = new RestTemplate();
-            
             // 1. Classification
             Map<String, String> aiRequest = new HashMap<>();
             aiRequest.put("complaint_text", saved.getDescription());
@@ -147,7 +154,7 @@ public class ComplaintService {
                 org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
                 headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
                 org.springframework.http.HttpEntity<Map<String, String>> aiEntity = new org.springframework.http.HttpEntity<>(aiRequest, headers);
-                
+
                 ResponseEntity<Map> aiResponse = restTemplate.postForEntity(aiServiceUrl + "/predict", aiEntity, Map.class);
                 if (aiResponse.getStatusCode().is2xxSuccessful() && aiResponse.getBody() != null) {
                     Map<String, Object> body = aiResponse.getBody();
@@ -169,8 +176,14 @@ public class ComplaintService {
                     saved.setAiStatus("UNAVAILABLE");
                 }
             } catch (Exception ex) {
-                logger.error("AI Classification failed: " + ex.getMessage());
+                logger.warn("AI Classification unavailable (complaint will save anyway): {}", ex.getMessage());
                 saved.setAiStatus("UNAVAILABLE");
+                if (saved.getCategory() == null || saved.getCategory().isEmpty()) {
+                    saved.setCategory("OTHER");
+                }
+                if (saved.getPriority() == null || saved.getPriority().isEmpty()) {
+                    saved.setPriority("MEDIUM");
+                }
             }
 
             // 2. Duplicate Detection
@@ -178,14 +191,14 @@ public class ComplaintService {
             List<Complaint> activeComplaints = getActiveComplaints().stream()
                 .filter(c -> !c.getId().equals(currentComplaintId))
                 .toList();
-                
+
             if (!activeComplaints.isEmpty()) {
                 Map<String, Object> dupReq = new HashMap<>();
-                dupReq.put("new_complaint", complaint.getDescription());
-                dupReq.put("new_ward", complaint.getWard());
-                dupReq.put("new_location", complaint.getLocationAddress());
-                dupReq.put("new_category", (complaint.getCategory() != null && !complaint.getCategory().equalsIgnoreCase("Other")) ? complaint.getCategory() : (saved.getAiSuggestedCategory() != null ? saved.getAiSuggestedCategory() : ""));
-                dupReq.put("new_created_at", complaint.getCreatedAt() != null ? complaint.getCreatedAt().toString() : java.time.LocalDateTime.now().toString());
+                dupReq.put("new_complaint", saved.getDescription());
+                dupReq.put("new_ward", saved.getWard());
+                dupReq.put("new_location", saved.getLocationAddress());
+                dupReq.put("new_category", (saved.getCategory() != null && !saved.getCategory().equalsIgnoreCase("Other")) ? saved.getCategory() : (saved.getAiSuggestedCategory() != null ? saved.getAiSuggestedCategory() : ""));
+                dupReq.put("new_created_at", saved.getCreatedAt() != null ? saved.getCreatedAt().toString() : java.time.LocalDateTime.now().toString());
 
                 List<Map<String, String>> existingList = new ArrayList<>();
                 for (Complaint ac : activeComplaints) {
@@ -194,7 +207,6 @@ public class ComplaintService {
                     item.put("text", ac.getDescription());
                     item.put("ward", ac.getWard());
                     item.put("location", ac.getLocationAddress());
-                    
                     String acCat = (ac.getCategory() != null && !ac.getCategory().equalsIgnoreCase("Other")) ? ac.getCategory() : (ac.getAiSuggestedCategory() != null ? ac.getAiSuggestedCategory() : "");
                     item.put("category", acCat);
                     item.put("status", ac.getStatus() != null ? ac.getStatus() : "");
@@ -202,12 +214,12 @@ public class ComplaintService {
                     existingList.add(item);
                 }
                 dupReq.put("existing_complaints", existingList);
-                
+
                 try {
                     org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
                     headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
                     org.springframework.http.HttpEntity<Map<String, Object>> dupEntity = new org.springframework.http.HttpEntity<>(dupReq, headers);
-                    
+
                     ResponseEntity<Map> dupRes = restTemplate.postForEntity(aiServiceUrl + "/ai/duplicate-check", dupEntity, Map.class);
                     if (dupRes.getStatusCode().is2xxSuccessful() && dupRes.getBody() != null) {
                         Map<String, Object> body = dupRes.getBody();
@@ -221,14 +233,22 @@ public class ComplaintService {
                         }
                     }
                 } catch (Exception ex) {
-                    logger.error("AI Duplicate Check failed: " + ex.getMessage());
+                    logger.warn("AI Duplicate Check unavailable (complaint will save anyway): {}", ex.getMessage());
                 }
             }
-            
-            saved = complaintRepository.save(saved);
         } catch (Exception e) {
-            logger.error("AI Service completely unavailable or failed: " + e.getMessage());
+            logger.warn("AI Service completely unavailable — complaint saved with default category/priority: {}", e.getMessage());
+            saved.setAiStatus("UNAVAILABLE");
+            if (saved.getCategory() == null || saved.getCategory().isEmpty()) {
+                saved.setCategory("OTHER");
+            }
+            if (saved.getPriority() == null || saved.getPriority().isEmpty()) {
+                saved.setPriority("MEDIUM");
+            }
         }
+
+        // Second save: persist AI enrichment results onto the already-created entity
+        saved = complaintRepository.save(saved);
 
         return saved;
     }

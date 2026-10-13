@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import api from '../services/api';
 import {
   Box,
   Typography,
@@ -43,6 +44,10 @@ export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [searchActive, setSearchActive] = useState(false);
+
+  useEffect(() => {
+    api.get('/health').catch(() => { /* silent warm-up ping for backend cold start */ });
+  }, []);
 
   const scrollToSection = (id: string) => {
     setMobileDrawerOpen(false);

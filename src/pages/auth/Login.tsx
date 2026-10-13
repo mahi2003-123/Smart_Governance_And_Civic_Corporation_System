@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -10,6 +10,7 @@ import {
   FormControl,
   InputLabel,
   OutlinedInput,
+  Chip,
 } from '@mui/material';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
@@ -21,6 +22,7 @@ import AccountBalanceOutlinedIcon from '@mui/icons-material/AccountBalanceOutlin
 import AddIcon from '@mui/icons-material/Add';
 import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import api, { isApiBaseUrlMissing } from '../../services/api';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -31,6 +33,13 @@ export const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [slowRequest, setSlowRequest] = useState(false);
+  const slowTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Warm-up ping — fired once on mount so Render can start waking up immediately
+  useEffect(() => {
+    api.get('/health').catch(() => { /* ignore — just a warm-up */ });
+  }, []);
 
   const getDashboardPath = (role?: string) => {
     switch (role) {
@@ -45,6 +54,11 @@ export const Login: React.FC = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isApiBaseUrlMissing) {
+      setError('Configuration Error: VITE_API_BASE_URL is not set. Please configure this environment variable in your deployment settings.');
+      return;
+    }
+
     if (!email.trim() || !password.trim()) {
       setError('Please enter both email address and password.');
       return;
@@ -57,14 +71,42 @@ export const Login: React.FC = () => {
 
     setLoading(true);
     setError('');
+    setSlowRequest(false);
+
+    // Show a 'waking up' banner after 5 s
+    slowTimer.current = setTimeout(() => setSlowRequest(true), 5000);
+
+    const attempt = async () => login(email.trim(), password.trim());
 
     try {
-      const loggedUser = await login(email.trim(), password.trim());
+      const loggedUser = await attempt();
       navigate(getDashboardPath(loggedUser.role), { replace: true });
     } catch (err: any) {
-      setError(err.message || 'Invalid credentials or user record not found.');
+      // Retry once on network / timeout errors
+      const isNetworkError =
+        !err.response &&
+        (err.code === 'ECONNABORTED' ||
+          err.message?.toLowerCase().includes('network') ||
+          err.message?.toLowerCase().includes('timeout'));
+
+      if (isNetworkError) {
+        try {
+          const loggedUser = await attempt();
+          navigate(getDashboardPath(loggedUser.role), { replace: true });
+          return;
+        } catch (retryErr: any) {
+          setError(
+            retryErr.message ||
+              'Server is unreachable after retry. Please try again in a moment.',
+          );
+        }
+      } else {
+        setError(err.message || 'Invalid credentials or user record not found.');
+      }
     } finally {
       setLoading(false);
+      setSlowRequest(false);
+      if (slowTimer.current) clearTimeout(slowTimer.current);
     }
   };
 
@@ -232,11 +274,53 @@ export const Login: React.FC = () => {
               </Typography>
             </Box>
 
+            {isApiBaseUrlMissing && (
+              <Alert severity="error" sx={{ mb: 3, borderRadius: '12px', fontSize: '0.85rem' }}>
+                Configuration Error: VITE_API_BASE_URL is not set. Please configure this environment variable in your deployment settings.
+              </Alert>
+            )}
+
             {error && (
               <Alert severity="error" onClose={() => setError('')} sx={{ mb: 3, borderRadius: '12px', fontSize: '0.85rem' }}>
                 {error}
               </Alert>
             )}
+
+            {slowRequest && (
+              <Alert severity="info" sx={{ mb: 3, borderRadius: '12px', fontSize: '0.85rem' }}>
+                Server is waking up, this can take up to a minute.
+              </Alert>
+            )}
+
+            {/* Quick Demo Test Accounts */}
+            <Box sx={{ mb: 3, p: 2, borderRadius: '12px', backgroundColor: '#F4F8F5', border: '1px solid #D6E6DC' }}>
+              <Typography variant="caption" sx={{ fontWeight: 700, color: '#1F4D3A', display: 'block', mb: 1, letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+                Quick Test Logins:
+              </Typography>
+              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }} useFlexGap>
+                <Chip
+                  label="Councillor: rajesh@gmail.com"
+                  size="small"
+                  onClick={() => { setEmail('rajesh@gmail.com'); setPassword('123456'); setError(''); }}
+                  sx={{ cursor: 'pointer', backgroundColor: '#FFFFFF', borderColor: '#1F4D3A', fontWeight: 600, '&:hover': { backgroundColor: '#E8F3EE' } }}
+                  variant="outlined"
+                />
+                <Chip
+                  label="Citizen: jithin@gmail.com"
+                  size="small"
+                  onClick={() => { setEmail('jithin@gmail.com'); setPassword('123456'); setError(''); }}
+                  sx={{ cursor: 'pointer', backgroundColor: '#FFFFFF', borderColor: '#1F4D3A', fontWeight: 600, '&:hover': { backgroundColor: '#E8F3EE' } }}
+                  variant="outlined"
+                />
+                <Chip
+                  label="Admin: admin@gmail.com"
+                  size="small"
+                  onClick={() => { setEmail('admin@gmail.com'); setPassword('admin12345'); setError(''); }}
+                  sx={{ cursor: 'pointer', backgroundColor: '#FFFFFF', borderColor: '#1F4D3A', fontWeight: 600, '&:hover': { backgroundColor: '#E8F3EE' } }}
+                  variant="outlined"
+                />
+              </Stack>
+            </Box>
 
             <Box component="form" onSubmit={handleLogin}>
               <Stack spacing={2.5}>

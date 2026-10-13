@@ -20,12 +20,14 @@ export const Footer: React.FC = () => {
       <Container maxWidth="lg">
         {/* CSS Grid 4 Column Footer */}
         <Box
-          display="grid"
-          gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr', md: '4fr 3fr 2fr 3fr' }}
-          gap={4}
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '4fr 3fr 2fr 3fr' },
+            gap: 4,
+          }}
         >
           <Box>
-            <Box display="flex" alignItems="center" gap={1.5} mb={2}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
               <Box
                 sx={{
                   width: 36,
@@ -40,7 +42,7 @@ export const Footer: React.FC = () => {
               >
                 <LocationCityIcon fontSize="small" />
               </Box>
-              <Typography variant="h6" fontWeight={800} color="#FFFFFF">
+              <Typography variant="h6" sx={{ fontWeight: 800, color: '#FFFFFF' }}>
                 SGCS Civic Portal
               </Typography>
             </Box>
@@ -50,10 +52,10 @@ export const Footer: React.FC = () => {
           </Box>
 
           <Box>
-            <Typography variant="subtitle2" fontWeight={700} color="#FFFFFF" gutterBottom mb={2}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#FFFFFF', mb: 2 }} gutterBottom>
               Quick Services
             </Typography>
-            <Box display="flex" flexDirection="column" gap={1}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               <Link href="/citizen/complaints" underline="hover" color="inherit" variant="body2">
                 File a Complaint
               </Link>
@@ -70,10 +72,10 @@ export const Footer: React.FC = () => {
           </Box>
 
           <Box>
-            <Typography variant="subtitle2" fontWeight={700} color="#FFFFFF" gutterBottom mb={2}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#FFFFFF', mb: 2 }} gutterBottom>
               Civic Portals
             </Typography>
-            <Box display="flex" flexDirection="column" gap={1}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               <Link href="/councillor/dashboard" underline="hover" color="inherit" variant="body2">
                 Councillor Portal
               </Link>
@@ -87,16 +89,16 @@ export const Footer: React.FC = () => {
           </Box>
 
           <Box>
-            <Typography variant="subtitle2" fontWeight={700} color="#FFFFFF" gutterBottom mb={2}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#FFFFFF', mb: 2 }} gutterBottom>
               Municipal Helpline
             </Typography>
-            <Box display="flex" alignItems="center" gap={1.5} mb={1}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
               <PhoneInTalkIcon sx={{ color: '#6F4E37' }} />
-              <Typography variant="body2" fontWeight={700} color="#FFFFFF">
+              <Typography variant="body2" sx={{ fontWeight: 700, color: '#FFFFFF' }}>
                 1800-CIVIC-SGCS (Toll Free)
               </Typography>
             </Box>
-            <Box display="flex" alignItems="center" gap={1.5}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
               <EmailIcon sx={{ color: '#6F4E37' }} />
               <Typography variant="body2">helpdesk@sgcs.gov.in</Typography>
             </Box>
@@ -105,7 +107,15 @@ export const Footer: React.FC = () => {
 
         <Divider sx={{ my: 4, borderColor: 'rgba(232, 221, 211, 0.1)' }} />
 
-        <Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems="center" gap={2}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 2,
+          }}
+        >
           <Typography variant="caption" sx={{ opacity: 0.7 }}>
             © {new Date().getFullYear()} Smart Governance and Civic Corporation System (SGCS) - MCA Major Project. All Rights Reserved.
           </Typography>

@@ -15,11 +15,16 @@ test_cases = [
 ]
 
 print("Testing /health ...")
-try:
-    health_resp = requests.get(f"{BASE_URL}/health", timeout=5)
-    print(health_resp.json())
-except Exception as e:
-    print("Health check failed:", e)
+health_resp = None
+for attempt in range(5):
+    try:
+        health_resp = requests.get(f"{BASE_URL}/health", timeout=5)
+        print(health_resp.json())
+        break
+    except Exception as e:
+        if attempt == 4:
+            print("Health check failed:", e)
+        time.sleep(1)
 
 print("\nTesting /predict with empty text ...")
 try:
@@ -70,3 +75,4 @@ for case in test_cases:
         all_matched = False
 
 print("\nFinal verdict on API vs CLI match:", "YES" if all_matched else "NO")
+assert all_matched, "Integration test failed: API vs CLI outputs did not match"

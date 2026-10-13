@@ -18,13 +18,15 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 }) => {
   return (
     <Box
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      justifyContent="center"
-      py={6}
-      px={2}
-      textAlign="center"
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: 6,
+        px: 2,
+        textAlign: 'center',
+      }}
     >
       <Box
         sx={{
@@ -40,10 +42,10 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       >
         <InboxOutlinedIcon sx={{ fontSize: 36, color: '#6F4E37' }} />
       </Box>
-      <Typography variant="h6" fontWeight={700} gutterBottom>
+      <Typography variant="h6" sx={{ fontWeight: 700 }} gutterBottom>
         {title}
       </Typography>
-      <Typography variant="body2" color="text.secondary" maxWidth={400} mb={actionText ? 3 : 0}>
+      <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 400, mb: actionText ? 3 : 0 }}>
         {description}
       </Typography>
       {actionText && onAction && (
@@ -68,13 +70,15 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
 }) => {
   return (
     <Box
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      justifyContent="center"
-      py={6}
-      px={2}
-      textAlign="center"
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: 6,
+        px: 2,
+        textAlign: 'center',
+      }}
     >
       <Box
         sx={{
@@ -90,10 +94,10 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
       >
         <ErrorOutlinedIcon sx={{ fontSize: 36, color: '#D32F2F' }} />
       </Box>
-      <Typography variant="h6" fontWeight={700} color="error" gutterBottom>
+      <Typography variant="h6" color="error" sx={{ fontWeight: 700 }} gutterBottom>
         {title}
       </Typography>
-      <Typography variant="body2" color="text.secondary" maxWidth={400} mb={onRetry ? 3 : 0}>
+      <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 400, mb: onRetry ? 3 : 0 }}>
         {description}
       </Typography>
       {onRetry && (

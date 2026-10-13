@@ -1,5 +1,6 @@
 package com.sgcs.service;
 
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
@@ -22,10 +23,23 @@ public class FirebaseNotificationService {
     @Autowired
     private UserDeviceTokenRepository tokenRepository;
 
+    /**
+     * Returns true when FirebaseApp is ready to send messages.
+     * Every FCM call must check this to avoid IllegalStateException on no-credentials deployments.
+     */
+    private boolean isFirebaseReady() {
+        return !FirebaseApp.getApps().isEmpty();
+    }
+
     @Async
     public CompletableFuture<String> sendUrgentTaskPushNotification(String workerId, String taskId, String trackingNumber, String complaintTitle, String ward, String location) {
+        if (!isFirebaseReady()) {
+            logger.debug("Firebase not initialized — skipping urgent push for worker {}", workerId);
+            return CompletableFuture.completedFuture("skipped: firebase disabled");
+        }
+
         List<UserDeviceToken> tokens = tokenRepository.findByUserIdAndActiveTrue(workerId);
-        
+
         if (tokens.isEmpty()) {
             logger.info("No active FCM tokens found for workerId: {}", workerId);
             return CompletableFuture.completedFuture("skipped: no registered device");
@@ -81,6 +95,11 @@ public class FirebaseNotificationService {
 
     @Async
     public void sendTaskTransferredPushNotification(String oldWorkerId, String trackingNumber, String complaintTitle) {
+        if (!isFirebaseReady()) {
+            logger.debug("Firebase not initialized — skipping transfer push for worker {}", oldWorkerId);
+            return;
+        }
+
         List<UserDeviceToken> tokens = tokenRepository.findByUserIdAndActiveTrue(oldWorkerId);
         if (tokens.isEmpty()) return;
 
