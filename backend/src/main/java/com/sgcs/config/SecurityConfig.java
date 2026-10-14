@@ -51,7 +51,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Explicitly allow all preflight OPTIONS requests before authentication checks
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/api/health").permitAll()
+                .requestMatchers("/api/health", "/api/system-status").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
 
                 // Section 2: Bulk Delete Endpoints (ADMIN only)

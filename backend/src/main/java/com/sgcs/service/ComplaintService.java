@@ -49,6 +49,22 @@ public class ComplaintService {
     @Value("${ai.service.url:https://smart-governance-and-civic-corporation-7q2c.onrender.com}")
     private String aiServiceUrl;
 
+    public List<String> getAiCandidateBaseUrls() {
+        List<String> urls = new ArrayList<>();
+        if (aiServiceUrl != null && !aiServiceUrl.trim().isEmpty()) {
+            urls.add(aiServiceUrl.trim());
+        }
+        String livePrimary = "https://smart-governance-and-civic-corporation-7q2c.onrender.com";
+        if (!urls.contains(livePrimary)) {
+            urls.add(livePrimary);
+        }
+        String liveLegacy = "https://sgcs-ai-service.onrender.com";
+        if (!urls.contains(liveLegacy)) {
+            urls.add(liveLegacy);
+        }
+        return urls;
+    }
+
     public List<Complaint> getAllComplaints() {
         return complaintRepository.findAllByOrderByCreatedAtDesc();
     }
@@ -163,45 +179,57 @@ public class ComplaintService {
             String classificationText = (saved.getTitle() != null && !saved.getTitle().trim().isEmpty() ? saved.getTitle().trim() + ". " : "") + 
                                        (saved.getDescription() != null ? saved.getDescription().trim() : "");
             aiRequest.put("complaint_text", classificationText);
-            try {
-                org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-                headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
-                org.springframework.http.HttpEntity<Map<String, String>> aiEntity = new org.springframework.http.HttpEntity<>(aiRequest, headers);
+            ResponseEntity<Map> aiResponse = null;
+            for (String baseUrl : getAiCandidateBaseUrls()) {
+                String cleanBase = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+                for (String endpoint : List.of("/predict", "/ai/classify-complaint", "/classify")) {
+                    try {
+                        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+                        headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+                        org.springframework.http.HttpEntity<Map<String, String>> aiEntity = new org.springframework.http.HttpEntity<>(aiRequest, headers);
 
-                ResponseEntity<Map> aiResponse = restTemplate.postForEntity(aiServiceUrl + "/predict", aiEntity, Map.class);
-                if (aiResponse.getStatusCode().is2xxSuccessful() && aiResponse.getBody() != null) {
-                    Map<String, Object> body = aiResponse.getBody();
-                    String predictedCat = (String) body.get("category");
-                    saved.setAiSuggestedCategory(predictedCat);
-                    Object conf = body.get("confidence");
-                    double parsedConf = 0.0;
-                    if (conf instanceof Number) {
-                        parsedConf = ((Number) conf).doubleValue();
-                        saved.setAiConfidence(parsedConf);
-                    }
-                    if (parsedConf < 0.4) {
-                        saved.setAiSuggestedCategory("OTHER");
-                    }
-                    if (body.get("model") != null) {
-                        saved.setAiModel((String) body.get("model"));
-                    }
-                    saved.setAiStatus("COMPLETED");
-
-                    // If citizen selected "Other" or "Auto-Detect" or left category empty, adopt AI category
-                    if (predictedCat != null && parsedConf >= 0.4 && !"OTHER".equalsIgnoreCase(predictedCat)) {
-                        String currentCat = saved.getCategory();
-                        if (currentCat == null || currentCat.trim().isEmpty() || 
-                            "Other".equalsIgnoreCase(currentCat.trim()) || 
-                            "AUTO".equalsIgnoreCase(currentCat.trim()) ||
-                            "Auto-Detect".equalsIgnoreCase(currentCat.trim())) {
-                            saved.setCategory(predictedCat.toUpperCase().trim());
+                        aiResponse = restTemplate.postForEntity(cleanBase + endpoint, aiEntity, Map.class);
+                        if (aiResponse != null && aiResponse.getStatusCode().is2xxSuccessful() && aiResponse.getBody() != null) {
+                            break;
                         }
+                    } catch (Exception ex) {
+                        logger.debug("AI classification attempt failed at {}{}: {}", cleanBase, endpoint, ex.getMessage());
                     }
-                } else {
-                    saved.setAiStatus("UNAVAILABLE");
                 }
-            } catch (Exception ex) {
-                logger.warn("AI Classification unavailable (complaint will save anyway): {}", ex.getMessage());
+                if (aiResponse != null && aiResponse.getStatusCode().is2xxSuccessful() && aiResponse.getBody() != null) {
+                    break;
+                }
+            }
+
+            if (aiResponse != null && aiResponse.getStatusCode().is2xxSuccessful() && aiResponse.getBody() != null) {
+                Map<String, Object> body = aiResponse.getBody();
+                String predictedCat = (String) body.get("category");
+                saved.setAiSuggestedCategory(predictedCat);
+                Object conf = body.get("confidence");
+                double parsedConf = 0.0;
+                if (conf instanceof Number) {
+                    parsedConf = ((Number) conf).doubleValue();
+                    saved.setAiConfidence(parsedConf);
+                }
+                if (parsedConf < 0.25) {
+                    saved.setAiSuggestedCategory("OTHER");
+                }
+                if (body.get("model") != null) {
+                    saved.setAiModel((String) body.get("model"));
+                }
+                saved.setAiStatus("COMPLETED");
+
+                // If citizen selected "Other" or "Auto-Detect" or left category empty, adopt AI category
+                if (predictedCat != null && parsedConf >= 0.25 && !"OTHER".equalsIgnoreCase(predictedCat)) {
+                    String currentCat = saved.getCategory();
+                    if (currentCat == null || currentCat.trim().isEmpty() || 
+                        "Other".equalsIgnoreCase(currentCat.trim()) || 
+                        "AUTO".equalsIgnoreCase(currentCat.trim()) ||
+                        "Auto-Detect".equalsIgnoreCase(currentCat.trim())) {
+                        saved.setCategory(predictedCat.toUpperCase().trim());
+                    }
+                }
+            } else {
                 saved.setAiStatus("UNAVAILABLE");
                 if (saved.getCategory() == null || saved.getCategory().isEmpty()) {
                     saved.setCategory("OTHER");
@@ -244,25 +272,38 @@ public class ComplaintService {
                 }
                 dupReq.put("existing_complaints", existingList);
 
-                try {
-                    org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-                    headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
-                    org.springframework.http.HttpEntity<Map<String, Object>> dupEntity = new org.springframework.http.HttpEntity<>(dupReq, headers);
+                ResponseEntity<Map> dupRes = null;
+                for (String baseUrl : getAiCandidateBaseUrls()) {
+                    String cleanBase = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+                    for (String endpoint : List.of("/ai/duplicate-check", "/duplicate-check")) {
+                        try {
+                            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+                            headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+                            org.springframework.http.HttpEntity<Map<String, Object>> dupEntity = new org.springframework.http.HttpEntity<>(dupReq, headers);
 
-                    ResponseEntity<Map> dupRes = restTemplate.postForEntity(aiServiceUrl + "/ai/duplicate-check", dupEntity, Map.class);
-                    if (dupRes.getStatusCode().is2xxSuccessful() && dupRes.getBody() != null) {
-                        Map<String, Object> body = dupRes.getBody();
-                        String possId = (String) body.get("possible_duplicate_id");
-                        Object sim = body.get("similarity");
-                        if (possId != null) {
-                            saved.setPossibleDuplicateId(possId);
-                            if (sim instanceof Number) {
-                                saved.setDuplicateSimilarityScore(((Number) sim).doubleValue());
+                            dupRes = restTemplate.postForEntity(cleanBase + endpoint, dupEntity, Map.class);
+                            if (dupRes != null && dupRes.getStatusCode().is2xxSuccessful() && dupRes.getBody() != null) {
+                                break;
                             }
+                        } catch (Exception ex) {
+                            logger.debug("AI duplicate check attempt failed at {}{}: {}", cleanBase, endpoint, ex.getMessage());
                         }
                     }
-                } catch (Exception ex) {
-                    logger.warn("AI Duplicate Check unavailable (complaint will save anyway): {}", ex.getMessage());
+                    if (dupRes != null && dupRes.getStatusCode().is2xxSuccessful() && dupRes.getBody() != null) {
+                        break;
+                    }
+                }
+
+                if (dupRes != null && dupRes.getStatusCode().is2xxSuccessful() && dupRes.getBody() != null) {
+                    Map<String, Object> body = dupRes.getBody();
+                    String possId = (String) body.get("possible_duplicate_id");
+                    Object sim = body.get("similarity");
+                    if (possId != null) {
+                        saved.setPossibleDuplicateId(possId);
+                        if (sim instanceof Number) {
+                            saved.setDuplicateSimilarityScore(((Number) sim).doubleValue());
+                        }
+                    }
                 }
             }
         } catch (Exception e) {

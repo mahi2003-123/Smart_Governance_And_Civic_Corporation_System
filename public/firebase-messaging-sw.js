@@ -3,12 +3,12 @@ importScripts('https://www.gstatic.com/firebasejs/9.2.0/firebase-messaging-compa
 
 const urlParams = new URLSearchParams(location.search);
 let firebaseConfig = {
-  apiKey: "dummy-api-key",
+  apiKey: "AIzaSyBwoFo8fUwz-cu-vRUokqDdT5AuKPq-fTI",
   authDomain: "sgcs-civic-system.firebaseapp.com",
   projectId: "sgcs-civic-system",
-  storageBucket: "sgcs-civic-system.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:abcdef"
+  storageBucket: "sgcs-civic-system.firebasestorage.app",
+  messagingSenderId: "343274833225",
+  appId: "1:343274833225:web:45e2517ce4d284b27b4698"
 };
 
 try {

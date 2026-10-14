@@ -3,12 +3,12 @@ import { getMessaging, getToken, onMessage, isSupported, Messaging } from 'fireb
 import api from '../services/api';
 
 export const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyBwoFo8fUwz-cu-vRUokqDdT5AuKPq-fTI',
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'sgcs-civic-system.firebaseapp.com',
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'sgcs-civic-system',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'sgcs-civic-system.appspot.com',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'sgcs-civic-system.firebasestorage.app',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '343274833225',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:343274833225:web:45e2517ce4d284b27b4698',
 };
 
 let messagingInstance: Messaging | null = null;
@@ -99,13 +99,12 @@ export const requestFirebaseNotificationPermission = async (): Promise<string | 
     );
     await navigator.serviceWorker.ready;
 
-    const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+    const DEFAULT_VAPID_KEY = 'BNwXaurkFdzfb4ToVbaNGm3moZTNrym9CO-VXAoJipCs3efi1-ud7_R6PNof1eRsH7XtYQx5gSW_YRYKfkNpWt4';
+    const vapidKey = (import.meta.env.VITE_FIREBASE_VAPID_KEY || DEFAULT_VAPID_KEY).trim();
     const tokenOptions: { serviceWorkerRegistration: ServiceWorkerRegistration; vapidKey?: string } = {
       serviceWorkerRegistration: swRegistration,
+      vapidKey: vapidKey,
     };
-    if (vapidKey && typeof vapidKey === 'string' && vapidKey.trim() !== '') {
-      tokenOptions.vapidKey = vapidKey.trim();
-    }
 
     const currentToken = await getToken(messaging, tokenOptions);
     if (currentToken) {
