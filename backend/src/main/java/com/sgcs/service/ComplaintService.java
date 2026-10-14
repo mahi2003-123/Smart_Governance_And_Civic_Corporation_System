@@ -46,7 +46,7 @@ public class ComplaintService {
     @Qualifier("aiRestTemplate")
     private RestTemplate restTemplate;
 
-    @Value("${ai.service.url:http://127.0.0.1:8000}")
+    @Value("${ai.service.url:https://smart-governance-and-civic-corporation-7q2c.onrender.com}")
     private String aiServiceUrl;
 
     public List<Complaint> getAllComplaints() {
@@ -144,12 +144,25 @@ public class ComplaintService {
             "/councillor/dashboard"
         ));
 
+        // If complaint is submitted as URGENT, dispatch high-priority alert to ward officials immediately
+        if ("URGENT".equalsIgnoreCase(saved.getPriority())) {
+            notificationService.createNotification(new Notification(
+                "ward_" + saved.getWard(),
+                "EMERGENCY: Urgent Complaint Filed",
+                "Urgent grievance #" + saved.getTrackingNumber() + " (" + saved.getTitle() + ") requires immediate inspection in " + saved.getWard(),
+                "COMPLAINT",
+                "/councillor/dashboard"
+            ));
+        }
+
         // AI enrichment — complaint creation MUST NOT fail if the AI service is unavailable
         saved.setAiStatus("PENDING");
         try {
             // 1. Classification
             Map<String, String> aiRequest = new HashMap<>();
-            aiRequest.put("complaint_text", saved.getDescription());
+            String classificationText = (saved.getTitle() != null && !saved.getTitle().trim().isEmpty() ? saved.getTitle().trim() + ". " : "") + 
+                                       (saved.getDescription() != null ? saved.getDescription().trim() : "");
+            aiRequest.put("complaint_text", classificationText);
             try {
                 org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
                 headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
@@ -158,7 +171,8 @@ public class ComplaintService {
                 ResponseEntity<Map> aiResponse = restTemplate.postForEntity(aiServiceUrl + "/predict", aiEntity, Map.class);
                 if (aiResponse.getStatusCode().is2xxSuccessful() && aiResponse.getBody() != null) {
                     Map<String, Object> body = aiResponse.getBody();
-                    saved.setAiSuggestedCategory((String) body.get("category"));
+                    String predictedCat = (String) body.get("category");
+                    saved.setAiSuggestedCategory(predictedCat);
                     Object conf = body.get("confidence");
                     double parsedConf = 0.0;
                     if (conf instanceof Number) {
@@ -172,6 +186,17 @@ public class ComplaintService {
                         saved.setAiModel((String) body.get("model"));
                     }
                     saved.setAiStatus("COMPLETED");
+
+                    // If citizen selected "Other" or "Auto-Detect" or left category empty, adopt AI category
+                    if (predictedCat != null && parsedConf >= 0.4 && !"OTHER".equalsIgnoreCase(predictedCat)) {
+                        String currentCat = saved.getCategory();
+                        if (currentCat == null || currentCat.trim().isEmpty() || 
+                            "Other".equalsIgnoreCase(currentCat.trim()) || 
+                            "AUTO".equalsIgnoreCase(currentCat.trim()) ||
+                            "Auto-Detect".equalsIgnoreCase(currentCat.trim())) {
+                            saved.setCategory(predictedCat.toUpperCase().trim());
+                        }
+                    }
                 } else {
                     saved.setAiStatus("UNAVAILABLE");
                 }
@@ -194,7 +219,9 @@ public class ComplaintService {
 
             if (!activeComplaints.isEmpty()) {
                 Map<String, Object> dupReq = new HashMap<>();
-                dupReq.put("new_complaint", saved.getDescription());
+                String newFullText = (saved.getTitle() != null && !saved.getTitle().trim().isEmpty() ? saved.getTitle().trim() + ". " : "") + 
+                                     (saved.getDescription() != null ? saved.getDescription().trim() : "");
+                dupReq.put("new_complaint", newFullText);
                 dupReq.put("new_ward", saved.getWard());
                 dupReq.put("new_location", saved.getLocationAddress());
                 dupReq.put("new_category", (saved.getCategory() != null && !saved.getCategory().equalsIgnoreCase("Other")) ? saved.getCategory() : (saved.getAiSuggestedCategory() != null ? saved.getAiSuggestedCategory() : ""));
@@ -204,7 +231,9 @@ public class ComplaintService {
                 for (Complaint ac : activeComplaints) {
                     Map<String, String> item = new HashMap<>();
                     item.put("id", ac.getId());
-                    item.put("text", ac.getDescription());
+                    String acFullText = (ac.getTitle() != null && !ac.getTitle().trim().isEmpty() ? ac.getTitle().trim() + ". " : "") + 
+                                        (ac.getDescription() != null ? ac.getDescription().trim() : "");
+                    item.put("text", acFullText);
                     item.put("ward", ac.getWard());
                     item.put("location", ac.getLocationAddress());
                     String acCat = (ac.getCategory() != null && !ac.getCategory().equalsIgnoreCase("Other")) ? ac.getCategory() : (ac.getAiSuggestedCategory() != null ? ac.getAiSuggestedCategory() : "");
@@ -743,16 +772,39 @@ public class ComplaintService {
         Complaint saved = complaintRepository.save(complaint);
         auditService.logActivity(updatedById != null ? updatedById : "system", updatedByName, updatedByRole, "Updated Priority", "COMPLAINT", saved.getTrackingNumber(), "Priority changed to " + priority);
 
-        if ("URGENT".equals(priority) && saved.getAssignedWorkerId() != null && !"URGENT".equalsIgnoreCase(oldPriority)) {
-            firebaseNotificationService.sendUrgentTaskPushNotification(
-                saved.getAssignedWorkerId(), saved.getId(), saved.getTrackingNumber(), saved.getTitle(), saved.getWard(), saved.getLocationAddress()
-            ).thenAccept(outcome -> {
-                auditService.logActivity(saved.getAssignedWorkerId(), saved.getAssignedWorkerName(), "WORKER", "URGENT PUSH " + outcome, "NOTIFICATION", saved.getTrackingNumber(), "URGENT PUSH " + outcome);
-            }).exceptionally(ex -> {
-                logger.error("Push notification failed", ex);
-                auditService.logActivity(saved.getAssignedWorkerId(), saved.getAssignedWorkerName(), "WORKER", "URGENT PUSH failed", "NOTIFICATION", saved.getTrackingNumber(), "URGENT PUSH failed: " + ex.getMessage());
-                return null;
-            });
+        if ("URGENT".equals(priority) && !"URGENT".equalsIgnoreCase(oldPriority)) {
+            // 1. If assigned to worker, send urgent push to worker
+            if (saved.getAssignedWorkerId() != null) {
+                firebaseNotificationService.sendUrgentTaskPushNotification(
+                    saved.getAssignedWorkerId(), saved.getId(), saved.getTrackingNumber(), saved.getTitle(), saved.getWard(), saved.getLocationAddress()
+                ).thenAccept(outcome -> {
+                    auditService.logActivity(saved.getAssignedWorkerId(), saved.getAssignedWorkerName(), "WORKER", "URGENT PUSH " + outcome, "NOTIFICATION", saved.getTrackingNumber(), "URGENT PUSH " + outcome);
+                }).exceptionally(ex -> {
+                    logger.error("Push notification failed", ex);
+                    auditService.logActivity(saved.getAssignedWorkerId(), saved.getAssignedWorkerName(), "WORKER", "URGENT PUSH failed", "NOTIFICATION", saved.getTrackingNumber(), "URGENT PUSH failed: " + ex.getMessage());
+                    return null;
+                });
+            } else {
+                // If not assigned yet, alert ward officials/councillors immediately
+                notificationService.createNotification(new Notification(
+                    "ward_" + saved.getWard(),
+                    "EMERGENCY: Grievance Escalated to URGENT",
+                    "Grievance #" + saved.getTrackingNumber() + " in " + saved.getWard() + " has been marked URGENT and requires technician assignment.",
+                    "COMPLAINT",
+                    "/councillor/dashboard"
+                ));
+            }
+
+            // 2. Notify the citizen who filed the complaint
+            if (saved.getCitizenId() != null) {
+                notificationService.createNotification(new Notification(
+                    saved.getCitizenId(),
+                    "Grievance Priority Escalated to URGENT",
+                    "Your grievance #" + saved.getTrackingNumber() + " (" + saved.getTitle() + ") has been escalated to URGENT priority for fast-track resolution.",
+                    "COMPLAINT",
+                    "/citizen/track?ref=" + saved.getTrackingNumber()
+                ));
+            }
         }
         return saved;
     }

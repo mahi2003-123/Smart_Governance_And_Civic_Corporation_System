@@ -62,8 +62,13 @@ public class FirebaseConfig {
 
     @PostConstruct
     public void initialize() {
-        if (!firebaseEnabled) {
-            logger.warn("Firebase is DISABLED (firebase.enabled=false). Push notifications will be skipped.");
+        boolean credentialsSupplied = (firebaseAdminCredentialsJson != null && !firebaseAdminCredentialsJson.trim().isEmpty())
+            || (firebaseAdminCredentialsFile != null && !firebaseAdminCredentialsFile.trim().isEmpty())
+            || (new java.io.File("/etc/secrets/firebase-admin.json").exists())
+            || (System.getenv("GOOGLE_APPLICATION_CREDENTIALS") != null && !System.getenv("GOOGLE_APPLICATION_CREDENTIALS").trim().isEmpty());
+
+        if (!firebaseEnabled && !credentialsSupplied) {
+            logger.warn("Firebase is DISABLED (firebase.enabled=false and no credentials found). Push notifications will be skipped.");
             return;
         }
 

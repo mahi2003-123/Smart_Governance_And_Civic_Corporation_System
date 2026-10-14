@@ -14,6 +14,7 @@ import {
   Tooltip,
 } from '@mui/material';
 import NotificationsOutlinedIcon from '@mui/icons-material/NotificationsOutlined';
+import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
@@ -22,11 +23,20 @@ import FeedbackIcon from '@mui/icons-material/Feedback';
 import { useNavigate } from 'react-router-dom';
 import { notificationService } from '../../services/notificationService';
 import { NotificationItem } from '../../types';
+import {
+  requestFirebaseNotificationPermission,
+  registerTokenWithBackend,
+  onMessageListener,
+  isFirebaseConfigured
+} from '../../utils/firebase';
 
 export const NotificationPopover: React.FC = () => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [pushPermission, setPushPermission] = useState<string>('default');
+  const [pushLoading, setPushLoading] = useState<boolean>(false);
+  const [pushSuccess, setPushSuccess] = useState<boolean>(false);
 
   const fetchNotifs = async () => {
     try {
@@ -39,7 +49,49 @@ export const NotificationPopover: React.FC = () => {
 
   useEffect(() => {
     fetchNotifs();
+
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setPushPermission(Notification.permission);
+    } else {
+      setPushPermission('unsupported');
+    }
+
+    const unsub = onMessageListener((_payload: any) => {
+      fetchNotifs();
+    });
+
+    return () => {
+      if (unsub) unsub();
+    };
   }, []);
+
+  const handleEnablePush = async () => {
+    setPushLoading(true);
+    try {
+      const token = await requestFirebaseNotificationPermission();
+      if (token) {
+        const ok = await registerTokenWithBackend(token);
+        if (ok) {
+          setPushSuccess(true);
+          setPushPermission('granted');
+          setTimeout(() => setPushSuccess(false), 5000);
+        }
+      } else {
+        if (typeof window !== 'undefined' && 'Notification' in window) {
+          setPushPermission(Notification.permission);
+          if (Notification.permission === 'denied') {
+            alert('Notification permission is blocked in your browser settings. Please enable notifications for this site to receive alerts.');
+          } else if (!isFirebaseConfigured()) {
+            alert('Push notifications require Firebase configuration (VITE_FIREBASE_API_KEY). Ensure environment variables are configured.');
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error enabling push notifications:', err);
+    } finally {
+      setPushLoading(false);
+    }
+  };
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -142,6 +194,13 @@ export const NotificationPopover: React.FC = () => {
                 sx={{ backgroundColor: '#FEE2E2', color: '#DC2626', fontWeight: 800, height: 20, fontSize: '0.7rem' }}
               />
             )}
+            {pushPermission === 'granted' && (
+              <Chip
+                label="Push On"
+                size="small"
+                sx={{ backgroundColor: '#DCFCE7', color: '#166534', fontWeight: 700, height: 20, fontSize: '0.65rem' }}
+              />
+            )}
           </Box>
 
           {unreadCount > 0 && (
@@ -157,6 +216,62 @@ export const NotificationPopover: React.FC = () => {
         </Box>
 
         <Divider sx={{ borderColor: '#F1F5F9' }} />
+
+        {/* Push Notification Opt-in / Status Banner */}
+        {pushSuccess ? (
+          <Box sx={{ px: 2, py: 1, backgroundColor: '#DCFCE7', borderBottom: '1px solid #BBF7D0', display: 'flex', alignItems: 'center', gap: 1 }}>
+            <NotificationsActiveIcon sx={{ color: '#16A34A', fontSize: 16 }} />
+            <Typography variant="caption" sx={{ fontWeight: 700, color: '#166534', fontSize: '0.72rem' }}>
+              ✓ Web push alerts active for this device!
+            </Typography>
+          </Box>
+        ) : pushPermission !== 'granted' && pushPermission !== 'unsupported' ? (
+          <Box
+            sx={{
+              px: 2,
+              py: 1,
+              backgroundColor: '#F0FDF4',
+              borderBottom: '1px solid #DCFCE7',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 1.5,
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <NotificationsActiveIcon sx={{ color: '#16A34A', fontSize: 18 }} />
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 700, color: '#166534', display: 'block', lineHeight: 1.2, fontSize: '0.75rem' }}>
+                  Enable Push Alerts
+                </Typography>
+                <Typography variant="caption" sx={{ color: '#15803D', fontSize: '0.67rem', display: 'block' }}>
+                  Receive civic updates in background
+                </Typography>
+              </Box>
+            </Box>
+            <Button
+              size="small"
+              variant="contained"
+              disabled={pushLoading}
+              onClick={handleEnablePush}
+              sx={{
+                backgroundColor: '#16A34A',
+                color: '#FFFFFF',
+                textTransform: 'none',
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                py: 0.2,
+                px: 1.2,
+                minWidth: 'auto',
+                borderRadius: '6px',
+                boxShadow: 'none',
+                '&:hover': { backgroundColor: '#15803D', boxShadow: 'none' },
+              }}
+            >
+              {pushLoading ? 'Enabling...' : 'Enable'}
+            </Button>
+          </Box>
+        ) : null}
 
         {/* Notifications List */}
         <List sx={{ p: 0, overflowY: 'auto', maxHeight: 380 }}>

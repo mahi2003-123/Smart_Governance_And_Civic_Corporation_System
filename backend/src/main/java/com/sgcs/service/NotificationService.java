@@ -12,8 +12,16 @@ import java.util.Optional;
 @Service
 public class NotificationService {
 
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NotificationService.class);
+
     @Autowired
     private NotificationRepository notificationRepository;
+
+    @Autowired
+    private FirebaseNotificationService firebaseNotificationService;
+
+    @Autowired
+    private com.sgcs.repository.UserDeviceTokenRepository userDeviceTokenRepository;
 
     public List<Notification> getNotificationsForUser(String userId, String role, String ward) {
         List<String> recipients = new ArrayList<>();
@@ -29,7 +37,23 @@ public class NotificationService {
         if (notification.getId() == null || notification.getId().isEmpty()) {
             notification.setId("notif_" + System.currentTimeMillis() + "_" + (int)(Math.random() * 1000));
         }
-        return notificationRepository.save(notification);
+        Notification saved = notificationRepository.save(notification);
+
+        try {
+            if (firebaseNotificationService != null) {
+                firebaseNotificationService.sendPushNotification(
+                    saved.getRecipientId(),
+                    saved.getTitle(),
+                    saved.getMessage(),
+                    saved.getType(),
+                    saved.getLinkUrl()
+                );
+            }
+        } catch (Exception e) {
+            logger.warn("Could not dispatch FCM push for notification {}: {}", saved.getId(), e.getMessage());
+        }
+
+        return saved;
     }
 
     public Notification createNotification(String recipientId, String title, String message, String type, String linkUrl) {
@@ -58,9 +82,6 @@ public class NotificationService {
     public void deleteAllNotifications() {
         notificationRepository.deleteAll();
     }
-
-    @Autowired
-    private com.sgcs.repository.UserDeviceTokenRepository userDeviceTokenRepository;
 
     public void registerDeviceToken(String userId, String fcmToken, String deviceType, String deviceName) {
         java.util.Optional<com.sgcs.entity.UserDeviceToken> existingOpt = userDeviceTokenRepository.findByFcmToken(fcmToken);

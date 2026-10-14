@@ -4,46 +4,59 @@ importScripts('https://www.gstatic.com/firebasejs/9.2.0/firebase-messaging-compa
 const urlParams = new URLSearchParams(location.search);
 let firebaseConfig = {
   apiKey: "dummy-api-key",
-  authDomain: "dummy-project.firebaseapp.com",
-  projectId: "dummy-project",
-  storageBucket: "dummy-project.appspot.com",
+  authDomain: "sgcs-civic-system.firebaseapp.com",
+  projectId: "sgcs-civic-system",
+  storageBucket: "sgcs-civic-system.appspot.com",
   messagingSenderId: "123456789",
   appId: "1:123456789:web:abcdef"
 };
 
 try {
   if (urlParams.has('config')) {
-    firebaseConfig = JSON.parse(decodeURIComponent(urlParams.get('config')));
+    const parsed = JSON.parse(decodeURIComponent(urlParams.get('config')));
+    if (parsed && typeof parsed === 'object') {
+      firebaseConfig = { ...firebaseConfig, ...parsed };
+    }
   }
-} catch(e) {
-  console.log("Failed to parse config from SW url", e);
+} catch (e) {
+  console.warn('[SW] Failed to parse config from SW url:', e);
 }
 
 try {
-    firebase.initializeApp(firebaseConfig);
-    const messaging = firebase.messaging();
+  firebase.initializeApp(firebaseConfig);
+  const messaging = firebase.messaging();
 
-    messaging.onBackgroundMessage(function(payload) {
-      console.log('Received background message ', payload);
-      
-      const notificationTitle = payload.data?.title || payload.notification?.title || '🚨 SGCS Urgent Task';
-      const notificationOptions = {
-        body: payload.data?.body || payload.notification?.body || 'You have an urgent task.',
-        icon: '/vite.svg',
-        data: payload.data
-      };
+  messaging.onBackgroundMessage(function (payload) {
+    console.log('[SW] Received background message:', payload);
 
-      self.registration.showNotification(notificationTitle, notificationOptions);
-    });
+    const notificationTitle =
+      payload?.data?.title ||
+      payload?.notification?.title ||
+      'SGCS Civic Alert';
 
+    const notificationOptions = {
+      body:
+        payload?.data?.body ||
+        payload?.notification?.body ||
+        'You have a new update in SGCS.',
+      icon: '/vite.svg',
+      badge: '/vite.svg',
+      data: payload?.data || {},
+      tag: payload?.data?.taskId || payload?.data?.trackingNumber || undefined
+    };
+
+    self.registration.showNotification(notificationTitle, notificationOptions);
+  });
 } catch (e) {
-    console.log("Firebase SW init failed", e);
+  console.warn('[SW] Firebase SW initialization skipped or failed:', e);
 }
 
-self.addEventListener('notificationclick', function(event) {
+self.addEventListener('notificationclick', function (event) {
   event.notification.close();
-  
-  const urlToOpen = new URL(event.notification.data.click_action || '/worker/assigned', self.location.origin).href;
+
+  const data = event.notification?.data || {};
+  const clickAction = data.click_action || data.linkUrl || (data.taskId ? '/worker/tasks' : '/');
+  const urlToOpen = new URL(clickAction, self.location.origin).href;
 
   const promiseChain = clients.matchAll({
     type: 'window',

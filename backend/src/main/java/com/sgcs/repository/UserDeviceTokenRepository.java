@@ -12,4 +12,6 @@ public interface UserDeviceTokenRepository extends JpaRepository<UserDeviceToken
     Optional<UserDeviceToken> findByFcmToken(String fcmToken);
     List<UserDeviceToken> findByUserIdAndActiveTrue(String userId);
     List<UserDeviceToken> findByUserId(String userId);
+    List<UserDeviceToken> findByActiveTrue();
+    List<UserDeviceToken> findByUserIdInAndActiveTrue(List<String> userIds);
 }

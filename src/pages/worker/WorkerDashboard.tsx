@@ -41,7 +41,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { complaintService } from '../../services/complaintService';
 import { notificationService } from '../../services/notificationService';
 import { Complaint, ComplaintStatus } from '../../types';
-import { requestFirebaseNotificationPermission, registerTokenWithBackend, onMessageListener } from '../../utils/firebase';
+import { requestFirebaseNotificationPermission, registerTokenWithBackend, onMessageListener, isFirebaseConfigured } from '../../utils/firebase';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import { STATUS_COLORS, PRIORITY_COLORS } from '../../constants';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
@@ -127,28 +127,41 @@ export const WorkerDashboard: React.FC = () => {
   }, [user]);
 
   useEffect(() => {
-    if (Notification.permission === 'granted') {
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
       setFcmEnabled(true);
     }
   }, []);
 
   const handleEnablePush = async () => {
     if (!user) return;
-    const token = await requestFirebaseNotificationPermission();
-    if (token) {
-      setFcmEnabled(true);
-      await registerTokenWithBackend(token);
-      // Restart task fetching just in case urgency came in
-      fetchTasks();
+    try {
+      const token = await requestFirebaseNotificationPermission();
+      if (token) {
+        setFcmEnabled(true);
+        await registerTokenWithBackend(token);
+        // Restart task fetching just in case urgency came in
+        fetchTasks();
+      } else {
+        if (typeof window !== 'undefined' && 'Notification' in window) {
+          if (Notification.permission === 'denied') {
+            alert('Notification permission is blocked in your phone browser settings. Please allow notifications for this site to receive urgent alerts.');
+          } else if (!isFirebaseConfigured()) {
+            alert('Push notifications require Firebase configuration (VITE_FIREBASE_API_KEY). Ensure environment variables are configured.');
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Failed to enable push notifications:', e);
     }
   };
 
   useEffect(() => {
     if (fcmEnabled) {
-      onMessageListener((payload: any) => {
+      const unsub = onMessageListener((payload: any) => {
         setFcmNotification(payload);
         fetchTasks();
       });
+      return unsub;
     }
   }, [fcmEnabled]);
 

@@ -7,7 +7,8 @@ import {
   Stack,
   Alert,
   Paper,
-  InputAdornment
+  InputAdornment,
+  MenuItem
 } from '@mui/material';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
@@ -24,10 +25,11 @@ export const SubmitComplaint: React.FC = () => {
   const { user } = useAuth();
 
   const [title, setTitle] = useState('');
+  const [category, setCategory] = useState<string>('AUTO');
   const [description, setDescription] = useState('');
   const [ward, setWard] = useState(user?.ward || 'Ward 1 - Central Town');
   const [locationAddress, setLocationAddress] = useState('');
-  const [priority] = useState<ComplaintPriority>('MEDIUM');
+  const [priority, setPriority] = useState<ComplaintPriority>('MEDIUM');
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -56,7 +58,7 @@ export const SubmitComplaint: React.FC = () => {
     try {
       const created = await complaintService.createComplaint({
         title: title.trim(),
-        category: 'Other', // Temporary generic category, AI engine assigns actual category to councillor backlog
+        category: (category === 'AUTO' ? 'Other' : category) as any,
         description: description.trim(),
         ward,
         locationAddress: locationAddress.trim(),
@@ -194,6 +196,40 @@ export const SubmitComplaint: React.FC = () => {
             onChange={(e) => setDescription(e.target.value)}
             required
           />
+
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2.5 }}>
+            <TextField
+              select
+              fullWidth
+              label="Civic Category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              helperText="Select category or keep Auto-Detect (AI Classification)"
+            >
+              <MenuItem value="AUTO">🤖 Auto-Detect (AI Classification)</MenuItem>
+              <MenuItem value="ROAD">Road Damage & Potholes</MenuItem>
+              <MenuItem value="WATER_SUPPLY">Water Supply & Leakage</MenuItem>
+              <MenuItem value="WASTE_MANAGEMENT">Garbage & Waste Disposal</MenuItem>
+              <MenuItem value="DRAINAGE">Drainage & Sewage Overflow</MenuItem>
+              <MenuItem value="STREET_LIGHT">Street Light Failure</MenuItem>
+              <MenuItem value="PUBLIC_SPACE">Public Spaces & Parks</MenuItem>
+              <MenuItem value="Other">Other Grievance</MenuItem>
+            </TextField>
+
+            <TextField
+              select
+              fullWidth
+              label="Urgency / Priority"
+              value={priority}
+              onChange={(e) => setPriority(e.target.value as ComplaintPriority)}
+              helperText="Mark URGENT for critical public hazards"
+            >
+              <MenuItem value="LOW">Low - Routine</MenuItem>
+              <MenuItem value="MEDIUM">Medium - Normal</MenuItem>
+              <MenuItem value="HIGH">High - Important</MenuItem>
+              <MenuItem value="URGENT">🚨 URGENT - Immediate Hazard</MenuItem>
+            </TextField>
+          </Box>
 
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr' }, gap: 2.5 }}>
             <WardSelector
