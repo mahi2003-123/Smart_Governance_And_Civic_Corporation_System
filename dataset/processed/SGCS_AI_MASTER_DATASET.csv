@@ -4999,75 +4999,672 @@ Why has the plastic bottles blocking the sidewalk temple street not been attende
 Could you please look into the sewage overflow entering residential compounds residential area? Your timely assistance in getting this resolved would be highly appreciated by everyone in the neighborhood.,DRAINAGE
 "While passing by near the bus stop yesterday, I noticed a severe case of severely blocked sewer causing backflow. It looked quite dangerous and seemed like it had been neglected for quite some time, so I decided to raise a formal report.",DRAINAGE
 Why has the discarded furniture blocking the lane public park corner not been attended to yet? Who is responsible for this civic neglect?,WASTE_MANAGEMENT
-Waste has not been collected,WASTE_MANAGEMENT
-Garbage is overflowing near the bus stop,WASTE_MANAGEMENT
-No one has collected trash for three days,WASTE_MANAGEMENT
-Dumpster is full and smelling bad,WASTE_MANAGEMENT
-Need garbage vehicle in our area,WASTE_MANAGEMENT
-Waste scattered all over the street,WASTE_MANAGEMENT
-Garbage truck did not come this week,WASTE_MANAGEMENT
-Too much trash near the park entrance,WASTE_MANAGEMENT
-Please clear the waste bins,WASTE_MANAGEMENT
-Garbage pile is causing health issues,WASTE_MANAGEMENT
-There is a pothole on the road,ROAD
-The road near the school is damaged,ROAD
-Huge pothole near the college gate,ROAD
-Road is broken and needs repair,ROAD
-Large pothole causing traffic issues,ROAD
-The main street has dangerous potholes,ROAD
-Asphalt is completely ruined here,ROAD
-Please fix the broken road,ROAD
-Pothole is causing accidents,ROAD
-Bad road condition near market,ROAD
-The street light is not working,STREET_LIGHT
-Road light has been broken for a week,STREET_LIGHT
-Complete darkness on this street at night,STREET_LIGHT
-Street lamp post is damaged,STREET_LIGHT
-Streetlight bulbs are fused,STREET_LIGHT
-No lighting near the walking tracks,STREET_LIGHT
-Street lights are flickering constantly,STREET_LIGHT
-Pole light is out in our ward,STREET_LIGHT
-Need new street lights installed,STREET_LIGHT
-Broken light post on main avenue,STREET_LIGHT
-There is no water supply,WATER_SUPPLY
-Water pipe is leaking,WATER_SUPPLY
-Drinking water is dirty and muddy,WATER_SUPPLY
-No water coming from taps since morning,WATER_SUPPLY
-Water supply connection broke,WATER_SUPPLY
-Low water pressure in our house,WATER_SUPPLY
-Public tap is leaking continuously,WATER_SUPPLY
-Main water pipeline has burst,WATER_SUPPLY
-Sewage mixed with drinking water,WATER_SUPPLY
-Water scarcity in the residential area,WATER_SUPPLY
-The drain is blocked,DRAINAGE
-Drain water is overflowing on the road,DRAINAGE
-Sewage is continuously overflowing,DRAINAGE
-Open manhole is dangerous,DRAINAGE
-Blocked gutter causing bad smell,DRAINAGE
-Drainage pipe is clogged,DRAINAGE
-Sewage water entering houses,DRAINAGE
-Please clean the choked drain,DRAINAGE
-Public drain is overflowing with waste,DRAINAGE
-Cover missing from the drain hole,DRAINAGE
-Park needs cleaning,PUBLIC_SPACE
-Public park equipment is damaged,PUBLIC_SPACE
-Benches in the park are broken,PUBLIC_SPACE
-Children's play area is not maintained,PUBLIC_SPACE
-Tree fell down near the walking path,PUBLIC_SPACE
-Public garden is full of dry leaves,PUBLIC_SPACE
-Gym equipment in park is broken,PUBLIC_SPACE
-Fencing around the park is broken,PUBLIC_SPACE
-Public square is very dirty,PUBLIC_SPACE
-Community hall doors are damaged,PUBLIC_SPACE
-deep pothole,ROAD
-deep pathole,ROAD
-pathole,ROAD
-tar,ROAD
-tarred,ROAD
-street is broken,ROAD
-pit on the road,ROAD
-waste inside the public pond,WASTE_MANAGEMENT
-clean the pond,WASTE_MANAGEMENT
-garbage in the pond,WASTE_MANAGEMENT
-pond is polluted with waste,WASTE_MANAGEMENT
-clean the lake,WASTE_MANAGEMENT
+Children playground in neighbourhood park has broken swing set chains with sharp hooks dangerous for kids.,PUBLIC_SPACE
+Benches in freedom park are stolen concrete seating slabs with exposed metal reinforcement rebar.,PUBLIC_SPACE
+Walking track and jogging path in Green Valley children park pathway curb stones dislodged and rolling onto the turf.,PUBLIC_SPACE
+The recreational grounds in Riverside promenade park have football goalpost rusted and netting completely shredded.,PUBLIC_SPACE
+Fencing and boundary wall of civic center lawn is broken down and stray cows and dogs wander through playground.,PUBLIC_SPACE
+Children playground in Ward 1 central park has jungle gym climbing frame unstable and shaking violently.,PUBLIC_SPACE
+Fountain in public square Green Valley children park is dysfunctional with stagnant mosquito-breeding water.,PUBLIC_SPACE
+Public garden lake view park is completely neglected with wild weeds and thorny creepers encroaching onto the seating lawns.,PUBLIC_SPACE
+Public garden sector 4 public playground is completely neglected with horticulture department has not tended or watered flower beds for months.,PUBLIC_SPACE
+"Benches in civic center lawn are completely broken, cracked in half, and vandalized with spray paint.",PUBLIC_SPACE
+Walking track and jogging path in Gandhi memorial garden pathway curb stones dislodged and rolling onto the turf.,PUBLIC_SPACE
+Open gymnasium equipment in sector 4 public playground is pull-up bars loose from foundation concrete base.,PUBLIC_SPACE
+Public garden East Hill community garden is completely neglected with flower beds trampled by stray cattle because gates are missing.,PUBLIC_SPACE
+Children playground in Riverside promenade park has sandbox contaminated and boundary timber rotted away.,PUBLIC_SPACE
+Open gymnasium equipment in Riverside promenade park is pull-up bars loose from foundation concrete base.,PUBLIC_SPACE
+"Community hall and public library freedom park doors broken, ceiling plaster peeling off, and fans not working.",PUBLIC_SPACE
+Fencing and boundary wall of ward sports complex is broken down and stray cows and dogs wander through playground.,PUBLIC_SPACE
+Benches in lake view park are splintered wooden planks making them impossible to sit on.,PUBLIC_SPACE
+"Public garden civic center lawn is completely neglected with dry grass, unpruned hedges, and dead trees about to fall.",PUBLIC_SPACE
+The recreational grounds in Ward 1 central park have basketball hoop backboard shattered and rim bent downwards.,PUBLIC_SPACE
+"Benches in Gandhi memorial garden are completely broken, cracked in half, and vandalized with spray paint.",PUBLIC_SPACE
+"Public garden rotary public park is completely neglected with dry grass, unpruned hedges, and dead trees about to fall.",PUBLIC_SPACE
+Benches in sector 4 public playground are rusted cast iron frame collapsed under seating weight.,PUBLIC_SPACE
+Open gymnasium equipment in neighbourhood park is elliptical cross-trainer pedal broken off and dangerous to use.,PUBLIC_SPACE
+Open gymnasium equipment in heritage park is elliptical cross-trainer pedal broken off and dangerous to use.,PUBLIC_SPACE
+"Benches in neighbourhood park are completely broken, cracked in half, and vandalized with spray paint.",PUBLIC_SPACE
+The recreational grounds in civic center lawn have basketball hoop backboard shattered and rim bent downwards.,PUBLIC_SPACE
+Public park gazebo in lake view park structural support pillar cracked and needs immediate bracing.,PUBLIC_SPACE
+Community hall and public library East Hill community garden reading room benches broken and glass windows shattered.,PUBLIC_SPACE
+The recreational grounds in town municipal square have basketball hoop backboard shattered and rim bent downwards.,PUBLIC_SPACE
+"Open gymnasium equipment in neighbourhood park is rusted pulleys, snapped cables, and missing weight plates.",PUBLIC_SPACE
+The municipal park at Green Valley children park has fallen eucalyptus tree across the main walking promenade.,PUBLIC_SPACE
+"Benches in sector 4 public playground are completely broken, cracked in half, and vandalized with spray paint.",PUBLIC_SPACE
+Botanical garden Green Valley children park has lawns yellowed and dying due to broken automated watering system.,PUBLIC_SPACE
+The recreational grounds in Green Valley children park have spectator stands concrete steps crumbled and unsafe to sit.,PUBLIC_SPACE
+The recreational grounds in sector 4 public playground have spectator stands concrete steps crumbled and unsafe to sit.,PUBLIC_SPACE
+Benches in East Hill community garden are stolen concrete seating slabs with exposed metal reinforcement rebar.,PUBLIC_SPACE
+Public park gazebo in Green Valley children park seating ledge broken and covered in bird droppings and debris.,PUBLIC_SPACE
+Botanical garden freedom park has dead palm tree leaning towards children play area.,PUBLIC_SPACE
+Botanical garden ward sports complex has dead palm tree leaning towards children play area.,PUBLIC_SPACE
+Public garden heritage park is completely neglected with irrigation sprinkler heads snapped and spraying water onto walkways.,PUBLIC_SPACE
+"Community hall and public library lake view park doors broken, ceiling plaster peeling off, and fans not working.",PUBLIC_SPACE
+"The municipal park at Gandhi memorial garden has broken benches, damaged pavements, and uncleaned fountain.",PUBLIC_SPACE
+The recreational grounds in East Hill community garden have basketball hoop backboard shattered and rim bent downwards.,PUBLIC_SPACE
+The recreational grounds in Gandhi memorial garden have spectator stands concrete steps crumbled and unsafe to sit.,PUBLIC_SPACE
+Children playground in civic center lawn has sandbox contaminated and boundary timber rotted away.,PUBLIC_SPACE
+Botanical garden sector 4 public playground has dead palm tree leaning towards children play area.,PUBLIC_SPACE
+"Benches in lake view park are completely broken, cracked in half, and vandalized with spray paint.",PUBLIC_SPACE
+Public park gazebo in neighbourhood park roof shingles blown away and timber rafters rotting in the rain.,PUBLIC_SPACE
+Fountain in public square neighbourhood park submersible pump burnt out and electrical wires left submerged.,PUBLIC_SPACE
+The recreational grounds in Gandhi memorial garden have cricket practice net torn and synthetic turf peeling up.,PUBLIC_SPACE
+Benches in Riverside promenade park are rusted cast iron frame collapsed under seating weight.,PUBLIC_SPACE
+"Community hall and public library East Hill community garden doors broken, ceiling plaster peeling off, and fans not working.",PUBLIC_SPACE
+Public park gazebo in freedom park seating ledge broken and covered in bird droppings and debris.,PUBLIC_SPACE
+Walking track and jogging path in lake view park walking promenade surface eroded and needs urgent resurfacing.,PUBLIC_SPACE
+Children playground in ward sports complex has rubber matting in toddler area torn off and exposing concrete.,PUBLIC_SPACE
+The recreational grounds in rotary public park have basketball hoop backboard shattered and rim bent downwards.,PUBLIC_SPACE
+Open gymnasium equipment in East Hill community garden is elliptical cross-trainer pedal broken off and dangerous to use.,PUBLIC_SPACE
+Fountain in public square lake view park is dysfunctional with stagnant mosquito-breeding water.,PUBLIC_SPACE
+Open gymnasium equipment in civic center lawn is seated chest press handles detached and hanging loose.,PUBLIC_SPACE
+Children playground in Ward 1 central park has merry-go-round jammed and completely immovable.,PUBLIC_SPACE
+Benches in ward sports complex are stolen concrete seating slabs with exposed metal reinforcement rebar.,PUBLIC_SPACE
+Public garden Ward 1 central park is completely neglected with wild weeds and thorny creepers encroaching onto the seating lawns.,PUBLIC_SPACE
+Children playground in Riverside promenade park has swings snapped and lying on the ground for two weeks.,PUBLIC_SPACE
+Children playground in rotary public park has rusted see-saw with missing handles and bolts.,PUBLIC_SPACE
+The recreational grounds in East Hill community garden have spectator stands concrete steps crumbled and unsafe to sit.,PUBLIC_SPACE
+Walking track and jogging path in lake view park is covered in thick mud and overgrown roots pushing through tiles.,PUBLIC_SPACE
+Botanical garden lake view park has dead palm tree leaning towards children play area.,PUBLIC_SPACE
+Fountain in public square Green Valley children park jet nozzles clogged and surrounding decorative tiles chipped.,PUBLIC_SPACE
+Benches in freedom park are rusted cast iron frame collapsed under seating weight.,PUBLIC_SPACE
+The recreational grounds in neighbourhood park have cricket practice net torn and synthetic turf peeling up.,PUBLIC_SPACE
+Fountain in public square botanical garden pond basin cracked and water seeping into park walkways.,PUBLIC_SPACE
+Public garden Riverside promenade park is completely neglected with irrigation sprinkler heads snapped and spraying water onto walkways.,PUBLIC_SPACE
+"Open gymnasium equipment in Riverside promenade park is rusted pulleys, snapped cables, and missing weight plates.",PUBLIC_SPACE
+Fountain in public square civic center lawn jet nozzles clogged and surrounding decorative tiles chipped.,PUBLIC_SPACE
+Public park gazebo in Riverside promenade park roof shingles blown away and timber rafters rotting in the rain.,PUBLIC_SPACE
+Children playground in Green Valley children park has broken swing set chains with sharp hooks dangerous for kids.,PUBLIC_SPACE
+"Open gymnasium equipment in rotary public park is rusted pulleys, snapped cables, and missing weight plates.",PUBLIC_SPACE
+Public garden lake view park is completely neglected with flower beds trampled by stray cattle because gates are missing.,PUBLIC_SPACE
+Community hall and public library neighbourhood park washrooms in community center locked and taps completely missing.,PUBLIC_SPACE
+Walking track and jogging path in lake view park pathway curb stones dislodged and rolling onto the turf.,PUBLIC_SPACE
+Community hall and public library Green Valley children park reading room benches broken and glass windows shattered.,PUBLIC_SPACE
+Children playground in Green Valley children park has cracked plastic slide with razor sharp edges causing injuries.,PUBLIC_SPACE
+Fencing and boundary wall of neighbourhood park brick boundary wall leaning perilously towards adjacent footpath.,PUBLIC_SPACE
+Fencing and boundary wall of sector 4 public playground iron railing rusted through and missing several vertical bars.,PUBLIC_SPACE
+Public park gazebo in rotary public park roof shingles blown away and timber rafters rotting in the rain.,PUBLIC_SPACE
+The recreational grounds in neighbourhood park have football goalpost rusted and netting completely shredded.,PUBLIC_SPACE
+Fencing and boundary wall of Ward 1 central park brick boundary wall leaning perilously towards adjacent footpath.,PUBLIC_SPACE
+Children playground in Gandhi memorial garden has jungle gym climbing frame unstable and shaking violently.,PUBLIC_SPACE
+Public garden Green Valley children park is completely neglected with wild weeds and thorny creepers encroaching onto the seating lawns.,PUBLIC_SPACE
+Walking track and jogging path in botanical garden has loose granite slabs that wobble and pinch pedestrians feet.,PUBLIC_SPACE
+Benches in East Hill community garden are rusted cast iron frame collapsed under seating weight.,PUBLIC_SPACE
+Children playground in Green Valley children park has swings snapped and lying on the ground for two weeks.,PUBLIC_SPACE
+Fountain in public square Gandhi memorial garden is dysfunctional with stagnant mosquito-breeding water.,PUBLIC_SPACE
+The recreational grounds in Ward 1 central park have football goalpost rusted and netting completely shredded.,PUBLIC_SPACE
+Community hall and public library sector 4 public playground reading room benches broken and glass windows shattered.,PUBLIC_SPACE
+Fencing and boundary wall of Green Valley children park is broken down and stray cows and dogs wander through playground.,PUBLIC_SPACE
+Fencing and boundary wall of East Hill community garden is broken down and stray cows and dogs wander through playground.,PUBLIC_SPACE
+Fencing and boundary wall of town municipal square iron railing rusted through and missing several vertical bars.,PUBLIC_SPACE
+The municipal park at Green Valley children park has overgrown wild bushes and fallen tree branches blocking visitor paths.,PUBLIC_SPACE
+"Open gymnasium equipment in freedom park is rusted pulleys, snapped cables, and missing weight plates.",PUBLIC_SPACE
+Botanical garden Ward 1 central park has dead palm tree leaning towards children play area.,PUBLIC_SPACE
+Fountain in public square lake view park jet nozzles clogged and surrounding decorative tiles chipped.,PUBLIC_SPACE
+Fountain in public square Ward 1 central park is dysfunctional with stagnant mosquito-breeding water.,PUBLIC_SPACE
+Walking track and jogging path in rotary public park is full of broken paver blocks causing joggers and elders to trip.,PUBLIC_SPACE
+Children playground in civic center lawn has jungle gym climbing frame unstable and shaking violently.,PUBLIC_SPACE
+Children playground in sector 4 public playground has jungle gym climbing frame unstable and shaking violently.,PUBLIC_SPACE
+Botanical garden civic center lawn has fallen tree limbs dangling dangerously over visitor resting sheds.,PUBLIC_SPACE
+Botanical garden neighbourhood park has lawns yellowed and dying due to broken automated watering system.,PUBLIC_SPACE
+Public park gazebo in neighbourhood park seating ledge broken and covered in bird droppings and debris.,PUBLIC_SPACE
+Benches in Green Valley children park are rusted cast iron frame collapsed under seating weight.,PUBLIC_SPACE
+The recreational grounds in East Hill community garden have cricket practice net torn and synthetic turf peeling up.,PUBLIC_SPACE
+"Open gymnasium equipment in botanical garden is rusted pulleys, snapped cables, and missing weight plates.",PUBLIC_SPACE
+"Community hall and public library Ward 1 central park doors broken, ceiling plaster peeling off, and fans not working.",PUBLIC_SPACE
+Fountain in public square Riverside promenade park jet nozzles clogged and surrounding decorative tiles chipped.,PUBLIC_SPACE
+Benches in lake view park are stolen concrete seating slabs with exposed metal reinforcement rebar.,PUBLIC_SPACE
+"Open gymnasium equipment in ward sports complex is rusted pulleys, snapped cables, and missing weight plates.",PUBLIC_SPACE
+Public garden ward sports complex is completely neglected with flower beds trampled by stray cattle because gates are missing.,PUBLIC_SPACE
+Walking track and jogging path in town municipal square has loose granite slabs that wobble and pinch pedestrians feet.,PUBLIC_SPACE
+Fountain in public square rotary public park submersible pump burnt out and electrical wires left submerged.,PUBLIC_SPACE
+The recreational grounds in civic center lawn have football goalpost rusted and netting completely shredded.,PUBLIC_SPACE
+The recreational grounds in ward sports complex have football goalpost rusted and netting completely shredded.,PUBLIC_SPACE
+Walking track and jogging path in ward sports complex is covered in thick mud and overgrown roots pushing through tiles.,PUBLIC_SPACE
+Children playground in Riverside promenade park has rusted see-saw with missing handles and bolts.,PUBLIC_SPACE
+Benches in town municipal square are stolen concrete seating slabs with exposed metal reinforcement rebar.,PUBLIC_SPACE
+Open gymnasium equipment in freedom park is elliptical cross-trainer pedal broken off and dangerous to use.,PUBLIC_SPACE
+Community hall and public library lake view park civic stage wooden floor termite-eaten and collapsing underfoot.,PUBLIC_SPACE
+"The municipal park at ward sports complex has broken benches, damaged pavements, and uncleaned fountain.",PUBLIC_SPACE
+The municipal park at Ward 1 central park has fallen eucalyptus tree across the main walking promenade.,PUBLIC_SPACE
+Walking track and jogging path in town municipal square pathway curb stones dislodged and rolling onto the turf.,PUBLIC_SPACE
+"The municipal park at lake view park has broken benches, damaged pavements, and uncleaned fountain.",PUBLIC_SPACE
+Public park gazebo in Riverside promenade park structural support pillar cracked and needs immediate bracing.,PUBLIC_SPACE
+The municipal park at lake view park has fallen eucalyptus tree across the main walking promenade.,PUBLIC_SPACE
+Walking track and jogging path in sector 4 public playground is full of broken paver blocks causing joggers and elders to trip.,PUBLIC_SPACE
+"Open gymnasium equipment in town municipal square is rusted pulleys, snapped cables, and missing weight plates.",PUBLIC_SPACE
+Open gymnasium equipment in ward sports complex is elliptical cross-trainer pedal broken off and dangerous to use.,PUBLIC_SPACE
+"Public garden neighbourhood park is completely neglected with dry grass, unpruned hedges, and dead trees about to fall.",PUBLIC_SPACE
+Fountain in public square heritage park pond basin cracked and water seeping into park walkways.,PUBLIC_SPACE
+Public park gazebo in civic center lawn structural support pillar cracked and needs immediate bracing.,PUBLIC_SPACE
+Public garden ward sports complex is completely neglected with irrigation sprinkler heads snapped and spraying water onto walkways.,PUBLIC_SPACE
+Walking track and jogging path in Gandhi memorial garden has loose granite slabs that wobble and pinch pedestrians feet.,PUBLIC_SPACE
+Walking track and jogging path in Ward 1 central park pathway curb stones dislodged and rolling onto the turf.,PUBLIC_SPACE
+Open gymnasium equipment in ward sports complex is seated chest press handles detached and hanging loose.,PUBLIC_SPACE
+The recreational grounds in Gandhi memorial garden have basketball hoop backboard shattered and rim bent downwards.,PUBLIC_SPACE
+Fencing and boundary wall of Riverside promenade park is broken down and stray cows and dogs wander through playground.,PUBLIC_SPACE
+Community hall and public library rotary public park washrooms in community center locked and taps completely missing.,PUBLIC_SPACE
+Community hall and public library Green Valley children park civic stage wooden floor termite-eaten and collapsing underfoot.,PUBLIC_SPACE
+Public garden town municipal square is completely neglected with irrigation sprinkler heads snapped and spraying water onto walkways.,PUBLIC_SPACE
+Children playground in rotary public park has rubber matting in toddler area torn off and exposing concrete.,PUBLIC_SPACE
+The recreational grounds in heritage park have spectator stands concrete steps crumbled and unsafe to sit.,PUBLIC_SPACE
+Children playground in Ward 1 central park has rubber matting in toddler area torn off and exposing concrete.,PUBLIC_SPACE
+Botanical garden East Hill community garden has lawns yellowed and dying due to broken automated watering system.,PUBLIC_SPACE
+Children playground in Ward 1 central park has sandbox contaminated and boundary timber rotted away.,PUBLIC_SPACE
+Public park gazebo in heritage park seating ledge broken and covered in bird droppings and debris.,PUBLIC_SPACE
+Botanical garden sector 4 public playground has fallen tree limbs dangling dangerously over visitor resting sheds.,PUBLIC_SPACE
+Botanical garden sector 4 public playground has medicinal plant section completely overgrown with wild shrubs.,PUBLIC_SPACE
+The municipal park at town municipal square has damaged entrance gate with sharp metal protruding outwards.,PUBLIC_SPACE
+Fountain in public square Ward 1 central park jet nozzles clogged and surrounding decorative tiles chipped.,PUBLIC_SPACE
+Fencing and boundary wall of heritage park is broken down and stray cows and dogs wander through playground.,PUBLIC_SPACE
+Open gymnasium equipment in neighbourhood park is pull-up bars loose from foundation concrete base.,PUBLIC_SPACE
+Children playground in neighbourhood park has rubber matting in toddler area torn off and exposing concrete.,PUBLIC_SPACE
+Benches in lake view park are rusted cast iron frame collapsed under seating weight.,PUBLIC_SPACE
+Fencing and boundary wall of heritage park brick boundary wall leaning perilously towards adjacent footpath.,PUBLIC_SPACE
+Walking track and jogging path in lake view park has deep puddles and cracked concrete paving tiles.,PUBLIC_SPACE
+Public park gazebo in neighbourhood park structural support pillar cracked and needs immediate bracing.,PUBLIC_SPACE
+Botanical garden civic center lawn has lawns yellowed and dying due to broken automated watering system.,PUBLIC_SPACE
+Fountain in public square sector 4 public playground is dysfunctional with stagnant mosquito-breeding water.,PUBLIC_SPACE
+Botanical garden sector 4 public playground has lawns yellowed and dying due to broken automated watering system.,PUBLIC_SPACE
+Community hall and public library botanical garden reading room benches broken and glass windows shattered.,PUBLIC_SPACE
+Public garden neighbourhood park is completely neglected with wild weeds and thorny creepers encroaching onto the seating lawns.,PUBLIC_SPACE
+Public park gazebo in botanical garden structural support pillar cracked and needs immediate bracing.,PUBLIC_SPACE
+The recreational grounds in lake view park have cricket practice net torn and synthetic turf peeling up.,PUBLIC_SPACE
+Public garden Riverside promenade park is completely neglected with flower beds trampled by stray cattle because gates are missing.,PUBLIC_SPACE
+Public garden Green Valley children park is completely neglected with irrigation sprinkler heads snapped and spraying water onto walkways.,PUBLIC_SPACE
+"The municipal park at Ward 1 central park has vandalized signage, broken lampposts, and damaged footpaths.",PUBLIC_SPACE
+Botanical garden botanical garden has fallen tree limbs dangling dangerously over visitor resting sheds.,PUBLIC_SPACE
+Fencing and boundary wall of botanical garden chain-link perimeter fence cut and vandalized by miscreants.,PUBLIC_SPACE
+Public park gazebo in freedom park central dome lantern fixture smashed and dangling by live wires.,PUBLIC_SPACE
+The recreational grounds in East Hill community garden have football goalpost rusted and netting completely shredded.,PUBLIC_SPACE
+Children playground in ward sports complex has sandbox contaminated and boundary timber rotted away.,PUBLIC_SPACE
+"Public garden lake view park is completely neglected with dry grass, unpruned hedges, and dead trees about to fall.",PUBLIC_SPACE
+Community hall and public library Gandhi memorial garden reading room benches broken and glass windows shattered.,PUBLIC_SPACE
+Fountain in public square rotary public park pond basin cracked and water seeping into park walkways.,PUBLIC_SPACE
+Walking track and jogging path in ward sports complex pathway curb stones dislodged and rolling onto the turf.,PUBLIC_SPACE
+Community hall and public library rotary public park reading room benches broken and glass windows shattered.,PUBLIC_SPACE
+Public garden town municipal square is completely neglected with flower beds trampled by stray cattle because gates are missing.,PUBLIC_SPACE
+Fountain in public square Gandhi memorial garden pond basin cracked and water seeping into park walkways.,PUBLIC_SPACE
+Public garden neighbourhood park is completely neglected with flower beds trampled by stray cattle because gates are missing.,PUBLIC_SPACE
+Children playground in botanical garden has rubber matting in toddler area torn off and exposing concrete.,PUBLIC_SPACE
+Benches in Green Valley children park are splintered wooden planks making them impossible to sit on.,PUBLIC_SPACE
+Fountain in public square heritage park is dysfunctional with stagnant mosquito-breeding water.,PUBLIC_SPACE
+Walking track and jogging path in East Hill community garden has deep puddles and cracked concrete paving tiles.,PUBLIC_SPACE
+Public park gazebo in sector 4 public playground structural support pillar cracked and needs immediate bracing.,PUBLIC_SPACE
+"Public garden freedom park is completely neglected with dry grass, unpruned hedges, and dead trees about to fall.",PUBLIC_SPACE
+Fencing and boundary wall of sector 4 public playground brick boundary wall leaning perilously towards adjacent footpath.,PUBLIC_SPACE
+Community hall and public library lake view park reading room benches broken and glass windows shattered.,PUBLIC_SPACE
+Public garden Ward 1 central park is completely neglected with horticulture department has not tended or watered flower beds for months.,PUBLIC_SPACE
+Botanical garden rotary public park has dead palm tree leaning towards children play area.,PUBLIC_SPACE
+The municipal park at botanical garden has fallen eucalyptus tree across the main walking promenade.,PUBLIC_SPACE
+Public garden botanical garden is completely neglected with flower beds trampled by stray cattle because gates are missing.,PUBLIC_SPACE
+"Community hall and public library sector 4 public playground doors broken, ceiling plaster peeling off, and fans not working.",PUBLIC_SPACE
+Open gymnasium equipment in sector 4 public playground is seated chest press handles detached and hanging loose.,PUBLIC_SPACE
+Walking track and jogging path in freedom park has loose granite slabs that wobble and pinch pedestrians feet.,PUBLIC_SPACE
+Walking track and jogging path in ward sports complex walking promenade surface eroded and needs urgent resurfacing.,PUBLIC_SPACE
+The municipal park at lake view park has damaged entrance gate with sharp metal protruding outwards.,PUBLIC_SPACE
+The recreational grounds in Riverside promenade park have spectator stands concrete steps crumbled and unsafe to sit.,PUBLIC_SPACE
+Community hall and public library East Hill community garden washrooms in community center locked and taps completely missing.,PUBLIC_SPACE
+Benches in Ward 1 central park are rusted cast iron frame collapsed under seating weight.,PUBLIC_SPACE
+Public garden heritage park is completely neglected with horticulture department has not tended or watered flower beds for months.,PUBLIC_SPACE
+Open gymnasium equipment in heritage park is seated chest press handles detached and hanging loose.,PUBLIC_SPACE
+Fencing and boundary wall of town municipal square brick boundary wall leaning perilously towards adjacent footpath.,PUBLIC_SPACE
+Children playground in rotary public park has swings snapped and lying on the ground for two weeks.,PUBLIC_SPACE
+Public park gazebo in Ward 1 central park roof shingles blown away and timber rafters rotting in the rain.,PUBLIC_SPACE
+"Public garden heritage park is completely neglected with dry grass, unpruned hedges, and dead trees about to fall.",PUBLIC_SPACE
+The recreational grounds in Gandhi memorial garden have football goalpost rusted and netting completely shredded.,PUBLIC_SPACE
+"The municipal park at Gandhi memorial garden has vandalized signage, broken lampposts, and damaged footpaths.",PUBLIC_SPACE
+The municipal park at Green Valley children park has no security and boundary fencing torn down allowing stray animals.,PUBLIC_SPACE
+Walking track and jogging path in Green Valley children park has loose granite slabs that wobble and pinch pedestrians feet.,PUBLIC_SPACE
+Children playground in neighbourhood park has jungle gym climbing frame unstable and shaking violently.,PUBLIC_SPACE
+Public park gazebo in botanical garden seating ledge broken and covered in bird droppings and debris.,PUBLIC_SPACE
+Open gymnasium equipment in Gandhi memorial garden is elliptical cross-trainer pedal broken off and dangerous to use.,PUBLIC_SPACE
+Walking track and jogging path in Gandhi memorial garden is covered in thick mud and overgrown roots pushing through tiles.,PUBLIC_SPACE
+Botanical garden Riverside promenade park has fallen tree limbs dangling dangerously over visitor resting sheds.,PUBLIC_SPACE
+Benches in ward sports complex are rusted cast iron frame collapsed under seating weight.,PUBLIC_SPACE
+Botanical garden Riverside promenade park has medicinal plant section completely overgrown with wild shrubs.,PUBLIC_SPACE
+Public park gazebo in Riverside promenade park seating ledge broken and covered in bird droppings and debris.,PUBLIC_SPACE
+The recreational grounds in rotary public park have football goalpost rusted and netting completely shredded.,PUBLIC_SPACE
+Botanical garden Gandhi memorial garden has fallen tree limbs dangling dangerously over visitor resting sheds.,PUBLIC_SPACE
+Fencing and boundary wall of Ward 1 central park iron railing rusted through and missing several vertical bars.,PUBLIC_SPACE
+Fencing and boundary wall of Riverside promenade park brick boundary wall leaning perilously towards adjacent footpath.,PUBLIC_SPACE
+Walking track and jogging path in sector 4 public playground pathway curb stones dislodged and rolling onto the turf.,PUBLIC_SPACE
+Fountain in public square civic center lawn pond basin cracked and water seeping into park walkways.,PUBLIC_SPACE
+Fencing and boundary wall of botanical garden brick boundary wall leaning perilously towards adjacent footpath.,PUBLIC_SPACE
+Community hall and public library town municipal square washrooms in community center locked and taps completely missing.,PUBLIC_SPACE
+The municipal park at heritage park has unmaintained public garden with dead flower beds and overgrown grass.,PUBLIC_SPACE
+Open gymnasium equipment in rotary public park is elliptical cross-trainer pedal broken off and dangerous to use.,PUBLIC_SPACE
+Benches in Gandhi memorial garden are splintered wooden planks making them impossible to sit on.,PUBLIC_SPACE
+Botanical garden town municipal square has lawns yellowed and dying due to broken automated watering system.,PUBLIC_SPACE
+"The municipal park at lake view park has vandalized signage, broken lampposts, and damaged footpaths.",PUBLIC_SPACE
+Public garden Riverside promenade park is completely neglected with horticulture department has not tended or watered flower beds for months.,PUBLIC_SPACE
+Fountain in public square botanical garden jet nozzles clogged and surrounding decorative tiles chipped.,PUBLIC_SPACE
+Community hall and public library freedom park reading room benches broken and glass windows shattered.,PUBLIC_SPACE
+"The municipal park at botanical garden has broken benches, damaged pavements, and uncleaned fountain.",PUBLIC_SPACE
+Public garden town municipal square is completely neglected with horticulture department has not tended or watered flower beds for months.,PUBLIC_SPACE
+Public garden freedom park is completely neglected with flower beds trampled by stray cattle because gates are missing.,PUBLIC_SPACE
+Fountain in public square botanical garden submersible pump burnt out and electrical wires left submerged.,PUBLIC_SPACE
+Public park gazebo in sector 4 public playground seating ledge broken and covered in bird droppings and debris.,PUBLIC_SPACE
+Public park gazebo in heritage park central dome lantern fixture smashed and dangling by live wires.,PUBLIC_SPACE
+Benches in town municipal square are splintered wooden planks making them impossible to sit on.,PUBLIC_SPACE
+Children playground in Green Valley children park has jungle gym climbing frame unstable and shaking violently.,PUBLIC_SPACE
+Children playground in heritage park has rusted see-saw with missing handles and bolts.,PUBLIC_SPACE
+Public garden Green Valley children park is completely neglected with horticulture department has not tended or watered flower beds for months.,PUBLIC_SPACE
+Public park gazebo in town municipal square seating ledge broken and covered in bird droppings and debris.,PUBLIC_SPACE
+Open gymnasium equipment in Green Valley children park is elliptical cross-trainer pedal broken off and dangerous to use.,PUBLIC_SPACE
+The municipal park at town municipal square has no security and boundary fencing torn down allowing stray animals.,PUBLIC_SPACE
+The municipal park at town municipal square has overgrown wild bushes and fallen tree branches blocking visitor paths.,PUBLIC_SPACE
+"Community hall and public library neighbourhood park doors broken, ceiling plaster peeling off, and fans not working.",PUBLIC_SPACE
+The municipal park at rotary public park has collapsed gazebo structure making it unsafe for senior citizens.,PUBLIC_SPACE
+Walking track and jogging path in heritage park is full of broken paver blocks causing joggers and elders to trip.,PUBLIC_SPACE
+"Community hall and public library town municipal square doors broken, ceiling plaster peeling off, and fans not working.",PUBLIC_SPACE
+Children playground in rotary public park has sandbox contaminated and boundary timber rotted away.,PUBLIC_SPACE
+Children playground in botanical garden has broken swing set chains with sharp hooks dangerous for kids.,PUBLIC_SPACE
+Walking track and jogging path in East Hill community garden walking promenade surface eroded and needs urgent resurfacing.,PUBLIC_SPACE
+Children playground in town municipal square has jungle gym climbing frame unstable and shaking violently.,PUBLIC_SPACE
+Fountain in public square Riverside promenade park pond basin cracked and water seeping into park walkways.,PUBLIC_SPACE
+Botanical garden civic center lawn has medicinal plant section completely overgrown with wild shrubs.,PUBLIC_SPACE
+Community hall and public library botanical garden civic stage wooden floor termite-eaten and collapsing underfoot.,PUBLIC_SPACE
+Botanical garden town municipal square has fallen tree limbs dangling dangerously over visitor resting sheds.,PUBLIC_SPACE
+Public park gazebo in civic center lawn roof shingles blown away and timber rafters rotting in the rain.,PUBLIC_SPACE
+Public garden Gandhi memorial garden is completely neglected with irrigation sprinkler heads snapped and spraying water onto walkways.,PUBLIC_SPACE
+The recreational grounds in town municipal square have football goalpost rusted and netting completely shredded.,PUBLIC_SPACE
+Public garden East Hill community garden is completely neglected with irrigation sprinkler heads snapped and spraying water onto walkways.,PUBLIC_SPACE
+Children playground in lake view park has rusted see-saw with missing handles and bolts.,PUBLIC_SPACE
+"The municipal park at town municipal square has vandalized signage, broken lampposts, and damaged footpaths.",PUBLIC_SPACE
+Walking track and jogging path in neighbourhood park is covered in thick mud and overgrown roots pushing through tiles.,PUBLIC_SPACE
+Walking track and jogging path in Ward 1 central park is covered in thick mud and overgrown roots pushing through tiles.,PUBLIC_SPACE
+Public park gazebo in civic center lawn seating ledge broken and covered in bird droppings and debris.,PUBLIC_SPACE
+Children playground in botanical garden has swings snapped and lying on the ground for two weeks.,PUBLIC_SPACE
+Fountain in public square town municipal square pond basin cracked and water seeping into park walkways.,PUBLIC_SPACE
+Fencing and boundary wall of ward sports complex brick boundary wall leaning perilously towards adjacent footpath.,PUBLIC_SPACE
+Public garden Riverside promenade park is completely neglected with wild weeds and thorny creepers encroaching onto the seating lawns.,PUBLIC_SPACE
+The municipal park at civic center lawn has collapsed gazebo structure making it unsafe for senior citizens.,PUBLIC_SPACE
+The municipal park at civic center lawn has no security and boundary fencing torn down allowing stray animals.,PUBLIC_SPACE
+Fencing and boundary wall of civic center lawn iron railing rusted through and missing several vertical bars.,PUBLIC_SPACE
+Community hall and public library Riverside promenade park civic stage wooden floor termite-eaten and collapsing underfoot.,PUBLIC_SPACE
+Children playground in neighbourhood park has rusted see-saw with missing handles and bolts.,PUBLIC_SPACE
+Fencing and boundary wall of heritage park iron railing rusted through and missing several vertical bars.,PUBLIC_SPACE
+The recreational grounds in town municipal square have spectator stands concrete steps crumbled and unsafe to sit.,PUBLIC_SPACE
+Fountain in public square rotary public park is dysfunctional with stagnant mosquito-breeding water.,PUBLIC_SPACE
+Children playground in botanical garden has merry-go-round jammed and completely immovable.,PUBLIC_SPACE
+Fencing and boundary wall of Gandhi memorial garden is broken down and stray cows and dogs wander through playground.,PUBLIC_SPACE
+Fountain in public square neighbourhood park pond basin cracked and water seeping into park walkways.,PUBLIC_SPACE
+"The municipal park at sector 4 public playground has vandalized signage, broken lampposts, and damaged footpaths.",PUBLIC_SPACE
+Open gymnasium equipment in lake view park is seated chest press handles detached and hanging loose.,PUBLIC_SPACE
+Benches in Green Valley children park are stolen concrete seating slabs with exposed metal reinforcement rebar.,PUBLIC_SPACE
+Public park gazebo in ward sports complex central dome lantern fixture smashed and dangling by live wires.,PUBLIC_SPACE
+"The municipal park at Riverside promenade park has vandalized signage, broken lampposts, and damaged footpaths.",PUBLIC_SPACE
+Walking track and jogging path in freedom park is covered in thick mud and overgrown roots pushing through tiles.,PUBLIC_SPACE
+"Public garden Riverside promenade park is completely neglected with dry grass, unpruned hedges, and dead trees about to fall.",PUBLIC_SPACE
+Children playground in botanical garden has rusted see-saw with missing handles and bolts.,PUBLIC_SPACE
+Public park gazebo in lake view park seating ledge broken and covered in bird droppings and debris.,PUBLIC_SPACE
+Community hall and public library Green Valley children park washrooms in community center locked and taps completely missing.,PUBLIC_SPACE
+Public garden sector 4 public playground is completely neglected with wild weeds and thorny creepers encroaching onto the seating lawns.,PUBLIC_SPACE
+Fencing and boundary wall of Gandhi memorial garden brick boundary wall leaning perilously towards adjacent footpath.,PUBLIC_SPACE
+Fountain in public square ward sports complex submersible pump burnt out and electrical wires left submerged.,PUBLIC_SPACE
+Walking track and jogging path in rotary public park has loose granite slabs that wobble and pinch pedestrians feet.,PUBLIC_SPACE
+Open gymnasium equipment in botanical garden is elliptical cross-trainer pedal broken off and dangerous to use.,PUBLIC_SPACE
+Public garden freedom park is completely neglected with wild weeds and thorny creepers encroaching onto the seating lawns.,PUBLIC_SPACE
+Open gymnasium equipment in Ward 1 central park is seated chest press handles detached and hanging loose.,PUBLIC_SPACE
+Fencing and boundary wall of freedom park iron railing rusted through and missing several vertical bars.,PUBLIC_SPACE
+The recreational grounds in neighbourhood park have basketball hoop backboard shattered and rim bent downwards.,PUBLIC_SPACE
+The municipal park at botanical garden has no security and boundary fencing torn down allowing stray animals.,PUBLIC_SPACE
+Botanical garden lake view park has lawns yellowed and dying due to broken automated watering system.,PUBLIC_SPACE
+Public park gazebo in Ward 1 central park structural support pillar cracked and needs immediate bracing.,PUBLIC_SPACE
+The recreational grounds in sector 4 public playground have basketball hoop backboard shattered and rim bent downwards.,PUBLIC_SPACE
+Botanical garden heritage park has dead palm tree leaning towards children play area.,PUBLIC_SPACE
+Children playground in neighbourhood park has merry-go-round jammed and completely immovable.,PUBLIC_SPACE
+The recreational grounds in rotary public park have spectator stands concrete steps crumbled and unsafe to sit.,PUBLIC_SPACE
+Public park gazebo in Green Valley children park roof shingles blown away and timber rafters rotting in the rain.,PUBLIC_SPACE
+Children playground in sector 4 public playground has cracked plastic slide with razor sharp edges causing injuries.,PUBLIC_SPACE
+Walking track and jogging path in botanical garden pathway curb stones dislodged and rolling onto the turf.,PUBLIC_SPACE
+The municipal park at heritage park has collapsed gazebo structure making it unsafe for senior citizens.,PUBLIC_SPACE
+Public garden East Hill community garden is completely neglected with wild weeds and thorny creepers encroaching onto the seating lawns.,PUBLIC_SPACE
+Walking track and jogging path in East Hill community garden is full of broken paver blocks causing joggers and elders to trip.,PUBLIC_SPACE
+Fencing and boundary wall of civic center lawn chain-link perimeter fence cut and vandalized by miscreants.,PUBLIC_SPACE
+Botanical garden botanical garden has medicinal plant section completely overgrown with wild shrubs.,PUBLIC_SPACE
+"Benches in botanical garden are completely broken, cracked in half, and vandalized with spray paint.",PUBLIC_SPACE
+Community hall and public library ward sports complex civic stage wooden floor termite-eaten and collapsing underfoot.,PUBLIC_SPACE
+Fountain in public square neighbourhood park jet nozzles clogged and surrounding decorative tiles chipped.,PUBLIC_SPACE
+Benches in civic center lawn are rusted cast iron frame collapsed under seating weight.,PUBLIC_SPACE
+Benches in rotary public park are stolen concrete seating slabs with exposed metal reinforcement rebar.,PUBLIC_SPACE
+Fencing and boundary wall of Green Valley children park brick boundary wall leaning perilously towards adjacent footpath.,PUBLIC_SPACE
+Benches in civic center lawn are splintered wooden planks making them impossible to sit on.,PUBLIC_SPACE
+The recreational grounds in Ward 1 central park have spectator stands concrete steps crumbled and unsafe to sit.,PUBLIC_SPACE
+Open gymnasium equipment in civic center lawn is elliptical cross-trainer pedal broken off and dangerous to use.,PUBLIC_SPACE
+Benches in Riverside promenade park are splintered wooden planks making them impossible to sit on.,PUBLIC_SPACE
+Fencing and boundary wall of freedom park chain-link perimeter fence cut and vandalized by miscreants.,PUBLIC_SPACE
+Walking track and jogging path in Green Valley children park walking promenade surface eroded and needs urgent resurfacing.,PUBLIC_SPACE
+Open gymnasium equipment in ward sports complex is pull-up bars loose from foundation concrete base.,PUBLIC_SPACE
+Walking track and jogging path in rotary public park is covered in thick mud and overgrown roots pushing through tiles.,PUBLIC_SPACE
+Public garden Gandhi memorial garden is completely neglected with horticulture department has not tended or watered flower beds for months.,PUBLIC_SPACE
+Fountain in public square town municipal square is dysfunctional with stagnant mosquito-breeding water.,PUBLIC_SPACE
+Open gymnasium equipment in botanical garden is pull-up bars loose from foundation concrete base.,PUBLIC_SPACE
+Fencing and boundary wall of civic center lawn brick boundary wall leaning perilously towards adjacent footpath.,PUBLIC_SPACE
+The recreational grounds in Riverside promenade park have basketball hoop backboard shattered and rim bent downwards.,PUBLIC_SPACE
+Botanical garden ward sports complex has medicinal plant section completely overgrown with wild shrubs.,PUBLIC_SPACE
+Children playground in neighbourhood park has swings snapped and lying on the ground for two weeks.,PUBLIC_SPACE
+Public park gazebo in ward sports complex seating ledge broken and covered in bird droppings and debris.,PUBLIC_SPACE
+Fencing and boundary wall of neighbourhood park is broken down and stray cows and dogs wander through playground.,PUBLIC_SPACE
+The municipal park at East Hill community garden has overgrown wild bushes and fallen tree branches blocking visitor paths.,PUBLIC_SPACE
+Fencing and boundary wall of East Hill community garden iron railing rusted through and missing several vertical bars.,PUBLIC_SPACE
+The municipal park at town municipal square has fallen eucalyptus tree across the main walking promenade.,PUBLIC_SPACE
+"Open gymnasium equipment in Green Valley children park is rusted pulleys, snapped cables, and missing weight plates.",PUBLIC_SPACE
+Open gymnasium equipment in Ward 1 central park is elliptical cross-trainer pedal broken off and dangerous to use.,PUBLIC_SPACE
+Botanical garden East Hill community garden has medicinal plant section completely overgrown with wild shrubs.,PUBLIC_SPACE
+Public garden civic center lawn is completely neglected with irrigation sprinkler heads snapped and spraying water onto walkways.,PUBLIC_SPACE
+Walking track and jogging path in heritage park walking promenade surface eroded and needs urgent resurfacing.,PUBLIC_SPACE
+Benches in Ward 1 central park are stolen concrete seating slabs with exposed metal reinforcement rebar.,PUBLIC_SPACE
+Fountain in public square East Hill community garden submersible pump burnt out and electrical wires left submerged.,PUBLIC_SPACE
+Walking track and jogging path in Gandhi memorial garden is full of broken paver blocks causing joggers and elders to trip.,PUBLIC_SPACE
+The municipal park at neighbourhood park has no security and boundary fencing torn down allowing stray animals.,PUBLIC_SPACE
+"Open gymnasium equipment in civic center lawn is rusted pulleys, snapped cables, and missing weight plates.",PUBLIC_SPACE
+"Benches in East Hill community garden are completely broken, cracked in half, and vandalized with spray paint.",PUBLIC_SPACE
+Public park gazebo in East Hill community garden central dome lantern fixture smashed and dangling by live wires.,PUBLIC_SPACE
+Children playground in lake view park has cracked plastic slide with razor sharp edges causing injuries.,PUBLIC_SPACE
+Botanical garden lake view park has fallen tree limbs dangling dangerously over visitor resting sheds.,PUBLIC_SPACE
+The recreational grounds in botanical garden have football goalpost rusted and netting completely shredded.,PUBLIC_SPACE
+Community hall and public library Ward 1 central park reading room benches broken and glass windows shattered.,PUBLIC_SPACE
+The recreational grounds in sector 4 public playground have football goalpost rusted and netting completely shredded.,PUBLIC_SPACE
+Public park gazebo in botanical garden central dome lantern fixture smashed and dangling by live wires.,PUBLIC_SPACE
+Children playground in Riverside promenade park has merry-go-round jammed and completely immovable.,PUBLIC_SPACE
+Walking track and jogging path in civic center lawn is full of broken paver blocks causing joggers and elders to trip.,PUBLIC_SPACE
+Benches in East Hill community garden are splintered wooden planks making them impossible to sit on.,PUBLIC_SPACE
+Community hall and public library sector 4 public playground washrooms in community center locked and taps completely missing.,PUBLIC_SPACE
+Fencing and boundary wall of sector 4 public playground is broken down and stray cows and dogs wander through playground.,PUBLIC_SPACE
+Benches in neighbourhood park are splintered wooden planks making them impossible to sit on.,PUBLIC_SPACE
+Children playground in Riverside promenade park has cracked plastic slide with razor sharp edges causing injuries.,PUBLIC_SPACE
+Walking track and jogging path in Gandhi memorial garden walking promenade surface eroded and needs urgent resurfacing.,PUBLIC_SPACE
+Botanical garden Ward 1 central park has lawns yellowed and dying due to broken automated watering system.,PUBLIC_SPACE
+Children playground in neighbourhood park has sandbox contaminated and boundary timber rotted away.,PUBLIC_SPACE
+Children playground in heritage park has jungle gym climbing frame unstable and shaking violently.,PUBLIC_SPACE
+Children playground in Green Valley children park has merry-go-round jammed and completely immovable.,PUBLIC_SPACE
+Benches in Riverside promenade park are stolen concrete seating slabs with exposed metal reinforcement rebar.,PUBLIC_SPACE
+The recreational grounds in civic center lawn have cricket practice net torn and synthetic turf peeling up.,PUBLIC_SPACE
+Benches in freedom park are splintered wooden planks making them impossible to sit on.,PUBLIC_SPACE
+The municipal park at heritage park has no security and boundary fencing torn down allowing stray animals.,PUBLIC_SPACE
+Walking track and jogging path in rotary public park walking promenade surface eroded and needs urgent resurfacing.,PUBLIC_SPACE
+Public park gazebo in East Hill community garden roof shingles blown away and timber rafters rotting in the rain.,PUBLIC_SPACE
+Walking track and jogging path in heritage park is covered in thick mud and overgrown roots pushing through tiles.,PUBLIC_SPACE
+The municipal park at ward sports complex has no security and boundary fencing torn down allowing stray animals.,PUBLIC_SPACE
+Botanical garden East Hill community garden has fallen tree limbs dangling dangerously over visitor resting sheds.,PUBLIC_SPACE
+The recreational grounds in botanical garden have spectator stands concrete steps crumbled and unsafe to sit.,PUBLIC_SPACE
+Botanical garden botanical garden has dead palm tree leaning towards children play area.,PUBLIC_SPACE
+Benches in sector 4 public playground are stolen concrete seating slabs with exposed metal reinforcement rebar.,PUBLIC_SPACE
+The municipal park at civic center lawn has overgrown wild bushes and fallen tree branches blocking visitor paths.,PUBLIC_SPACE
+Walking track and jogging path in East Hill community garden has loose granite slabs that wobble and pinch pedestrians feet.,PUBLIC_SPACE
+Fountain in public square lake view park submersible pump burnt out and electrical wires left submerged.,PUBLIC_SPACE
+The municipal park at sector 4 public playground has unmaintained public garden with dead flower beds and overgrown grass.,PUBLIC_SPACE
+Children playground in ward sports complex has merry-go-round jammed and completely immovable.,PUBLIC_SPACE
+The recreational grounds in freedom park have spectator stands concrete steps crumbled and unsafe to sit.,PUBLIC_SPACE
+Children playground in town municipal square has sandbox contaminated and boundary timber rotted away.,PUBLIC_SPACE
+Botanical garden Gandhi memorial garden has dead palm tree leaning towards children play area.,PUBLIC_SPACE
+Public park gazebo in rotary public park seating ledge broken and covered in bird droppings and debris.,PUBLIC_SPACE
+Fencing and boundary wall of Green Valley children park iron railing rusted through and missing several vertical bars.,PUBLIC_SPACE
+Children playground in lake view park has sandbox contaminated and boundary timber rotted away.,PUBLIC_SPACE
+Benches in rotary public park are splintered wooden planks making them impossible to sit on.,PUBLIC_SPACE
+Fountain in public square Riverside promenade park is dysfunctional with stagnant mosquito-breeding water.,PUBLIC_SPACE
+The recreational grounds in freedom park have basketball hoop backboard shattered and rim bent downwards.,PUBLIC_SPACE
+Children playground in Green Valley children park has rusted see-saw with missing handles and bolts.,PUBLIC_SPACE
+Walking track and jogging path in civic center lawn pathway curb stones dislodged and rolling onto the turf.,PUBLIC_SPACE
+Walking track and jogging path in Riverside promenade park pathway curb stones dislodged and rolling onto the turf.,PUBLIC_SPACE
+The recreational grounds in rotary public park have cricket practice net torn and synthetic turf peeling up.,PUBLIC_SPACE
+Community hall and public library town municipal square reading room benches broken and glass windows shattered.,PUBLIC_SPACE
+"Benches in rotary public park are completely broken, cracked in half, and vandalized with spray paint.",PUBLIC_SPACE
+Walking track and jogging path in lake view park is full of broken paver blocks causing joggers and elders to trip.,PUBLIC_SPACE
+Children playground in freedom park has rusted see-saw with missing handles and bolts.,PUBLIC_SPACE
+Open gymnasium equipment in heritage park is pull-up bars loose from foundation concrete base.,PUBLIC_SPACE
+Botanical garden neighbourhood park has fallen tree limbs dangling dangerously over visitor resting sheds.,PUBLIC_SPACE
+The recreational grounds in lake view park have spectator stands concrete steps crumbled and unsafe to sit.,PUBLIC_SPACE
+Public park gazebo in neighbourhood park central dome lantern fixture smashed and dangling by live wires.,PUBLIC_SPACE
+The recreational grounds in neighbourhood park have spectator stands concrete steps crumbled and unsafe to sit.,PUBLIC_SPACE
+"Open gymnasium equipment in lake view park is rusted pulleys, snapped cables, and missing weight plates.",PUBLIC_SPACE
+Benches in heritage park are stolen concrete seating slabs with exposed metal reinforcement rebar.,PUBLIC_SPACE
+Open gymnasium equipment in Green Valley children park is seated chest press handles detached and hanging loose.,PUBLIC_SPACE
+Children playground in East Hill community garden has rubber matting in toddler area torn off and exposing concrete.,PUBLIC_SPACE
+Children playground in rotary public park has broken swing set chains with sharp hooks dangerous for kids.,PUBLIC_SPACE
+Walking track and jogging path in East Hill community garden pathway curb stones dislodged and rolling onto the turf.,PUBLIC_SPACE
+Botanical garden Gandhi memorial garden has medicinal plant section completely overgrown with wild shrubs.,PUBLIC_SPACE
+Open gymnasium equipment in sector 4 public playground is elliptical cross-trainer pedal broken off and dangerous to use.,PUBLIC_SPACE
+Botanical garden botanical garden has lawns yellowed and dying due to broken automated watering system.,PUBLIC_SPACE
+Public park gazebo in Gandhi memorial garden central dome lantern fixture smashed and dangling by live wires.,PUBLIC_SPACE
+Benches in botanical garden are rusted cast iron frame collapsed under seating weight.,PUBLIC_SPACE
+Fountain in public square lake view park pond basin cracked and water seeping into park walkways.,PUBLIC_SPACE
+Community hall and public library neighbourhood park civic stage wooden floor termite-eaten and collapsing underfoot.,PUBLIC_SPACE
+Children playground in town municipal square has rusted see-saw with missing handles and bolts.,PUBLIC_SPACE
+Fencing and boundary wall of rotary public park is broken down and stray cows and dogs wander through playground.,PUBLIC_SPACE
+Public garden ward sports complex is completely neglected with horticulture department has not tended or watered flower beds for months.,PUBLIC_SPACE
+The municipal park at sector 4 public playground has damaged entrance gate with sharp metal protruding outwards.,PUBLIC_SPACE
+Open gymnasium equipment in lake view park is elliptical cross-trainer pedal broken off and dangerous to use.,PUBLIC_SPACE
+Children playground in sector 4 public playground has merry-go-round jammed and completely immovable.,PUBLIC_SPACE
+Walking track and jogging path in Gandhi memorial garden has deep puddles and cracked concrete paving tiles.,PUBLIC_SPACE
+Walking track and jogging path in freedom park pathway curb stones dislodged and rolling onto the turf.,PUBLIC_SPACE
+"Community hall and public library botanical garden doors broken, ceiling plaster peeling off, and fans not working.",PUBLIC_SPACE
+Children playground in ward sports complex has broken swing set chains with sharp hooks dangerous for kids.,PUBLIC_SPACE
+Public park gazebo in lake view park central dome lantern fixture smashed and dangling by live wires.,PUBLIC_SPACE
+Children playground in town municipal square has broken swing set chains with sharp hooks dangerous for kids.,PUBLIC_SPACE
+Fountain in public square civic center lawn is dysfunctional with stagnant mosquito-breeding water.,PUBLIC_SPACE
+The municipal park at sector 4 public playground has fallen eucalyptus tree across the main walking promenade.,PUBLIC_SPACE
+Botanical garden Green Valley children park has dead palm tree leaning towards children play area.,PUBLIC_SPACE
+Public park gazebo in town municipal square roof shingles blown away and timber rafters rotting in the rain.,PUBLIC_SPACE
+Children playground in heritage park has merry-go-round jammed and completely immovable.,PUBLIC_SPACE
+Botanical garden Gandhi memorial garden has lawns yellowed and dying due to broken automated watering system.,PUBLIC_SPACE
+The municipal park at East Hill community garden has fallen eucalyptus tree across the main walking promenade.,PUBLIC_SPACE
+Community hall and public library freedom park washrooms in community center locked and taps completely missing.,PUBLIC_SPACE
+"Public garden town municipal square is completely neglected with dry grass, unpruned hedges, and dead trees about to fall.",PUBLIC_SPACE
+"Public garden Gandhi memorial garden is completely neglected with dry grass, unpruned hedges, and dead trees about to fall.",PUBLIC_SPACE
+Benches in heritage park are rusted cast iron frame collapsed under seating weight.,PUBLIC_SPACE
+Children playground in town municipal square has merry-go-round jammed and completely immovable.,PUBLIC_SPACE
+Fountain in public square heritage park submersible pump burnt out and electrical wires left submerged.,PUBLIC_SPACE
+Children playground in Gandhi memorial garden has sandbox contaminated and boundary timber rotted away.,PUBLIC_SPACE
+Fencing and boundary wall of Riverside promenade park chain-link perimeter fence cut and vandalized by miscreants.,PUBLIC_SPACE
+"Community hall and public library heritage park doors broken, ceiling plaster peeling off, and fans not working.",PUBLIC_SPACE
+Open gymnasium equipment in freedom park is seated chest press handles detached and hanging loose.,PUBLIC_SPACE
+Fountain in public square heritage park jet nozzles clogged and surrounding decorative tiles chipped.,PUBLIC_SPACE
+Walking track and jogging path in Ward 1 central park walking promenade surface eroded and needs urgent resurfacing.,PUBLIC_SPACE
+Children playground in East Hill community garden has jungle gym climbing frame unstable and shaking violently.,PUBLIC_SPACE
+The recreational grounds in heritage park have cricket practice net torn and synthetic turf peeling up.,PUBLIC_SPACE
+Fencing and boundary wall of lake view park is broken down and stray cows and dogs wander through playground.,PUBLIC_SPACE
+Benches in town municipal square are rusted cast iron frame collapsed under seating weight.,PUBLIC_SPACE
+Walking track and jogging path in Riverside promenade park is full of broken paver blocks causing joggers and elders to trip.,PUBLIC_SPACE
+Public park gazebo in freedom park structural support pillar cracked and needs immediate bracing.,PUBLIC_SPACE
+"Community hall and public library Green Valley children park doors broken, ceiling plaster peeling off, and fans not working.",PUBLIC_SPACE
+Children playground in civic center lawn has cracked plastic slide with razor sharp edges causing injuries.,PUBLIC_SPACE
+Fencing and boundary wall of lake view park iron railing rusted through and missing several vertical bars.,PUBLIC_SPACE
+Botanical garden rotary public park has fallen tree limbs dangling dangerously over visitor resting sheds.,PUBLIC_SPACE
+"Open gymnasium equipment in East Hill community garden is rusted pulleys, snapped cables, and missing weight plates.",PUBLIC_SPACE
+Fountain in public square East Hill community garden jet nozzles clogged and surrounding decorative tiles chipped.,PUBLIC_SPACE
+Walking track and jogging path in East Hill community garden is covered in thick mud and overgrown roots pushing through tiles.,PUBLIC_SPACE
+Public park gazebo in ward sports complex structural support pillar cracked and needs immediate bracing.,PUBLIC_SPACE
+The recreational grounds in Green Valley children park have cricket practice net torn and synthetic turf peeling up.,PUBLIC_SPACE
+The recreational grounds in lake view park have basketball hoop backboard shattered and rim bent downwards.,PUBLIC_SPACE
+"The municipal park at rotary public park has broken benches, damaged pavements, and uncleaned fountain.",PUBLIC_SPACE
+The recreational grounds in Ward 1 central park have cricket practice net torn and synthetic turf peeling up.,PUBLIC_SPACE
+The recreational grounds in botanical garden have cricket practice net torn and synthetic turf peeling up.,PUBLIC_SPACE
+Benches in neighbourhood park are rusted cast iron frame collapsed under seating weight.,PUBLIC_SPACE
+The municipal park at freedom park has no security and boundary fencing torn down allowing stray animals.,PUBLIC_SPACE
+Fencing and boundary wall of botanical garden iron railing rusted through and missing several vertical bars.,PUBLIC_SPACE
+Walking track and jogging path in civic center lawn is covered in thick mud and overgrown roots pushing through tiles.,PUBLIC_SPACE
+Walking track and jogging path in Green Valley children park is full of broken paver blocks causing joggers and elders to trip.,PUBLIC_SPACE
+Walking track and jogging path in Green Valley children park is covered in thick mud and overgrown roots pushing through tiles.,PUBLIC_SPACE
+Botanical garden ward sports complex has lawns yellowed and dying due to broken automated watering system.,PUBLIC_SPACE
+Community hall and public library lake view park washrooms in community center locked and taps completely missing.,PUBLIC_SPACE
+The municipal park at Ward 1 central park has collapsed gazebo structure making it unsafe for senior citizens.,PUBLIC_SPACE
+Fencing and boundary wall of Ward 1 central park is broken down and stray cows and dogs wander through playground.,PUBLIC_SPACE
+Fencing and boundary wall of Riverside promenade park iron railing rusted through and missing several vertical bars.,PUBLIC_SPACE
+Fountain in public square Gandhi memorial garden submersible pump burnt out and electrical wires left submerged.,PUBLIC_SPACE
+Children playground in East Hill community garden has sandbox contaminated and boundary timber rotted away.,PUBLIC_SPACE
+The municipal park at lake view park has overgrown wild bushes and fallen tree branches blocking visitor paths.,PUBLIC_SPACE
+Community hall and public library heritage park reading room benches broken and glass windows shattered.,PUBLIC_SPACE
+Botanical garden heritage park has lawns yellowed and dying due to broken automated watering system.,PUBLIC_SPACE
+Fencing and boundary wall of East Hill community garden brick boundary wall leaning perilously towards adjacent footpath.,PUBLIC_SPACE
+Botanical garden freedom park has lawns yellowed and dying due to broken automated watering system.,PUBLIC_SPACE
+The recreational grounds in heritage park have football goalpost rusted and netting completely shredded.,PUBLIC_SPACE
+Public park gazebo in Gandhi memorial garden roof shingles blown away and timber rafters rotting in the rain.,PUBLIC_SPACE
+Community hall and public library civic center lawn civic stage wooden floor termite-eaten and collapsing underfoot.,PUBLIC_SPACE
+Botanical garden neighbourhood park has medicinal plant section completely overgrown with wild shrubs.,PUBLIC_SPACE
+The municipal park at freedom park has unmaintained public garden with dead flower beds and overgrown grass.,PUBLIC_SPACE
+Fountain in public square East Hill community garden pond basin cracked and water seeping into park walkways.,PUBLIC_SPACE
+Botanical garden Ward 1 central park has fallen tree limbs dangling dangerously over visitor resting sheds.,PUBLIC_SPACE
+The municipal park at Green Valley children park has unmaintained public garden with dead flower beds and overgrown grass.,PUBLIC_SPACE
+Fencing and boundary wall of heritage park chain-link perimeter fence cut and vandalized by miscreants.,PUBLIC_SPACE
+Fountain in public square sector 4 public playground pond basin cracked and water seeping into park walkways.,PUBLIC_SPACE
+Walking track and jogging path in freedom park walking promenade surface eroded and needs urgent resurfacing.,PUBLIC_SPACE
+Fountain in public square Green Valley children park submersible pump burnt out and electrical wires left submerged.,PUBLIC_SPACE
+Community hall and public library neighbourhood park reading room benches broken and glass windows shattered.,PUBLIC_SPACE
+Walking track and jogging path in heritage park has loose granite slabs that wobble and pinch pedestrians feet.,PUBLIC_SPACE
+Open gymnasium equipment in lake view park is pull-up bars loose from foundation concrete base.,PUBLIC_SPACE
+Community hall and public library civic center lawn washrooms in community center locked and taps completely missing.,PUBLIC_SPACE
+Public garden freedom park is completely neglected with horticulture department has not tended or watered flower beds for months.,PUBLIC_SPACE
+Community hall and public library heritage park civic stage wooden floor termite-eaten and collapsing underfoot.,PUBLIC_SPACE
+"Benches in Ward 1 central park are completely broken, cracked in half, and vandalized with spray paint.",PUBLIC_SPACE
+"The municipal park at Green Valley children park has vandalized signage, broken lampposts, and damaged footpaths.",PUBLIC_SPACE
+Walking track and jogging path in neighbourhood park is full of broken paver blocks causing joggers and elders to trip.,PUBLIC_SPACE
+Walking track and jogging path in lake view park has loose granite slabs that wobble and pinch pedestrians feet.,PUBLIC_SPACE
+"Benches in heritage park are completely broken, cracked in half, and vandalized with spray paint.",PUBLIC_SPACE
+Children playground in ward sports complex has jungle gym climbing frame unstable and shaking violently.,PUBLIC_SPACE
+Public park gazebo in lake view park roof shingles blown away and timber rafters rotting in the rain.,PUBLIC_SPACE
+Walking track and jogging path in ward sports complex has loose granite slabs that wobble and pinch pedestrians feet.,PUBLIC_SPACE
+Walking track and jogging path in ward sports complex is full of broken paver blocks causing joggers and elders to trip.,PUBLIC_SPACE
+Fencing and boundary wall of rotary public park iron railing rusted through and missing several vertical bars.,PUBLIC_SPACE
+Public park gazebo in East Hill community garden seating ledge broken and covered in bird droppings and debris.,PUBLIC_SPACE
+The municipal park at ward sports complex has overgrown wild bushes and fallen tree branches blocking visitor paths.,PUBLIC_SPACE
+Benches in botanical garden are stolen concrete seating slabs with exposed metal reinforcement rebar.,PUBLIC_SPACE
+Children playground in Gandhi memorial garden has merry-go-round jammed and completely immovable.,PUBLIC_SPACE
+Benches in neighbourhood park are stolen concrete seating slabs with exposed metal reinforcement rebar.,PUBLIC_SPACE
+Public park gazebo in Ward 1 central park seating ledge broken and covered in bird droppings and debris.,PUBLIC_SPACE
+Benches in Gandhi memorial garden are stolen concrete seating slabs with exposed metal reinforcement rebar.,PUBLIC_SPACE
+Botanical garden East Hill community garden has dead palm tree leaning towards children play area.,PUBLIC_SPACE
+Fencing and boundary wall of rotary public park brick boundary wall leaning perilously towards adjacent footpath.,PUBLIC_SPACE
+Fencing and boundary wall of town municipal square chain-link perimeter fence cut and vandalized by miscreants.,PUBLIC_SPACE
+Benches in botanical garden are splintered wooden planks making them impossible to sit on.,PUBLIC_SPACE
+The recreational grounds in town municipal square have cricket practice net torn and synthetic turf peeling up.,PUBLIC_SPACE
+Children playground in freedom park has rubber matting in toddler area torn off and exposing concrete.,PUBLIC_SPACE
+Botanical garden heritage park has medicinal plant section completely overgrown with wild shrubs.,PUBLIC_SPACE
+Community hall and public library East Hill community garden civic stage wooden floor termite-eaten and collapsing underfoot.,PUBLIC_SPACE
+Public park gazebo in sector 4 public playground central dome lantern fixture smashed and dangling by live wires.,PUBLIC_SPACE
+Fountain in public square Gandhi memorial garden jet nozzles clogged and surrounding decorative tiles chipped.,PUBLIC_SPACE
+Public garden Gandhi memorial garden is completely neglected with wild weeds and thorny creepers encroaching onto the seating lawns.,PUBLIC_SPACE
+Open gymnasium equipment in East Hill community garden is seated chest press handles detached and hanging loose.,PUBLIC_SPACE
+The municipal park at Gandhi memorial garden has unmaintained public garden with dead flower beds and overgrown grass.,PUBLIC_SPACE
+The municipal park at freedom park has damaged entrance gate with sharp metal protruding outwards.,PUBLIC_SPACE
+Children playground in civic center lawn has broken swing set chains with sharp hooks dangerous for kids.,PUBLIC_SPACE
+"Open gymnasium equipment in sector 4 public playground is rusted pulleys, snapped cables, and missing weight plates.",PUBLIC_SPACE
+"Community hall and public library ward sports complex doors broken, ceiling plaster peeling off, and fans not working.",PUBLIC_SPACE
+Fencing and boundary wall of lake view park chain-link perimeter fence cut and vandalized by miscreants.,PUBLIC_SPACE
+Public park gazebo in ward sports complex roof shingles blown away and timber rafters rotting in the rain.,PUBLIC_SPACE
+"The municipal park at civic center lawn has vandalized signage, broken lampposts, and damaged footpaths.",PUBLIC_SPACE
+The municipal park at civic center lawn has unmaintained public garden with dead flower beds and overgrown grass.,PUBLIC_SPACE
+Benches in sector 4 public playground are splintered wooden planks making them impossible to sit on.,PUBLIC_SPACE
+Public garden Green Valley children park is completely neglected with flower beds trampled by stray cattle because gates are missing.,PUBLIC_SPACE
+Public park gazebo in rotary public park structural support pillar cracked and needs immediate bracing.,PUBLIC_SPACE
+"Community hall and public library Gandhi memorial garden doors broken, ceiling plaster peeling off, and fans not working.",PUBLIC_SPACE
+Public garden sector 4 public playground is completely neglected with flower beds trampled by stray cattle because gates are missing.,PUBLIC_SPACE
+Children playground in rotary public park has jungle gym climbing frame unstable and shaking violently.,PUBLIC_SPACE
+"Public garden ward sports complex is completely neglected with dry grass, unpruned hedges, and dead trees about to fall.",PUBLIC_SPACE
+Botanical garden freedom park has medicinal plant section completely overgrown with wild shrubs.,PUBLIC_SPACE
+Public park gazebo in Riverside promenade park central dome lantern fixture smashed and dangling by live wires.,PUBLIC_SPACE
+Botanical garden Ward 1 central park has medicinal plant section completely overgrown with wild shrubs.,PUBLIC_SPACE
+Walking track and jogging path in freedom park is full of broken paver blocks causing joggers and elders to trip.,PUBLIC_SPACE
+Walking track and jogging path in town municipal square has deep puddles and cracked concrete paving tiles.,PUBLIC_SPACE
+Public garden civic center lawn is completely neglected with horticulture department has not tended or watered flower beds for months.,PUBLIC_SPACE
+Fountain in public square East Hill community garden is dysfunctional with stagnant mosquito-breeding water.,PUBLIC_SPACE
+The municipal park at Gandhi memorial garden has damaged entrance gate with sharp metal protruding outwards.,PUBLIC_SPACE
+The recreational grounds in civic center lawn have spectator stands concrete steps crumbled and unsafe to sit.,PUBLIC_SPACE
+Fountain in public square Ward 1 central park pond basin cracked and water seeping into park walkways.,PUBLIC_SPACE
+Children playground in ward sports complex has rusted see-saw with missing handles and bolts.,PUBLIC_SPACE
+Fencing and boundary wall of town municipal square is broken down and stray cows and dogs wander through playground.,PUBLIC_SPACE
+Fountain in public square ward sports complex is dysfunctional with stagnant mosquito-breeding water.,PUBLIC_SPACE
+Botanical garden Green Valley children park has medicinal plant section completely overgrown with wild shrubs.,PUBLIC_SPACE
+Botanical garden civic center lawn has dead palm tree leaning towards children play area.,PUBLIC_SPACE
+"Open gymnasium equipment in Gandhi memorial garden is rusted pulleys, snapped cables, and missing weight plates.",PUBLIC_SPACE
+Botanical garden Riverside promenade park has lawns yellowed and dying due to broken automated watering system.,PUBLIC_SPACE
+Fencing and boundary wall of freedom park brick boundary wall leaning perilously towards adjacent footpath.,PUBLIC_SPACE
+Children playground in heritage park has cracked plastic slide with razor sharp edges causing injuries.,PUBLIC_SPACE
+Children playground in East Hill community garden has rusted see-saw with missing handles and bolts.,PUBLIC_SPACE
+"The municipal park at Riverside promenade park has broken benches, damaged pavements, and uncleaned fountain.",PUBLIC_SPACE
+Fencing and boundary wall of neighbourhood park chain-link perimeter fence cut and vandalized by miscreants.,PUBLIC_SPACE
+Walking track and jogging path in Riverside promenade park has loose granite slabs that wobble and pinch pedestrians feet.,PUBLIC_SPACE
+Open gymnasium equipment in Gandhi memorial garden is seated chest press handles detached and hanging loose.,PUBLIC_SPACE
+Open gymnasium equipment in town municipal square is elliptical cross-trainer pedal broken off and dangerous to use.,PUBLIC_SPACE
+Huge pothole on road,ROAD
+Potholes causing accidents on main road,ROAD
+Road is completely damaged with deep craters,ROAD
+Asphalt peeling off after rain on street,ROAD
+Dangerous speed breaker without warning signs,ROAD
+Footpath pavers broken and missing,ROAD
+Cave in on roadway near junction,ROAD
+Tar road washed away in heavy rain,ROAD
+Road divider damaged and broken concrete blocks,ROAD
+Uneven road surface making bike skid,ROAD
+Manhole cover sunken below road level,ROAD
+Gravel loose on road causing slips,ROAD
+Road construction left unfinished for months,ROAD
+Heavy vehicle damage to colony street,ROAD
+Muddy unpaved road impossible to walk on,ROAD
+Deep ditch on roadside needs asphalt patch,ROAD
+No drinking water supply since two days,WATER_SUPPLY
+Water pipeline burst and clean water gushing on street,WATER_SUPPLY
+Low water pressure in municipal pipeline,WATER_SUPPLY
+Contaminated muddy water coming from tap,WATER_SUPPLY
+Drinking water has foul chemical smell,WATER_SUPPLY
+Main valve leakage flooding nearby houses,WATER_SUPPLY
+Erratic water supply timings without prior notice,WATER_SUPPLY
+Water meter broken and water leaking continuously,WATER_SUPPLY
+Colony borewell pump motor burnt out,WATER_SUPPLY
+Municipal tap leaking non stop in public area,WATER_SUPPLY
+Need water tanker urgently due to pipeline repair,WATER_SUPPLY
+Dirty brown tap water causing sickness,WATER_SUPPLY
+Underground drinking water pipe ruptured,WATER_SUPPLY
+Garbage dump not cleared for one week,WASTE_MANAGEMENT
+Overflowing dustbin on street corner stinking badly,WASTE_MANAGEMENT
+Trash scattered across public road by stray animals,WASTE_MANAGEMENT
+Dead dog carcass lying on sidewalk rotting,WASTE_MANAGEMENT
+Door to door garbage collection vehicle not coming,WASTE_MANAGEMENT
+Illegal garbage dumping by commercial restaurants,WASTE_MANAGEMENT
+Plastic waste burning emitting hazardous black smoke,WASTE_MANAGEMENT
+Foul stench from roadside garbage mound,WASTE_MANAGEMENT
+Sanitation worker not sweeping street leaves and trash,WASTE_MANAGEMENT
+Hospital bio waste dumped in open municipal bin,WASTE_MANAGEMENT
+Green waste and tree cuttings dumped on pavement,WASTE_MANAGEMENT
+Dead cow lying near bus stop urgent disposal needed,WASTE_MANAGEMENT
+Drainage choked and sewage overflowing on street,DRAINAGE
+Gutter overflowing with filthy black water,DRAINAGE
+Stormwater drain clogged with plastic silt and debris,DRAINAGE
+Severe waterlogging on road after mild rain,DRAINAGE
+Sewage backflow into residential toilets and bathrooms,DRAINAGE
+Open drain emitting intolerable gutter odor,DRAINAGE
+Manhole overflowing with human waste during monsoon,DRAINAGE
+Drainage slab broken pedestrian fell inside,DRAINAGE
+Stagnant sewage water breeding dengue mosquitoes,DRAINAGE
+Desilted drain mud dumped on road not cleared,DRAINAGE
+Culvert pipe blocked by debris causing road flooding,DRAINAGE
+Underground sewer line collapsed under pavement,DRAINAGE
+Street lights not working dark and unsafe at night,STREET_LIGHT
+Streetlight bulb fused on main colony road,STREET_LIGHT
+Electric light pole damaged and leaning dangerously,STREET_LIGHT
+Hanging live electric wires from streetlight pole,STREET_LIGHT
+Street lights blinking constantly causing disturbance,STREET_LIGHT
+Street lights remain on during daytime wasting power,STREET_LIGHT
+Entire street plunged into complete darkness at night,STREET_LIGHT
+LED street light fixture fallen onto the footpath,STREET_LIGHT
+No lighting near bus stand risk of chain snatching,STREET_LIGHT
+Lamppost timer dysfunctional lights turn on late night,STREET_LIGHT
+Dark alleyway needs new streetlight installation,STREET_LIGHT
+Underground electrical cable fault in street lighting,STREET_LIGHT
+Park benches vandalized and broken in municipal garden,PUBLIC_SPACE
+Children park swing set broken and unsafe for kids,PUBLIC_SPACE
+Jogging track tiles broken and uneven in town park,PUBLIC_SPACE
+Public garden fountain defunct and filled with green scum,PUBLIC_SPACE
+Open gym fitness equipment rusted and unserviceable,PUBLIC_SPACE
+Park boundary wall collapsed stray animals entering,PUBLIC_SPACE
+Community recreation hall roof leaking and doors broken,PUBLIC_SPACE
+Overgrown weeds and thorny bushes in children playground,PUBLIC_SPACE
+Public park gazebos tiles broken and structure collapsing,PUBLIC_SPACE
+Playground slide has sharp metal crack dangerous for toddlers,PUBLIC_SPACE
+Public library reading room fan and seating damaged,PUBLIC_SPACE
+Statue in public roundabout damaged and neglected,PUBLIC_SPACE
+Botanical garden flower beds destroyed by cattle,PUBLIC_SPACE
+Public park toilet doors broken and taps missing,PUBLIC_SPACE

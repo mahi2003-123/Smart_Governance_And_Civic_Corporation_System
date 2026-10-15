@@ -58,10 +58,6 @@ public class ComplaintService {
         if (!urls.contains(livePrimary)) {
             urls.add(livePrimary);
         }
-        String liveLegacy = "https://sgcs-ai-service.onrender.com";
-        if (!urls.contains(liveLegacy)) {
-            urls.add(liveLegacy);
-        }
         return urls;
     }
 

@@ -42,7 +42,7 @@ export const ComplaintForm: React.FC<ComplaintFormProps> = ({
   onCancel,
 }) => {
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState<ComplaintCategory>('Roads & Potholes');
+  const [category, setCategory] = useState<ComplaintCategory>('ROAD');
   const [priority, setPriority] = useState<ComplaintPriority>('HIGH');
   const [description, setDescription] = useState('');
   const [ward, setWard] = useState(initialWard || WARDS_LIST[0]);

@@ -107,7 +107,23 @@ export const CouncillorDashboard: React.FC = () => {
     }
   };
 
-  if (loading) return <LoadingSpinner message="Loading Councillor Console..." />;
+  // If still loading initial data without cache, render the header shell with skeleton metrics
+  if (loading && complaints.length === 0) {
+    return (
+      <Box sx={{ pb: 8, maxWidth: 1120, mx: 'auto' }}>
+        <WelcomeCard
+          title={user?.fullName || 'Councillor'}
+          subtitle={`Ward Councillor • ${user?.ward || 'Ward 1 - Central Town'} Operations`}
+          actionText="Publish Ward Notice"
+          actionIcon={<CampaignOutlinedIcon sx={{ fontSize: 18 }} />}
+          onAction={() => navigate('/councillor/announcements')}
+        />
+        <Box sx={{ my: 4 }}>
+          <LoadingSpinner message="Syncing Councillor Ward Console..." minHeight="240px" />
+        </Box>
+      </Box>
+    );
+  }
 
   const wardComplaints = (user?.role === 'COUNCILLOR' && user?.ward)
     ? complaints.filter((c) => matchesWard(c.ward, user.ward))

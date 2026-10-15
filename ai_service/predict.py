@@ -8,12 +8,6 @@ import numpy as np
 import warnings
 warnings.filterwarnings('ignore')
 
-try:
-    from sentence_transformers import SentenceTransformer
-    has_sentence_transformers = True
-except ImportError:
-    has_sentence_transformers = False
-
 MODELS_DIR = os.path.join(os.path.dirname(__file__), 'models')
 
 def load_system():
@@ -29,11 +23,10 @@ def load_system():
     vectorizer = None
     embedder = None
     
-    if metadata["feature_type"] == "tfidf":
+    if metadata.get("feature_type") == "tfidf":
         vectorizer = joblib.load(os.path.join(MODELS_DIR, "vectorizer.joblib"))
-    elif metadata["feature_type"] == "semantic":
-        if not has_sentence_transformers:
-            raise Exception("sentence-transformers is not installed but the model requires it.")
+    elif metadata.get("feature_type") == "semantic":
+        from sentence_transformers import SentenceTransformer
         embedder = SentenceTransformer(metadata["embedder_name"])
         
     return clf, vectorizer, embedder, metadata

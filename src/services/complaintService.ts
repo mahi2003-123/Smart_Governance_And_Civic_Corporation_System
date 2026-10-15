@@ -1,15 +1,42 @@
 import api from './api';
 import { Complaint, ComplaintStatus, ComplaintPriority, ComplaintCategory } from '../types';
 
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+}
+
+const complaintsCache = new Map<string, CacheEntry<Complaint[]>>();
+const CACHE_TTL_MS = 25000; // 25s fresh cache for instant page switches
+
+export const invalidateComplaintCache = () => {
+  complaintsCache.clear();
+};
+
 export const complaintService = {
-  getComplaints: async (filters?: {
-    status?: ComplaintStatus;
-    category?: ComplaintCategory;
-    ward?: string;
-    search?: string;
-    citizenId?: string;
-    assignedWorkerId?: string;
-  }): Promise<Complaint[]> => {
+  invalidateCache: invalidateComplaintCache,
+
+  getComplaints: async (
+    filters?: {
+      status?: ComplaintStatus;
+      category?: ComplaintCategory;
+      ward?: string;
+      search?: string;
+      citizenId?: string;
+      assignedWorkerId?: string;
+    },
+    forceRefresh = false
+  ): Promise<Complaint[]> => {
+    const cacheKey = JSON.stringify(filters || {});
+    const now = Date.now();
+
+    if (!forceRefresh) {
+      const cached = complaintsCache.get(cacheKey);
+      if (cached && now - cached.timestamp < CACHE_TTL_MS) {
+        return cached.data;
+      }
+    }
+
     try {
       const res = await api.get('/complaints', { params: filters });
       if (res.data && Array.isArray(res.data)) {
@@ -55,11 +82,18 @@ export const complaintService = {
           }
         }
 
-        return resultList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        const sorted = resultList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        complaintsCache.set(cacheKey, { data: sorted, timestamp: now });
+        return sorted;
       }
       return [];
     } catch (err: any) {
       console.error('[SGCS Frontend] Failed to fetch complaints from backend:', err);
+      // If we have cached data even if slightly expired, return it gracefully rather than crashing
+      const stale = complaintsCache.get(cacheKey);
+      if (stale) {
+        return stale.data;
+      }
       throw new Error(err.response?.data?.error || err.message || 'Failed to load complaints from database.');
     }
   },
@@ -107,6 +141,7 @@ export const complaintService = {
       };
       const res = await api.post('/complaints', apiPayload);
       if (res.data) {
+        invalidateComplaintCache();
         return {
           ...res.data,
           images: Array.isArray(res.data.images)
@@ -140,6 +175,7 @@ export const complaintService = {
         completionImage
       });
       if (res.data) {
+        invalidateComplaintCache();
         return {
           ...res.data,
           images: Array.isArray(res.data.images)
@@ -160,6 +196,7 @@ export const complaintService = {
     try {
       const res = await api.patch(`/complaints/${id}/priority`, { priority });
       if (res.data) {
+        invalidateComplaintCache();
         return {
           ...res.data,
           images: Array.isArray(res.data.images) ? res.data.images : (res.data.images ? res.data.images.split(',') : []),
@@ -184,6 +221,7 @@ export const complaintService = {
         dueDate
       });
       if (res.data) {
+        invalidateComplaintCache();
         return {
           ...res.data,
           images: Array.isArray(res.data.images)
@@ -204,6 +242,7 @@ export const complaintService = {
     try {
       const res = await api.post(`/complaints/${id}/start`);
       if (res.data) {
+        invalidateComplaintCache();
         return {
           ...res.data,
           images: Array.isArray(res.data.images)
@@ -228,6 +267,7 @@ export const complaintService = {
         beforeImage
       });
       if (res.data) {
+        invalidateComplaintCache();
         return {
           ...res.data,
           images: Array.isArray(res.data.images)
@@ -248,6 +288,7 @@ export const complaintService = {
     try {
       const res = await api.post(`/complaints/${id}/approve`);
       if (res.data) {
+        invalidateComplaintCache();
         return {
           ...res.data,
           images: Array.isArray(res.data.images)
@@ -268,6 +309,7 @@ export const complaintService = {
     try {
       const res = await api.post(`/complaints/${id}/reject-proof`, { feedback });
       if (res.data) {
+        invalidateComplaintCache();
         return {
           ...res.data,
           images: Array.isArray(res.data.images)
@@ -292,6 +334,7 @@ export const complaintService = {
         delayImage
       });
       if (res.data) {
+        invalidateComplaintCache();
         return {
           ...res.data,
           images: Array.isArray(res.data.images)
@@ -316,6 +359,7 @@ export const complaintService = {
         content
       });
       if (res.data) {
+        invalidateComplaintCache();
         return {
           ...res.data,
           images: Array.isArray(res.data.images)
@@ -335,6 +379,7 @@ export const complaintService = {
   reviewAiCategory: async (id: string, category: string): Promise<Complaint> => {
     try {
       const res = await api.post(`/complaints/${id}/ai-category`, { category });
+      invalidateComplaintCache();
       return {
         ...res.data,
         images: Array.isArray(res.data.images) ? res.data.images : (res.data.images ? res.data.images.split(',') : []),
@@ -349,6 +394,7 @@ export const complaintService = {
   linkDuplicate: async (id: string, masterId: string, isDuplicate: boolean): Promise<Complaint> => {
     try {
       const res = await api.post(`/complaints/${id}/link-duplicate`, { masterId, isDuplicate: isDuplicate.toString() });
+      invalidateComplaintCache();
       return {
         ...res.data,
         images: Array.isArray(res.data.images) ? res.data.images : (res.data.images ? res.data.images.split(',') : []),

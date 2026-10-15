@@ -9,6 +9,7 @@
         "STREET_LIGHT",
         "PUBLIC_SPACE"
     ],
-    "accuracy": 0.9963,
-    "macro_f1": 0.9958
+    "accuracy": 0.9988,
+    "macro_f1": 0.9985,
+    "total_training_samples": 5669
 }

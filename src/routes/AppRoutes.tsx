@@ -1,282 +1,286 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { LandingPage } from '../pages/LandingPage';
-import { Login } from '../pages/auth/Login';
-import { Register } from '../pages/auth/Register';
-import { ForgotPassword } from '../pages/auth/ForgotPassword';
-import { ResetPassword } from '../pages/auth/ResetPassword';
-import { EmailVerification } from '../pages/auth/EmailVerification';
-
-import { CitizenDashboard } from '../pages/citizen/CitizenDashboard';
-import { SubmitComplaint } from '../pages/citizen/SubmitComplaint';
-import { ComplaintHistory } from '../pages/citizen/ComplaintHistory';
-import { ComplaintDetails } from '../pages/citizen/ComplaintDetails';
-import { TrackComplaint } from '../pages/citizen/TrackComplaint';
-import { Proposals } from '../pages/citizen/Proposals';
-import { Notices } from '../pages/citizen/Notices';
-import { Profile } from '../pages/citizen/Profile';
-
-import { CouncillorDashboard } from '../pages/councillor/CouncillorDashboard';
-import { ManageComplaints } from '../pages/councillor/ManageComplaints';
-import { ProposalReview } from '../pages/councillor/ProposalReview';
-import { Announcements } from '../pages/councillor/Announcements';
-import { CouncillorReports } from '../pages/councillor/CouncillorReports';
-
-import { WorkerDashboard } from '../pages/worker/WorkerDashboard';
-import { AssignedTasks } from '../pages/worker/AssignedTasks';
-import { CompletedTasks } from '../pages/worker/CompletedTasks';
-
-import { AdminDashboard } from '../pages/admin/AdminDashboard';
-import { UserManagement } from '../pages/admin/UserManagement';
-import { CouncillorManagement } from '../pages/admin/CouncillorManagement';
-import { WorkerManagement } from '../pages/admin/WorkerManagement';
-import { WardManagement } from '../pages/admin/WardManagement';
-import { ComplaintMonitoring } from '../pages/admin/ComplaintMonitoring';
-import { ProposalMonitoring } from '../pages/admin/ProposalMonitoring';
-import { NoticeManagement } from '../pages/admin/NoticeManagement';
-import { SystemActivity } from '../pages/admin/SystemActivity';
-import { SystemReports } from '../pages/admin/SystemReports';
-
+import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { NotFoundPage, UnauthorizedPage } from '../components/common/NotFoundPage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { PublicOnlyRoute } from './PublicOnlyRoute';
 
+// Lazy-loaded pages for high-speed code-split routing
+const LandingPage = lazy(() => import('../pages/LandingPage').then((m) => ({ default: m.LandingPage })));
+const Login = lazy(() => import('../pages/auth/Login').then((m) => ({ default: m.Login })));
+const Register = lazy(() => import('../pages/auth/Register').then((m) => ({ default: m.Register })));
+const ForgotPassword = lazy(() => import('../pages/auth/ForgotPassword').then((m) => ({ default: m.ForgotPassword })));
+const ResetPassword = lazy(() => import('../pages/auth/ResetPassword').then((m) => ({ default: m.ResetPassword })));
+const EmailVerification = lazy(() => import('../pages/auth/EmailVerification').then((m) => ({ default: m.EmailVerification })));
+
+const CitizenDashboard = lazy(() => import('../pages/citizen/CitizenDashboard').then((m) => ({ default: m.CitizenDashboard })));
+const SubmitComplaint = lazy(() => import('../pages/citizen/SubmitComplaint').then((m) => ({ default: m.SubmitComplaint })));
+const ComplaintHistory = lazy(() => import('../pages/citizen/ComplaintHistory').then((m) => ({ default: m.ComplaintHistory })));
+const ComplaintDetails = lazy(() => import('../pages/citizen/ComplaintDetails').then((m) => ({ default: m.ComplaintDetails })));
+const TrackComplaint = lazy(() => import('../pages/citizen/TrackComplaint').then((m) => ({ default: m.TrackComplaint })));
+const Proposals = lazy(() => import('../pages/citizen/Proposals').then((m) => ({ default: m.Proposals })));
+const Notices = lazy(() => import('../pages/citizen/Notices').then((m) => ({ default: m.Notices })));
+const Profile = lazy(() => import('../pages/citizen/Profile').then((m) => ({ default: m.Profile })));
+
+const CouncillorDashboard = lazy(() => import('../pages/councillor/CouncillorDashboard').then((m) => ({ default: m.CouncillorDashboard })));
+const ManageComplaints = lazy(() => import('../pages/councillor/ManageComplaints').then((m) => ({ default: m.ManageComplaints })));
+const ProposalReview = lazy(() => import('../pages/councillor/ProposalReview').then((m) => ({ default: m.ProposalReview })));
+const Announcements = lazy(() => import('../pages/councillor/Announcements').then((m) => ({ default: m.Announcements })));
+const CouncillorReports = lazy(() => import('../pages/councillor/CouncillorReports').then((m) => ({ default: m.CouncillorReports })));
+
+const WorkerDashboard = lazy(() => import('../pages/worker/WorkerDashboard').then((m) => ({ default: m.WorkerDashboard })));
+const AssignedTasks = lazy(() => import('../pages/worker/AssignedTasks').then((m) => ({ default: m.AssignedTasks })));
+const CompletedTasks = lazy(() => import('../pages/worker/CompletedTasks').then((m) => ({ default: m.CompletedTasks })));
+
+const AdminDashboard = lazy(() => import('../pages/admin/AdminDashboard').then((m) => ({ default: m.AdminDashboard })));
+const UserManagement = lazy(() => import('../pages/admin/UserManagement').then((m) => ({ default: m.UserManagement })));
+const CouncillorManagement = lazy(() => import('../pages/admin/CouncillorManagement').then((m) => ({ default: m.CouncillorManagement })));
+const WorkerManagement = lazy(() => import('../pages/admin/WorkerManagement').then((m) => ({ default: m.WorkerManagement })));
+const WardManagement = lazy(() => import('../pages/admin/WardManagement').then((m) => ({ default: m.WardManagement })));
+const ComplaintMonitoring = lazy(() => import('../pages/admin/ComplaintMonitoring').then((m) => ({ default: m.ComplaintMonitoring })));
+const ProposalMonitoring = lazy(() => import('../pages/admin/ProposalMonitoring').then((m) => ({ default: m.ProposalMonitoring })));
+const NoticeManagement = lazy(() => import('../pages/admin/NoticeManagement').then((m) => ({ default: m.NoticeManagement })));
+const SystemActivity = lazy(() => import('../pages/admin/SystemActivity').then((m) => ({ default: m.SystemActivity })));
+const SystemReports = lazy(() => import('../pages/admin/SystemReports').then((m) => ({ default: m.SystemReports })));
+
 export const AppRoutes: React.FC = () => {
   return (
-    <Routes>
-      {/* Public Auth Routes */}
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/landing" element={<LandingPage />} />
-      <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
-      <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
-      <Route path="/forgot-password" element={<PublicOnlyRoute><ForgotPassword /></PublicOnlyRoute>} />
-      <Route path="/reset-password" element={<PublicOnlyRoute><ResetPassword /></PublicOnlyRoute>} />
-      <Route path="/email-verification" element={<PublicOnlyRoute><EmailVerification /></PublicOnlyRoute>} />
+    <Suspense fallback={<LoadingSpinner message="Loading SGCS Portal..." minHeight="60vh" />}>
+      <Routes>
+        {/* Public Auth Routes */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/landing" element={<LandingPage />} />
+        <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
+        <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
+        <Route path="/forgot-password" element={<PublicOnlyRoute><ForgotPassword /></PublicOnlyRoute>} />
+        <Route path="/reset-password" element={<PublicOnlyRoute><ResetPassword /></PublicOnlyRoute>} />
+        <Route path="/email-verification" element={<PublicOnlyRoute><EmailVerification /></PublicOnlyRoute>} />
 
-      {/* Citizen Routes */}
-      <Route
-        path="/citizen/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={['CITIZEN', 'COUNCILLOR', 'ADMIN']}>
-            <CitizenDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/citizen/complaints/submit"
-        element={
-          <ProtectedRoute allowedRoles={['CITIZEN', 'COUNCILLOR', 'ADMIN']}>
-            <SubmitComplaint />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/citizen/complaints"
-        element={
-          <ProtectedRoute allowedRoles={['CITIZEN', 'COUNCILLOR', 'ADMIN']}>
-            <ComplaintHistory />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/citizen/complaints/:id"
-        element={
-          <ProtectedRoute allowedRoles={['CITIZEN', 'COUNCILLOR', 'WORKER', 'ADMIN']}>
-            <ComplaintDetails />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/citizen/track"
-        element={
-          <ProtectedRoute allowedRoles={['CITIZEN', 'COUNCILLOR', 'WORKER', 'ADMIN']}>
-            <TrackComplaint />
-          </ProtectedRoute>
-        }
-      />
-      {/* Fallback Aliases */}
-      <Route path="/citizen/history" element={<Navigate to="/citizen/complaints" replace />} />
-      <Route path="/citizen/history/:id" element={<Navigate to="/citizen/complaints/:id" replace />} />
+        {/* Citizen Routes */}
+        <Route
+          path="/citizen/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['CITIZEN', 'COUNCILLOR', 'ADMIN']}>
+              <CitizenDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/citizen/complaints/submit"
+          element={
+            <ProtectedRoute allowedRoles={['CITIZEN', 'COUNCILLOR', 'ADMIN']}>
+              <SubmitComplaint />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/citizen/complaints"
+          element={
+            <ProtectedRoute allowedRoles={['CITIZEN', 'COUNCILLOR', 'ADMIN']}>
+              <ComplaintHistory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/citizen/complaints/:id"
+          element={
+            <ProtectedRoute allowedRoles={['CITIZEN', 'COUNCILLOR', 'WORKER', 'ADMIN']}>
+              <ComplaintDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/citizen/track"
+          element={
+            <ProtectedRoute allowedRoles={['CITIZEN', 'COUNCILLOR', 'WORKER', 'ADMIN']}>
+              <TrackComplaint />
+            </ProtectedRoute>
+          }
+        />
+        {/* Fallback Aliases */}
+        <Route path="/citizen/history" element={<Navigate to="/citizen/complaints" replace />} />
+        <Route path="/citizen/history/:id" element={<Navigate to="/citizen/complaints/:id" replace />} />
 
-      <Route
-        path="/citizen/proposals"
-        element={
-          <ProtectedRoute allowedRoles={['CITIZEN', 'COUNCILLOR', 'ADMIN']}>
-            <Proposals />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/citizen/notices"
-        element={
-          <ProtectedRoute allowedRoles={['CITIZEN', 'COUNCILLOR', 'WORKER', 'ADMIN']}>
-            <Notices />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/citizen/profile"
-        element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/citizen/proposals"
+          element={
+            <ProtectedRoute allowedRoles={['CITIZEN', 'COUNCILLOR', 'ADMIN']}>
+              <Proposals />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/citizen/notices"
+          element={
+            <ProtectedRoute allowedRoles={['CITIZEN', 'COUNCILLOR', 'ADMIN']}>
+              <Notices />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/citizen/profile"
+          element={
+            <ProtectedRoute allowedRoles={['CITIZEN', 'COUNCILLOR', 'WORKER', 'ADMIN']}>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Councillor Routes */}
-      <Route
-        path="/councillor/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={['COUNCILLOR', 'ADMIN']}>
-            <CouncillorDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/councillor/complaints"
-        element={
-          <ProtectedRoute allowedRoles={['COUNCILLOR', 'ADMIN']}>
-            <ManageComplaints />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/councillor/proposals"
-        element={
-          <ProtectedRoute allowedRoles={['COUNCILLOR', 'ADMIN']}>
-            <ProposalReview />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/councillor/announcements"
-        element={
-          <ProtectedRoute allowedRoles={['COUNCILLOR', 'ADMIN']}>
-            <Announcements />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/councillor/reports"
-        element={
-          <ProtectedRoute allowedRoles={['COUNCILLOR', 'ADMIN']}>
-            <CouncillorReports />
-          </ProtectedRoute>
-        }
-      />
+        {/* Councillor Routes */}
+        <Route
+          path="/councillor/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['COUNCILLOR', 'ADMIN']}>
+              <CouncillorDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/councillor/complaints"
+          element={
+            <ProtectedRoute allowedRoles={['COUNCILLOR', 'ADMIN']}>
+              <ManageComplaints />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/councillor/proposals"
+          element={
+            <ProtectedRoute allowedRoles={['COUNCILLOR', 'ADMIN']}>
+              <ProposalReview />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/councillor/announcements"
+          element={
+            <ProtectedRoute allowedRoles={['COUNCILLOR', 'ADMIN']}>
+              <Announcements />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/councillor/reports"
+          element={
+            <ProtectedRoute allowedRoles={['COUNCILLOR', 'ADMIN']}>
+              <CouncillorReports />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Field Worker Routes */}
-      <Route
-        path="/worker/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={['WORKER', 'ADMIN']}>
-            <WorkerDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/worker/tasks"
-        element={
-          <ProtectedRoute allowedRoles={['WORKER', 'ADMIN']}>
-            <AssignedTasks />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/worker/completed"
-        element={
-          <ProtectedRoute allowedRoles={['WORKER', 'ADMIN']}>
-            <CompletedTasks />
-          </ProtectedRoute>
-        }
-      />
+        {/* Worker Routes */}
+        <Route
+          path="/worker/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['WORKER', 'ADMIN']}>
+              <WorkerDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/worker/tasks"
+          element={
+            <ProtectedRoute allowedRoles={['WORKER', 'ADMIN']}>
+              <AssignedTasks />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/worker/completed"
+          element={
+            <ProtectedRoute allowedRoles={['WORKER', 'ADMIN']}>
+              <CompletedTasks />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Admin Routes */}
-      <Route
-        path="/admin/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={['ADMIN']}>
-            <AdminDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/users"
-        element={
-          <ProtectedRoute allowedRoles={['ADMIN']}>
-            <UserManagement />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/councillors"
-        element={
-          <ProtectedRoute allowedRoles={['ADMIN']}>
-            <CouncillorManagement />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/workers"
-        element={
-          <ProtectedRoute allowedRoles={['ADMIN']}>
-            <WorkerManagement />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/wards"
-        element={
-          <ProtectedRoute allowedRoles={['ADMIN']}>
-            <WardManagement />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/complaints"
-        element={
-          <ProtectedRoute allowedRoles={['ADMIN']}>
-            <ComplaintMonitoring />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/proposals"
-        element={
-          <ProtectedRoute allowedRoles={['ADMIN']}>
-            <ProposalMonitoring />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/notices"
-        element={
-          <ProtectedRoute allowedRoles={['ADMIN']}>
-            <NoticeManagement />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/activity"
-        element={
-          <ProtectedRoute allowedRoles={['ADMIN']}>
-            <SystemActivity />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/reports"
-        element={
-          <ProtectedRoute allowedRoles={['ADMIN']}>
-            <SystemReports />
-          </ProtectedRoute>
-        }
-      />
+        {/* Admin Routes */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <UserManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/councillors"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <CouncillorManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/workers"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <WorkerManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/wards"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <WardManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/complaints"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <ComplaintMonitoring />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/proposals"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <ProposalMonitoring />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/notices"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <NoticeManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/activity"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <SystemActivity />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/reports"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <SystemReports />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Error Routes */}
-      <Route path="/unauthorized" element={<UnauthorizedPage />} />
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+        {/* Error Routes */}
+        <Route path="/unauthorized" element={<UnauthorizedPage />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </Suspense>
   );
 };
 

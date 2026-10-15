@@ -134,24 +134,35 @@ def extract_tokens(text: Optional[str]) -> Set[str]:
     cleaned = normalize_text(text)
     return {w for w in cleaned.split() if w not in STOP_WORDS and len(w) > 1}
 
-def extract_ward_number(ward_str: Optional[str]) -> Optional[str]:
-    if not ward_str:
-        return None
-    m = re.search(r'\b(?:ward\s*)?(\d+)\b', str(ward_str).lower())
-    if m:
-        return m.group(1)
-    norm = normalize_text(ward_str)
-    return norm if norm else None
+def are_wards_compatible(w1: Optional[str], w2: Optional[str]) -> bool:
+    if not w1 or not w2:
+        return True
+    s1, s2 = str(w1).lower().strip(), str(w2).lower().strip()
+    if s1 == s2 or s1 in s2 or s2 in s1:
+        return True
+    d1 = re.search(r'\d+', s1)
+    d2 = re.search(r'\d+', s2)
+    if d1 and d2:
+        return d1.group(0) == d2.group(0)
+    return False
 
 def calc_string_similarity(a: str, b: str) -> float:
     if not a or not b:
         return 0.0
     return SequenceMatcher(None, a, b).ratio()
 
+@app.get("/")
+def root_check():
+    return {
+        "status": "UP",
+        "service": "SGCS AI Classification & Duplicate Detection Service",
+        "model_loaded": ai_system["clf"] is not None
+    }
+
+@app.post("/duplicate-check")
 @app.post("/ai/duplicate-check")
 def duplicate_check(data: DuplicateCheckInput):
     new_text = str(data.new_complaint or "").strip()
-    new_ward_id = extract_ward_number(data.new_ward)
     new_loc = str(data.new_location or "").strip()
     new_cat = str(data.new_category or "").strip().upper()
     existing = data.existing_complaints
@@ -168,9 +179,9 @@ def duplicate_check(data: DuplicateCheckInput):
     vectorizer = ai_system.get("vectorizer")
 
     for c in existing:
-        c_ward_id = extract_ward_number(c.get('ward', ''))
-        # If both explicitly specify different ward numbers, they are in different jurisdictions
-        if new_ward_id and c_ward_id and new_ward_id != c_ward_id:
+        # Check ward compatibility
+        c_ward = c.get('ward', '')
+        if not are_wards_compatible(data.new_ward, c_ward):
             continue
 
         c_text = str(c.get('text', '') or "").strip()
@@ -194,7 +205,7 @@ def duplicate_check(data: DuplicateCheckInput):
                 cos_sim = 0.0
 
         # Blended text score
-        text_score = 0.45 * cos_sim + 0.30 * jaccard + 0.25 * overlap
+        text_score = 0.50 * cos_sim + 0.25 * jaccard + 0.25 * overlap
 
         # 2. Location Similarity
         c_loc = str(c.get('location', '') or "").strip()
@@ -214,37 +225,37 @@ def duplicate_check(data: DuplicateCheckInput):
         c_cat = str(c.get('category', '') or "").strip().upper()
         cat_match = 0.0
         if new_cat and c_cat and new_cat != 'OTHER' and c_cat != 'OTHER':
-            cat_match = 1.0 if new_cat == c_cat else -0.3
+            cat_match = 0.15 if new_cat == c_cat else -0.20
 
-        # 4. Status Boost (active issues are much more likely duplicate targets)
+        # 4. Status Boost (active issues are more likely duplicates than closed ones)
         c_status = str(c.get('status', '') or "").strip().upper()
-        status_boost = 0.10 if c_status in ['OPEN', 'PENDING', 'ASSIGNED', 'IN_PROGRESS', 'PENDING_APPROVAL'] else 0.0
+        status_boost = 0.08 if c_status in ['OPEN', 'PENDING', 'ASSIGNED', 'IN_PROGRESS', 'PENDING_APPROVAL'] else 0.0
 
         # Weighted combination
-        if has_location:
+        if has_location and loc_score > 0.2:
             score = (
                 0.50 * text_score +
                 0.30 * loc_score +
-                0.10 * max(0.0, cat_match) +
+                cat_match +
                 status_boost
             )
         else:
             score = (
                 0.75 * text_score +
-                0.15 * max(0.0, cat_match) +
+                cat_match +
                 status_boost
             )
 
-        # Strong text match override: if descriptions strongly describe the same problem
-        if text_score >= 0.70:
+        # Strong semantic text match override
+        if cos_sim >= 0.55 or text_score >= 0.50:
             score = max(score, text_score)
 
         if score > highest_score:
             highest_score = score
             best_match = c
 
-    # Threshold for flagging possible duplicate
-    if highest_score >= 0.55 and best_match:
+    # Threshold for flagging possible duplicate (calibrated at 0.45)
+    if highest_score >= 0.45 and best_match:
         return {
             "possible_duplicate_id": best_match.get('id'),
             "similarity": round(min(highest_score, 0.99), 4)

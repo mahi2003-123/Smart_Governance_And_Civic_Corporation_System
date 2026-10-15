@@ -138,7 +138,7 @@ export const ManageComplaints: React.FC = () => {
     return matchSearch && matchCat && matchPri && matchStat;
   }).sort((a,b) => new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime());
 
-  if (loading) return <LoadingSpinner message="Loading Dashboard & Complaints..." />;
+  if (loading && complaints.length === 0) return <LoadingSpinner message="Loading Dashboard & Complaints..." />;
 
   return (
     <Box>

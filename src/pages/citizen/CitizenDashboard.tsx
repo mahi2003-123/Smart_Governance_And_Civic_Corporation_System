@@ -68,7 +68,7 @@ export const CitizenDashboard: React.FC = () => {
   const resolvedCount = complaints.filter((c) => c.status === 'RESOLVED').length;
   const proposalCount = proposals.length;
 
-  if (loading) {
+  if (loading && complaints.length === 0) {
     return <LoadingSpinner message="Loading your civic portal..." />;
   }
 
