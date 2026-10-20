@@ -1,5 +1,14 @@
-importScripts('https://www.gstatic.com/firebasejs/9.2.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/9.2.0/firebase-messaging-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js');
+
+// Activate new service worker immediately
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(clients.claim());
+});
 
 const urlParams = new URLSearchParams(location.search);
 let firebaseConfig = {
@@ -41,6 +50,7 @@ try {
         'You have a new update in SGCS.',
       icon: '/vite.svg',
       badge: '/vite.svg',
+      vibrate: [200, 100, 200],
       data: payload?.data || {},
       tag: payload?.data?.taskId || payload?.data?.trackingNumber || undefined
     };

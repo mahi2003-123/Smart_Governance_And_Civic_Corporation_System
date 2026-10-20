@@ -127,10 +127,43 @@ export const registerTokenWithBackend = async (token: string): Promise<boolean> 
       deviceType: 'WEB',
       deviceName: typeof navigator !== 'undefined' ? navigator.userAgent.substring(0, 200) : 'Web Browser',
     });
+    console.log('[FCM] Device token registered with backend successfully.');
     return true;
   } catch (error) {
     console.error('[FCM] Failed to register device token with backend:', error);
     return false;
+  }
+};
+
+/**
+ * Automatically request notification permission and register the FCM token
+ * with the backend. This should be called after user login.
+ * Silently no-ops if notifications are not supported, permission is denied,
+ * or Firebase is not configured.
+ */
+export const autoRegisterFCMToken = async (): Promise<void> => {
+  try {
+    if (!isNotificationSupported() || !isFirebaseConfigured()) {
+      return;
+    }
+
+    // If permission was already granted, silently get the token and register it
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      const token = await requestFirebaseNotificationPermission();
+      if (token) {
+        await registerTokenWithBackend(token);
+      }
+    }
+    // If permission is 'default' (not yet asked), we request it
+    else if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+      const token = await requestFirebaseNotificationPermission();
+      if (token) {
+        await registerTokenWithBackend(token);
+      }
+    }
+    // If permission is 'denied', we silently skip
+  } catch (err) {
+    console.warn('[FCM] Auto-registration of FCM token failed (non-fatal):', err);
   }
 };
 

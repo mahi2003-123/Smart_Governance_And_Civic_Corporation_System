@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole } from '../types';
 import { authService } from '../services/authService';
+import { autoRegisterFCMToken } from '../utils/firebase';
 
 export const SUPER_ADMIN_USER: User = {
   id: 'usr_super_admin',
@@ -67,9 +68,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user]);
 
+  // Auto-register FCM token for push notifications on app load when user is logged in
+  useEffect(() => {
+    if (user && localStorage.getItem('sgcs_auth_token')) {
+      autoRegisterFCMToken().catch(() => {});
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+
   const login = async (email: string, password: string): Promise<User> => {
     const res = await authService.login(email, password);
     setUser(res.user);
+    // Auto-register FCM token for push notifications after login
+    autoRegisterFCMToken().catch(() => {});
     return res.user;
   };
 

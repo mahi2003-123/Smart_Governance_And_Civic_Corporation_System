@@ -7,6 +7,8 @@ import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
 import com.google.firebase.messaging.WebpushConfig;
 import com.google.firebase.messaging.WebpushNotification;
+import com.google.firebase.messaging.AndroidConfig;
+import com.google.firebase.messaging.AndroidNotification;
 import com.sgcs.entity.UserDeviceToken;
 import com.sgcs.repository.UserDeviceTokenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,6 +74,16 @@ public class FirebaseNotificationService {
                         .putData("title", "Urgent task assigned")
                         .putData("body", body)
                         .putData("click_action", "/worker/tasks")
+                        .setAndroidConfig(AndroidConfig.builder()
+                                .setPriority(AndroidConfig.Priority.HIGH)
+                                .setNotification(AndroidNotification.builder()
+                                        .setTitle("Urgent Task Assigned")
+                                        .setBody(body)
+                                        .setIcon("ic_notification")
+                                        .setSound("default")
+                                        .setChannelId("urgent_tasks")
+                                        .build())
+                                .build())
                         .setWebpushConfig(WebpushConfig.builder()
                                 .putHeader("Urgency", "high")
                                 .putHeader("TTL", "3600")
@@ -132,6 +144,14 @@ public class FirebaseNotificationService {
                         .putData("type", "TASK_TRANSFERRED")
                         .putData("title", "Task Transferred")
                         .putData("body", body)
+                        .setAndroidConfig(AndroidConfig.builder()
+                                .setPriority(AndroidConfig.Priority.HIGH)
+                                .setNotification(AndroidNotification.builder()
+                                        .setTitle("Task Transferred")
+                                        .setBody(body)
+                                        .setSound("default")
+                                        .build())
+                                .build())
                         .setWebpushConfig(WebpushConfig.builder()
                                 .putHeader("Urgency", "high")
                                 .putHeader("TTL", "3600")
@@ -214,6 +234,14 @@ public class FirebaseNotificationService {
                         .putData("title", safeTitle)
                         .putData("body", safeBody)
                         .putData("click_action", clickAction)
+                        .setAndroidConfig(AndroidConfig.builder()
+                                .setPriority(AndroidConfig.Priority.HIGH)
+                                .setNotification(AndroidNotification.builder()
+                                        .setTitle(safeTitle)
+                                        .setBody(safeBody)
+                                        .setSound("default")
+                                        .build())
+                                .build())
                         .setWebpushConfig(WebpushConfig.builder()
                                 .putHeader("Urgency", "high")
                                 .putHeader("TTL", "86400")
