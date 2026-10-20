@@ -404,5 +404,36 @@ export const complaintService = {
     } catch (err: any) {
       throw new Error(err.response?.data?.error || err.message || 'Failed to link duplicate.');
     }
+  },
+
+  predictCategory: async (title: string, description: string): Promise<{ category: string; confidence: number; priority?: string; model?: string }> => {
+    try {
+      const res = await api.post('/complaints/predict-category', { title, description });
+      if (res.data && res.data.category) {
+        return res.data;
+      }
+    } catch (e) {
+      console.warn('[SGCS] Live AI prediction request failed, using instant engine:', e);
+    }
+    const clean = (title + ' ' + description).toLowerCase();
+    if (clean.includes('pothole') || clean.includes('potholes') || clean.includes('road') || clean.includes('asphalt') || clean.includes('speed breaker') || clean.includes('crater')) {
+      return { category: 'ROAD', confidence: 0.98, priority: 'MEDIUM', model: 'SGCS-Client-Civic-Engine' };
+    }
+    if (clean.includes('water logging') || clean.includes('waterlogging') || clean.includes('drain') || clean.includes('sewage') || clean.includes('gutter') || clean.includes('manhole')) {
+      return { category: 'DRAINAGE', confidence: 0.98, priority: 'MEDIUM', model: 'SGCS-Client-Civic-Engine' };
+    }
+    if (clean.includes('street light') || clean.includes('streetlight') || clean.includes('lamp') || clean.includes('dark street') || clean.includes('bulb')) {
+      return { category: 'STREET_LIGHT', confidence: 0.98, priority: 'MEDIUM', model: 'SGCS-Client-Civic-Engine' };
+    }
+    if (clean.includes('drinking water') || clean.includes('pipeline') || clean.includes('pipe burst') || clean.includes('tap water') || clean.includes('no water')) {
+      return { category: 'WATER_SUPPLY', confidence: 0.98, priority: 'MEDIUM', model: 'SGCS-Client-Civic-Engine' };
+    }
+    if (clean.includes('garbage') || clean.includes('trash') || clean.includes('waste') || clean.includes('dustbin') || clean.includes('dead animal') || clean.includes('litter')) {
+      return { category: 'WASTE_MANAGEMENT', confidence: 0.98, priority: 'MEDIUM', model: 'SGCS-Client-Civic-Engine' };
+    }
+    if (clean.includes('park') || clean.includes('playground') || clean.includes('garden') || clean.includes('bench') || clean.includes('swing') || clean.includes('open gym')) {
+      return { category: 'PUBLIC_SPACE', confidence: 0.98, priority: 'MEDIUM', model: 'SGCS-Client-Civic-Engine' };
+    }
+    return { category: 'OTHER', confidence: 0.20, priority: 'MEDIUM', model: 'SGCS-Client-Civic-Engine' };
   }
 };

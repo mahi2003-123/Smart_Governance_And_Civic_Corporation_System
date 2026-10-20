@@ -53,6 +53,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/health", "/api/system-status").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/complaints/predict-category").permitAll()
 
                 // Section 2: Bulk Delete Endpoints (ADMIN only)
                 .requestMatchers(HttpMethod.DELETE, "/api/complaints", "/api/proposals", "/api/notices", "/api/notifications").hasRole("ADMIN")

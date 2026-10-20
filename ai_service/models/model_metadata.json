@@ -1,5 +1,5 @@
 {
-    "model_name": "Calibrated LinearSVC",
+    "model_name": "Calibrated LinearSVC (Enhanced Civic Engine)",
     "feature_type": "tfidf",
     "categories": [
         "ROAD",
@@ -9,7 +9,7 @@
         "STREET_LIGHT",
         "PUBLIC_SPACE"
     ],
-    "accuracy": 0.9988,
-    "macro_f1": 0.9985,
-    "total_training_samples": 5669
+    "accuracy": 0.9989,
+    "macro_f1": 0.9989,
+    "total_training_samples": 5904
 }

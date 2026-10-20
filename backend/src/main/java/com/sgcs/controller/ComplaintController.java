@@ -310,4 +310,28 @@ public class ComplaintController {
         Complaint updated = complaintService.linkDuplicate(id, masterId, isDuplicate, principal.getId(), principal.getFullName());
         return ResponseEntity.ok(updated);
     }
+
+    @PostMapping("/predict-category")
+    public ResponseEntity<?> predictCategory(@RequestBody(required = false) Map<String, String> body) {
+        String text = "";
+        if (body != null) {
+            if (body.containsKey("complaint_text")) {
+                text = body.get("complaint_text");
+            } else if (body.containsKey("text")) {
+                text = body.get("text");
+            } else {
+                String title = body.getOrDefault("title", "");
+                String desc = body.getOrDefault("description", "");
+                text = (title + ". " + desc).trim();
+            }
+        }
+        Map<String, Object> prediction = complaintService.predictCategory(text);
+        return ResponseEntity.ok(prediction);
+    }
+
+    @GetMapping("/predict-category")
+    public ResponseEntity<?> predictCategoryGet(@RequestParam(name = "text", required = false) String text) {
+        Map<String, Object> prediction = complaintService.predictCategory(text != null ? text : "");
+        return ResponseEntity.ok(prediction);
+    }
 }

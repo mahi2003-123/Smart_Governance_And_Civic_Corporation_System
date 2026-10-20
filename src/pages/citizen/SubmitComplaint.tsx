@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -8,7 +8,8 @@ import {
   Alert,
   Paper,
   InputAdornment,
-  MenuItem
+  MenuItem,
+  Chip
 } from '@mui/material';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
@@ -19,6 +20,17 @@ import { complaintService } from '../../services/complaintService';
 import { WardSelector } from '../../components/common/WardSelector';
 import { ImageUpload } from '../../components/common/ImageUpload';
 import { ComplaintPriority } from '../../types';
+
+const CATEGORY_LABELS: Record<string, string> = {
+  ROAD: 'Road Damage & Potholes',
+  WATER_SUPPLY: 'Water Supply & Leakage',
+  WASTE_MANAGEMENT: 'Garbage & Waste Disposal',
+  DRAINAGE: 'Drainage & Sewage Overflow',
+  STREET_LIGHT: 'Street Light Failure',
+  PUBLIC_SPACE: 'Public Spaces & Parks',
+  Other: 'Other Grievance',
+  OTHER: 'Other Grievance',
+};
 
 export const SubmitComplaint: React.FC = () => {
   const navigate = useNavigate();
@@ -33,6 +45,36 @@ export const SubmitComplaint: React.FC = () => {
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [liveAiPrediction, setLiveAiPrediction] = useState<{
+    category: string;
+    confidence: number;
+    priority?: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const text = (title + ' ' + description).trim();
+    if (text.length < 3) {
+      setLiveAiPrediction(null);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const pred = await complaintService.predictCategory(title, description);
+        if (pred && pred.category && pred.category !== 'OTHER') {
+          setLiveAiPrediction(pred);
+          if (pred.priority === 'URGENT' && priority === 'MEDIUM') {
+            setPriority('URGENT');
+          }
+        } else {
+          setLiveAiPrediction(null);
+        }
+      } catch {
+        setLiveAiPrediction(null);
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [title, description]);
 
   const [submittedData, setSubmittedData] = useState<{
     trackingNumber: string;
@@ -56,9 +98,13 @@ export const SubmitComplaint: React.FC = () => {
     setError('');
 
     try {
+      const effectiveCategory = (category === 'AUTO' && liveAiPrediction?.category)
+        ? liveAiPrediction.category
+        : (category === 'AUTO' ? 'Other' : category);
+
       const created = await complaintService.createComplaint({
         title: title.trim(),
-        category: (category === 'AUTO' ? 'Other' : category) as any,
+        category: effectiveCategory as any,
         description: description.trim(),
         ward,
         locationAddress: locationAddress.trim(),
@@ -67,6 +113,8 @@ export const SubmitComplaint: React.FC = () => {
         citizenId: user?.id || 'usr_citizen_01',
         citizenName: user?.fullName || 'Citizen Resident',
         citizenPhone: user?.phone || '+91 98765 43210',
+        aiSuggestedCategory: liveAiPrediction?.category,
+        aiConfidence: liveAiPrediction?.confidence,
       });
 
       setSubmittedData({
@@ -230,6 +278,48 @@ export const SubmitComplaint: React.FC = () => {
               <MenuItem value="URGENT">🚨 URGENT - Immediate Hazard</MenuItem>
             </TextField>
           </Box>
+
+          {category === 'AUTO' && liveAiPrediction && (
+            <Box
+              sx={{
+                p: 1.5,
+                borderRadius: '8px',
+                backgroundColor: '#F0FDF4',
+                border: '1px solid #BBF7D0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 1,
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600, color: '#166534', fontSize: '0.82rem' }}>
+                  🤖 AI Detected:
+                </Typography>
+                <Chip
+                  label={CATEGORY_LABELS[liveAiPrediction.category] || liveAiPrediction.category}
+                  size="small"
+                  sx={{
+                    backgroundColor: '#DCFCE7',
+                    color: '#15803D',
+                    fontWeight: 700,
+                    fontSize: '0.78rem',
+                  }}
+                />
+                <Typography variant="caption" sx={{ color: '#16A34A', fontWeight: 600 }}>
+                  ({Math.round(liveAiPrediction.confidence * 100)}% accuracy)
+                </Typography>
+              </Box>
+              {liveAiPrediction.priority === 'URGENT' && (
+                <Chip
+                  label="🚨 Critical Public Hazard Detected"
+                  size="small"
+                  sx={{ backgroundColor: '#FEE2E2', color: '#B91C1C', fontWeight: 700, fontSize: '0.72rem' }}
+                />
+              )}
+            </Box>
+          )}
 
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr' }, gap: 2.5 }}>
             <WardSelector
