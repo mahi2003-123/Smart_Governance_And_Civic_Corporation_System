@@ -84,14 +84,19 @@ export const ComplaintDetails: React.FC = () => {
   };
 
   const handleBack = () => {
-    if (user?.role === 'ADMIN') {
-      navigate('/admin/complaints');
-    } else if (user?.role === 'COUNCILLOR') {
-      navigate('/councillor/complaints');
-    } else if (user?.role === 'WORKER') {
-      navigate('/worker/tasks');
+    if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1);
     } else {
-      navigate('/citizen/complaints');
+      const role = user?.role?.toUpperCase();
+      if (role === 'ADMIN') {
+        navigate('/admin/complaints');
+      } else if (role === 'COUNCILLOR') {
+        navigate('/councillor/complaints');
+      } else if (role === 'WORKER') {
+        navigate('/worker/tasks');
+      } else {
+        navigate('/citizen/complaints');
+      }
     }
   };
 
@@ -104,6 +109,7 @@ export const ComplaintDetails: React.FC = () => {
           Complaint record not found.
         </Typography>
         <Button
+          startIcon={<ArrowBackOutlinedIcon sx={{ fontSize: 16 }} />}
           onClick={handleBack}
           sx={{ mt: 2, color: '#FF8C38', fontWeight: 700, textTransform: 'none' }}
         >
@@ -112,14 +118,15 @@ export const ComplaintDetails: React.FC = () => {
       </Box>
     );
 
-  // Security check: Citizens can only view their own filed complaints
+  // Security check: Citizens can only view their own filed complaints or if referenced by tracking number
   if (
-    user?.role === 'CITIZEN' &&
+    user?.role?.toUpperCase() === 'CITIZEN' &&
     complaint.citizenId &&
     user.id &&
     complaint.citizenId !== user.id &&
     complaint.citizenName !== user.fullName &&
-    complaint.citizenPhone !== user.email
+    complaint.citizenPhone !== user.email &&
+    id !== complaint.trackingNumber
   ) {
     return (
       <Box sx={{ textAlign: 'center', py: 8, maxWidth: 600, mx: 'auto' }}>
@@ -130,6 +137,7 @@ export const ComplaintDetails: React.FC = () => {
           You are only authorized to view complaints that you have registered under your citizen account.
         </Typography>
         <Button
+          startIcon={<ArrowBackOutlinedIcon sx={{ fontSize: 16 }} />}
           onClick={handleBack}
           variant="contained"
           sx={{ backgroundColor: '#496A57', textTransform: 'none' }}

@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
+import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { complaintService } from '../../services/complaintService';
 import { Complaint } from '../../types';
@@ -79,6 +80,19 @@ export const TrackComplaint: React.FC = () => {
 
   return (
     <Box sx={{ maxWidth: 800, mx: 'auto', pb: 8 }}>
+      <Button
+        startIcon={<ArrowBackOutlinedIcon sx={{ fontSize: 16 }} />}
+        onClick={() => {
+          if (window.history.state && window.history.state.idx > 0) {
+            navigate(-1);
+          } else {
+            navigate('/citizen/dashboard');
+          }
+        }}
+        sx={{ mb: 2, color: '#496A57', fontWeight: 600, textTransform: 'none', px: 0, '&:hover': { bgcolor: 'transparent', color: '#304B3A' } }}
+      >
+        Back to Dashboard
+      </Button>
       {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h1" sx={{ fontWeight: 600, color: '#202522', mb: 1, letterSpacing: '-0.015em' }}>
@@ -265,7 +279,7 @@ export const TrackComplaint: React.FC = () => {
           <Box sx={{ mt: 3, textAlign: 'right' }}>
             <Button
               variant="outlined"
-              onClick={() => navigate(`/citizen/complaints/${complaint.id}`)}
+              onClick={() => navigate(`/citizen/complaints/${complaint.trackingNumber || complaint.id}`)}
               sx={{
                 borderRadius: '8px',
                 borderColor: '#E5E8E4',

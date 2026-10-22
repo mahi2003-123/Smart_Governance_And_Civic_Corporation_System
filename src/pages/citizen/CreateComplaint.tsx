@@ -24,7 +24,7 @@ export const CreateComplaint: React.FC = () => {
       });
       setSuccessMsg(`Complaint registered successfully! Tracking Number: ${created.trackingNumber}`);
       setTimeout(() => {
-        navigate('/citizen/history');
+        navigate('/citizen/complaints');
       }, 1500);
     } catch (err) {
       setErrorMsg('Failed to submit complaint. Please check your internet connection.');

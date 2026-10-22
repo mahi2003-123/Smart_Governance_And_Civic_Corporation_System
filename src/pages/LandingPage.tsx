@@ -37,7 +37,7 @@ import { motion } from 'framer-motion';
 const BRAND_GREEN = '#1F4D3A'; // Primary Dark Forest Green accent
 const BRAND_GREEN_HOVER = '#16382A';
 const BRAND_GREEN_LIGHT = '#E8F3EE'; // Soft light green for badges
-const BRAND_GREEN_BORDER = '#C3E0D2';
+const _BRAND_GREEN_BORDER = '#C3E0D2';
 const BRAND_ORANGE = '#E67E22'; // Soft orange secondary accent
 
 export const LandingPage: React.FC = () => {

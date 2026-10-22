@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Typography, Breadcrumbs, Link } from '@mui/material';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 
 interface BreadcrumbItem {
   label: string;
@@ -22,6 +23,17 @@ export const HeaderBreadcrumb: React.FC<HeaderBreadcrumbProps> = ({
   actionButtons,
 }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const getDashboardPath = () => {
+    if (!user) return '/';
+    switch (user.role?.toUpperCase()) {
+      case 'ADMIN': return '/admin/dashboard';
+      case 'COUNCILLOR': return '/councillor/dashboard';
+      case 'WORKER': return '/worker/dashboard';
+      default: return '/citizen/dashboard';
+    }
+  };
 
   return (
     <Box mb={4}>
@@ -35,7 +47,7 @@ export const HeaderBreadcrumb: React.FC<HeaderBreadcrumbProps> = ({
           underline="hover"
           color="text.secondary"
           sx={{ cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600 }}
-          onClick={() => navigate('/')}
+          onClick={() => navigate(getDashboardPath())}
         >
           Home
         </Link>

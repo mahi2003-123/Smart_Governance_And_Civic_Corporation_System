@@ -1,6 +1,6 @@
 import { createTheme, ThemeOptions } from '@mui/material/styles';
 
-export const getCustomTheme = (mode: 'light' | 'dark') => {
+export const getCustomTheme = (_mode: 'light' | 'dark' = 'light') => {
   // SGCS Municipal Corporation System - Deep Forest Green & Terracotta Palette
   const themeOptions: ThemeOptions = {
     palette: {

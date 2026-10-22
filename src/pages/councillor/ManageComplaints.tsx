@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Box, Card, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, Button, IconButton, Tooltip, Grid, MenuItem } from '@mui/material';
-import BuildIcon from '@mui/icons-material/Build';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import BlockIcon from '@mui/icons-material/Block';
-import VerifiedIcon from '@mui/icons-material/Verified';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
@@ -12,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { complaintService } from '../../services/complaintService';
 import { Complaint, ComplaintPriority, ComplaintStatus } from '../../types';
-import { STATUS_COLORS, PRIORITY_COLORS, COMPLAINT_CATEGORIES } from '../../constants';
+import { STATUS_COLORS, COMPLAINT_CATEGORIES } from '../../constants';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { AssignWorkerModal } from '../../components/modals/AssignWorkerModal';
 import { VerifyProofModal } from '../../components/modals/VerifyProofModal';
@@ -289,7 +287,7 @@ export const ManageComplaints: React.FC = () => {
                     <TableCell align="right">
                       <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
                         <Tooltip title="View Full Timeline">
-                          <IconButton size="small" sx={{ color: '#68706B' }} onClick={() => navigate(`/citizen/history/${row.id}`)}>
+                          <IconButton size="small" sx={{ color: '#68706B' }} onClick={() => navigate(`/citizen/complaints/${row.id}`)}>
                             <VisibilityIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>

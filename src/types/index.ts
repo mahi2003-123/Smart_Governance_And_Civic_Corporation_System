@@ -8,6 +8,7 @@ export interface User {
   phone: string;
   role: UserRole;
   ward?: string;
+  address?: string;
   status?: UserStatus;
   avatarUrl?: string;
   assignedTasks?: number;

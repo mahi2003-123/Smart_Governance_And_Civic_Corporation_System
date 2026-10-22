@@ -45,7 +45,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
+  if (allowedRoles && !allowedRoles.some(r => r.toUpperCase() === user.role?.toUpperCase())) {
     return (
       <MainLayout>
         <Navigate to="/unauthorized" replace />

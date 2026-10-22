@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Container, Typography, Link, Divider } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import PhoneInTalkIcon from '@mui/icons-material/PhoneInTalk';
 import EmailIcon from '@mui/icons-material/Email';
 import LocationCityIcon from '@mui/icons-material/LocationCity';
@@ -56,16 +57,16 @@ export const Footer: React.FC = () => {
               Quick Services
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Link href="/citizen/complaints" underline="hover" color="inherit" variant="body2">
+              <Link component={RouterLink} to="/citizen/complaints/submit" underline="hover" color="inherit" variant="body2">
                 File a Complaint
               </Link>
-              <Link href="/citizen/history" underline="hover" color="inherit" variant="body2">
+              <Link component={RouterLink} to="/citizen/track" underline="hover" color="inherit" variant="body2">
                 Track Status Online
               </Link>
-              <Link href="/citizen/proposals" underline="hover" color="inherit" variant="body2">
+              <Link component={RouterLink} to="/citizen/proposals" underline="hover" color="inherit" variant="body2">
                 Community Proposals
               </Link>
-              <Link href="/citizen/notices" underline="hover" color="inherit" variant="body2">
+              <Link component={RouterLink} to="/citizen/notices" underline="hover" color="inherit" variant="body2">
                 Ward Announcements
               </Link>
             </Box>
@@ -76,13 +77,13 @@ export const Footer: React.FC = () => {
               Civic Portals
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Link href="/councillor/dashboard" underline="hover" color="inherit" variant="body2">
+              <Link component={RouterLink} to="/councillor/dashboard" underline="hover" color="inherit" variant="body2">
                 Councillor Portal
               </Link>
-              <Link href="/worker/dashboard" underline="hover" color="inherit" variant="body2">
+              <Link component={RouterLink} to="/worker/dashboard" underline="hover" color="inherit" variant="body2">
                 Field Worker App
               </Link>
-              <Link href="/admin/dashboard" underline="hover" color="inherit" variant="body2">
+              <Link component={RouterLink} to="/admin/dashboard" underline="hover" color="inherit" variant="body2">
                 Admin Console
               </Link>
             </Box>

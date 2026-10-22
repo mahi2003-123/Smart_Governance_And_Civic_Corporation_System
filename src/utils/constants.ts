@@ -1,4 +1,4 @@
-import { ComplaintCategory, ComplaintPriority, ComplaintStatus, NoticePriority, UserRole } from '../types';
+import { ComplaintCategory, ComplaintPriority, NoticePriority, UserRole } from '../types';
 
 export const WARDS_LIST = [
   'Ward 1 - Central Town',

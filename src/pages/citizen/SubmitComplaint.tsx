@@ -14,6 +14,7 @@ import {
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import AssignmentTurnedInOutlinedIcon from '@mui/icons-material/AssignmentTurnedInOutlined';
+import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { complaintService } from '../../services/complaintService';
@@ -203,6 +204,19 @@ export const SubmitComplaint: React.FC = () => {
 
   return (
     <Box sx={{ maxWidth: 760, mx: 'auto', pb: 8 }}>
+      <Button
+        startIcon={<ArrowBackOutlinedIcon sx={{ fontSize: 16 }} />}
+        onClick={() => {
+          if (window.history.state && window.history.state.idx > 0) {
+            navigate(-1);
+          } else {
+            navigate('/citizen/dashboard');
+          }
+        }}
+        sx={{ mb: 2, color: '#496A57', fontWeight: 600, textTransform: 'none', px: 0, '&:hover': { bgcolor: 'transparent', color: '#304B3A' } }}
+      >
+        Back to Dashboard
+      </Button>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h1" sx={{ fontWeight: 600, color: '#202522', mb: 1, letterSpacing: '-0.015em' }}>
           Report a Civic Grievance

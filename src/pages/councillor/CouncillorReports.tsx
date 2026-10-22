@@ -1,7 +1,6 @@
 import React from 'react';
-import { Box, Card, Typography, Grid, Button, Table, TableHead, TableRow, TableCell, TableBody, Chip } from '@mui/material';
+import { Box, Card, Typography, Button, Table, TableHead, TableRow, TableCell, TableBody, Chip } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
-import AssessmentIcon from '@mui/icons-material/Assessment';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from 'recharts';
 
 export const CouncillorReports: React.FC = () => {

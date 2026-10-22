@@ -3,9 +3,42 @@ import { Box, Typography, Button, Container, Card } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import SecurityIcon from '@mui/icons-material/Security';
 import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
+import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined';
+import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
+import { useAuth } from '../../hooks/useAuth';
 
 export const NotFoundPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handleGoBack = () => {
+    if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1);
+    } else {
+      handleGoHome();
+    }
+  };
+
+  const handleGoHome = () => {
+    if (!user) {
+      navigate('/');
+      return;
+    }
+    switch (user.role?.toUpperCase()) {
+      case 'ADMIN':
+        navigate('/admin/dashboard');
+        break;
+      case 'COUNCILLOR':
+        navigate('/councillor/dashboard');
+        break;
+      case 'WORKER':
+        navigate('/worker/dashboard');
+        break;
+      default:
+        navigate('/citizen/dashboard');
+        break;
+    }
+  };
 
   return (
     <Container maxWidth="md" sx={{ py: 10 }}>
@@ -29,14 +62,26 @@ export const NotFoundPage: React.FC = () => {
         <Typography variant="body1" sx={{ color: '#5F7367', maxWidth: 500, mx: 'auto', mb: 4 }}>
           The page or civic resource you are searching for does not exist or has been moved to another ward directory.
         </Typography>
-        <Button
-          variant="contained"
-          size="large"
-          onClick={() => navigate('/')}
-          sx={{ borderRadius: '6px', px: 4, bgcolor: '#1F4D3A', '&:hover': { bgcolor: '#16382A' }, textTransform: 'none', fontWeight: 700 }}
-        >
-          Return to Portal Home
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <Button
+            variant="outlined"
+            size="large"
+            startIcon={<ArrowBackOutlinedIcon />}
+            onClick={handleGoBack}
+            sx={{ borderRadius: '6px', px: 3, borderColor: '#1F4D3A', color: '#1F4D3A', textTransform: 'none', fontWeight: 700 }}
+          >
+            Go Back
+          </Button>
+          <Button
+            variant="contained"
+            size="large"
+            startIcon={<HomeOutlinedIcon />}
+            onClick={handleGoHome}
+            sx={{ borderRadius: '6px', px: 4, bgcolor: '#1F4D3A', '&:hover': { bgcolor: '#16382A' }, textTransform: 'none', fontWeight: 700 }}
+          >
+            {user ? 'Return to Dashboard' : 'Return to Portal Home'}
+          </Button>
+        </Box>
       </Card>
     </Container>
   );
@@ -44,6 +89,36 @@ export const NotFoundPage: React.FC = () => {
 
 export const UnauthorizedPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handleGoBack = () => {
+    if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1);
+    } else {
+      handleGoHome();
+    }
+  };
+
+  const handleGoHome = () => {
+    if (!user) {
+      navigate('/');
+      return;
+    }
+    switch (user.role?.toUpperCase()) {
+      case 'ADMIN':
+        navigate('/admin/dashboard');
+        break;
+      case 'COUNCILLOR':
+        navigate('/councillor/dashboard');
+        break;
+      case 'WORKER':
+        navigate('/worker/dashboard');
+        break;
+      default:
+        navigate('/citizen/dashboard');
+        break;
+    }
+  };
 
   return (
     <Container maxWidth="md" sx={{ py: 10 }}>
@@ -66,16 +141,28 @@ export const UnauthorizedPage: React.FC = () => {
           Access Restricted
         </Typography>
         <Typography variant="body1" sx={{ color: '#5A6672', maxWidth: 500, mx: 'auto', mb: 4 }}>
-          You do not have the required administrative clearance to access this module. Please switch to an authorized role or contact system administration.
+          You do not have the required administrative clearance to access this module. Please switch to an authorized role or return to safety.
         </Typography>
-        <Button
-          variant="contained"
-          size="large"
-          onClick={() => navigate('/')}
-          sx={{ borderRadius: '6px', px: 4, bgcolor: '#1F4D3A', '&:hover': { bgcolor: '#16382A' }, textTransform: 'none', fontWeight: 700 }}
-        >
-          Go Back to Safety
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <Button
+            variant="outlined"
+            size="large"
+            startIcon={<ArrowBackOutlinedIcon />}
+            onClick={handleGoBack}
+            sx={{ borderRadius: '6px', px: 3, borderColor: '#C0392B', color: '#C0392B', textTransform: 'none', fontWeight: 700 }}
+          >
+            Go Back
+          </Button>
+          <Button
+            variant="contained"
+            size="large"
+            startIcon={<HomeOutlinedIcon />}
+            onClick={handleGoHome}
+            sx={{ borderRadius: '6px', px: 4, bgcolor: '#1F4D3A', '&:hover': { bgcolor: '#16382A' }, textTransform: 'none', fontWeight: 700 }}
+          >
+            {user ? 'Return to Dashboard' : 'Return to Portal Home'}
+          </Button>
+        </Box>
       </Card>
     </Container>
   );

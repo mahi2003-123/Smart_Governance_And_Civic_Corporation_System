@@ -15,9 +15,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  FormControl,
-  InputLabel,
-  Select,
   MenuItem,
   Alert,
   Grid,
@@ -129,7 +126,7 @@ export const WorkerManagement: React.FC = () => {
     }
 
     if (formData.phone) {
-      const cleanPhone = formData.phone.replace(/[\s\-\+]/g, '');
+      const cleanPhone = formData.phone.replace(/[\s\-+]/g, '');
       const numberToCheck = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone.slice(2) : cleanPhone;
       if (!/^[6-9]\d{9}$/.test(numberToCheck)) {
         setModalError('Phone number must be a 10-digit mobile number starting with 6, 7, 8, or 9.');

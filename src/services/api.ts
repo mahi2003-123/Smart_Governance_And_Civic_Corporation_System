@@ -25,22 +25,12 @@ const resolveApiBaseUrl = (): string => {
     return 'http://localhost:5000/api';
   }
 
-  // Production with missing env var — fail visibly instead of silently
-  const msg =
-    '[SGCS] VITE_API_BASE_URL is not set. ' +
-    'Set this variable in your Vercel project dashboard to the Render backend URL ' +
-    '(e.g. https://sgcs-backend.onrender.com). The application cannot function without it.';
-  console.error(msg);
-  // Throw so the build fails early if this is reached at import time in SSR,
-  // or show a meaningful runtime error in the browser console.
-  if (typeof window === 'undefined') {
-    throw new Error(msg);
-  }
-  return '__missing_VITE_API_BASE_URL__';
+  // Production fallback to standard hosted Render service
+  return 'https://smart-governance-and-civic-corporation.onrender.com/api';
 };
 
 export const BASE_URL = resolveApiBaseUrl();
-export const isApiBaseUrlMissing = BASE_URL === '__missing_VITE_API_BASE_URL__';
+export const isApiBaseUrlMissing = false;
 
 const api = axios.create({
   baseURL: BASE_URL,

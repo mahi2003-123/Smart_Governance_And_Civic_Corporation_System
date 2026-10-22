@@ -98,7 +98,7 @@ export const SidebarContent: React.FC<{ onItemClick?: () => void }> = ({ onItemC
         },
         {
           items: [
-            { label: 'Admin Profile', path: '/admin/profile', icon: <PersonOutlinedIcon sx={{ fontSize: 19 }} /> },
+            { label: 'Admin Profile', path: '/citizen/profile', icon: <PersonOutlinedIcon sx={{ fontSize: 19 }} /> },
           ],
         },
       ];

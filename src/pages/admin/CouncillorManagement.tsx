@@ -141,7 +141,7 @@ export const CouncillorManagement: React.FC = () => {
     }
 
     if (formData.phone) {
-      const cleanPhone = formData.phone.replace(/[\s\-\+]/g, '');
+      const cleanPhone = formData.phone.replace(/[\s\-+]/g, '');
       const numberToCheck = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone.slice(2) : cleanPhone;
       if (!/^[6-9]\d{9}$/.test(numberToCheck)) {
         setModalError('Phone number must be a 10-digit mobile number starting with 6, 7, 8, or 9.');
@@ -304,6 +304,12 @@ export const CouncillorManagement: React.FC = () => {
                     icon: isActive ? <BlockOutlinedIcon fontSize="small" /> : <CheckCircleOutlinedIcon fontSize="small" />,
                     color: isActive ? 'error' : 'primary',
                     onClick: () => handleToggleStatus(c),
+                  },
+                  {
+                    label: 'Delete Councillor',
+                    icon: <DeleteOutlinedIcon fontSize="small" />,
+                    color: 'error',
+                    onClick: () => handleDeleteUser(c),
                   },
                 ];
 

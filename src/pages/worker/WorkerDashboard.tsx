@@ -17,8 +17,7 @@ import {
   MenuItem,
   Select,
   FormControl,
-  InputLabel,
-  Tooltip
+  InputLabel
 } from '@mui/material';
 import BuildIcon from '@mui/icons-material/Build';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
@@ -348,6 +347,8 @@ export const WorkerDashboard: React.FC = () => {
       : tabValue === 3
       ? pendingApprovalTasks
       : completedTasks;
+
+  if (loading) return <LoadingSpinner message="Loading assigned tasks..." />;
 
   return (
     <Box sx={{ pb: 6 }}>

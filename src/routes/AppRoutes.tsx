@@ -1,9 +1,15 @@
 import React, { Suspense, lazy } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { NotFoundPage, UnauthorizedPage } from '../components/common/NotFoundPage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { PublicOnlyRoute } from './PublicOnlyRoute';
+
+// Helper component to resolve parametric alias redirects without literal ':id' string in URL
+const CitizenHistoryIdRedirect: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  return <Navigate to={id ? `/citizen/complaints/${id}` : '/citizen/complaints'} replace />;
+};
 
 // Lazy-loaded pages for high-speed code-split routing
 const LandingPage = lazy(() => import('../pages/LandingPage').then((m) => ({ default: m.LandingPage })));
@@ -99,7 +105,33 @@ export const AppRoutes: React.FC = () => {
         />
         {/* Fallback Aliases */}
         <Route path="/citizen/history" element={<Navigate to="/citizen/complaints" replace />} />
-        <Route path="/citizen/history/:id" element={<Navigate to="/citizen/complaints/:id" replace />} />
+        <Route path="/citizen/history/:id" element={<CitizenHistoryIdRedirect />} />
+
+        {/* Multi-role Direct Complaint Details Routes */}
+        <Route
+          path="/councillor/complaints/:id"
+          element={
+            <ProtectedRoute allowedRoles={['COUNCILLOR', 'ADMIN']}>
+              <ComplaintDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/worker/tasks/:id"
+          element={
+            <ProtectedRoute allowedRoles={['WORKER', 'ADMIN']}>
+              <ComplaintDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/complaints/:id"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <ComplaintDetails />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/citizen/proposals"
@@ -272,6 +304,30 @@ export const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute allowedRoles={['ADMIN']}>
               <SystemReports />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/profile"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <Navigate to="/citizen/profile" replace />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/notifications"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <Navigate to="/admin/activity" replace />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/settings"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <Navigate to="/admin/dashboard" replace />
             </ProtectedRoute>
           }
         />
