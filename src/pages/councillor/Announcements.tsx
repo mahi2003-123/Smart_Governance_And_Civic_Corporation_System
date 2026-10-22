@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Box,
   Card,
@@ -31,6 +31,8 @@ import { WardNotice, NoticePriority } from '../../types';
 import { CustomTextField } from '../../components/common/CustomTextField';
 import { CustomButton } from '../../components/common/CustomButton';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { matchesWard } from '../../utils/wardUtils';
+import { WARDS_LIST } from '../../constants';
 
 const WARDS_SCOPE_OPTIONS = [
   'System Wide (All Registered Users)',
@@ -56,15 +58,57 @@ const CATEGORY_OPTIONS = [
 export const Announcements: React.FC = () => {
   const { user } = useAuth();
 
+  const isCouncillor = user?.role?.toUpperCase() === 'COUNCILLOR';
+
+  // Resolve councillor's assigned ward from user profile
+  const councillorWard = useMemo(() => {
+    if (!user?.ward) return null;
+    const match =
+      WARDS_SCOPE_OPTIONS.find(
+        (w) => w !== 'System Wide (All Registered Users)' && matchesWard(w, user.ward)
+      ) ||
+      WARDS_LIST.find((w) => matchesWard(w, user.ward));
+    return match || user.ward;
+  }, [user?.ward]);
+
+  // Councillor can only target their own assigned ward and System Wide
+  const availableScopeOptions = useMemo(() => {
+    if (isCouncillor) {
+      if (councillorWard) {
+        return [
+          councillorWard,
+          'System Wide (All Registered Users)',
+        ];
+      }
+      return ['System Wide (All Registered Users)'];
+    }
+    return WARDS_SCOPE_OPTIONS;
+  }, [isCouncillor, councillorWard]);
+
   const [loading, setLoading] = useState(true);
   const [notices, setNotices] = useState<WardNotice[]>([]);
 
   // Form states
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('Utility Maintenance');
-  const [targetScope, setTargetScope] = useState(
-    user?.ward ? `Ward 1 - Central Town` : 'System Wide (All Registered Users)'
-  );
+  const [targetScope, setTargetScope] = useState<string>(() => {
+    if (user?.role?.toUpperCase() === 'COUNCILLOR' && user?.ward) {
+      const match =
+        WARDS_SCOPE_OPTIONS.find(
+          (w) => w !== 'System Wide (All Registered Users)' && matchesWard(w, user.ward)
+        ) ||
+        WARDS_LIST.find((w) => matchesWard(w, user.ward));
+      return match || user.ward;
+    }
+    return 'System Wide (All Registered Users)';
+  });
+
+  useEffect(() => {
+    if (isCouncillor && councillorWard) {
+      setTargetScope(councillorWard);
+    }
+  }, [isCouncillor, councillorWard]);
+
   const [priority, setPriority] = useState<NoticePriority>('IMPORTANT');
   const [content, setContent] = useState('');
 
@@ -257,8 +301,13 @@ export const Announcements: React.FC = () => {
                     onChange={(e) => setTargetScope(e.target.value)}
                     required
                     fullWidth
+                    helperText={
+                      isCouncillor && councillorWard
+                        ? `Councillors may broadcast exclusively to ${councillorWard} or System Wide.`
+                        : undefined
+                    }
                   >
-                    {WARDS_SCOPE_OPTIONS.map((w) => (
+                    {availableScopeOptions.map((w) => (
                       <MenuItem key={w} value={w}>
                         {w}
                       </MenuItem>
@@ -389,7 +438,7 @@ export const Announcements: React.FC = () => {
                     Published by: {user?.fullName || 'Ward Councillor'}
                   </Typography>
                   <Typography variant="caption" sx={{ color: '#496A57' }}>
-                    {user?.ward || 'Ward 1 - Central Town'} Councillor Desk
+                    {councillorWard || user?.ward || 'Ward 1 - Central Town'} Councillor Desk
                   </Typography>
                 </Paper>
 
