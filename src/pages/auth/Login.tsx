@@ -10,7 +10,6 @@ import {
   FormControl,
   InputLabel,
   OutlinedInput,
-  Chip,
 } from '@mui/material';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
@@ -26,7 +25,7 @@ import api, { isApiBaseUrlMissing } from '../../services/api';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login, logout, user, isAuthenticated } = useAuth();
+  const { login, user, isAuthenticated } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -230,41 +229,6 @@ export const Login: React.FC = () => {
         >
           <Box sx={{ maxWidth: 420, mx: 'auto', width: '100%' }}>
             
-            {/* If user is already authenticated */}
-            {isAuthenticated && user && (
-              <Box sx={{ mb: 3, p: 2.5, borderRadius: '16px', border: '1px solid #E2EAF0', backgroundColor: '#FBFDFB' }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#1F4D3A', mb: 0.5 }}>
-                  Currently Logged In Session
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#1C2A24', mb: 2 }}>
-                  Signed in as <strong>{user.fullName}</strong> ({user.role})
-                </Typography>
-                <Stack direction="row" spacing={1.5}>
-                  <Button
-                    size="small"
-                    variant="contained"
-                    onClick={() => navigate(getDashboardPath(user.role))}
-                    sx={{
-                      backgroundColor: '#1F4D3A',
-                      color: '#FFFFFF',
-                      textTransform: 'none',
-                      '&:hover': { backgroundColor: '#16382A' },
-                    }}
-                  >
-                    Go to Dashboard
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={() => logout()}
-                    sx={{ borderColor: '#1F4D3A', color: '#1F4D3A', textTransform: 'none', '&:hover': { backgroundColor: '#E8F3EE' } }}
-                  >
-                    Sign Out & Switch User
-                  </Button>
-                </Stack>
-              </Box>
-            )}
-
             <Box sx={{ mb: 3.5 }}>
               <Typography variant="h3" sx={{ fontWeight: 900, color: '#1C2A24', mb: 0.5 }}>
                 Portal Sign In
@@ -291,36 +255,6 @@ export const Login: React.FC = () => {
                 Server is waking up, this can take up to a minute.
               </Alert>
             )}
-
-            {/* Quick Demo Test Accounts */}
-            <Box sx={{ mb: 3, p: 2, borderRadius: '12px', backgroundColor: '#F4F8F5', border: '1px solid #D6E6DC' }}>
-              <Typography variant="caption" sx={{ fontWeight: 700, color: '#1F4D3A', display: 'block', mb: 1, letterSpacing: '0.02em', textTransform: 'uppercase' }}>
-                Quick Test Logins:
-              </Typography>
-              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }} useFlexGap>
-                <Chip
-                  label="Councillor: rajesh@gmail.com"
-                  size="small"
-                  onClick={() => { setEmail('rajesh@gmail.com'); setPassword('123456'); setError(''); }}
-                  sx={{ cursor: 'pointer', backgroundColor: '#FFFFFF', borderColor: '#1F4D3A', fontWeight: 600, '&:hover': { backgroundColor: '#E8F3EE' } }}
-                  variant="outlined"
-                />
-                <Chip
-                  label="Citizen: jithin@gmail.com"
-                  size="small"
-                  onClick={() => { setEmail('jithin@gmail.com'); setPassword('123456'); setError(''); }}
-                  sx={{ cursor: 'pointer', backgroundColor: '#FFFFFF', borderColor: '#1F4D3A', fontWeight: 600, '&:hover': { backgroundColor: '#E8F3EE' } }}
-                  variant="outlined"
-                />
-                <Chip
-                  label="Admin: admin@gmail.com"
-                  size="small"
-                  onClick={() => { setEmail('admin@gmail.com'); setPassword('admin12345'); setError(''); }}
-                  sx={{ cursor: 'pointer', backgroundColor: '#FFFFFF', borderColor: '#1F4D3A', fontWeight: 600, '&:hover': { backgroundColor: '#E8F3EE' } }}
-                  variant="outlined"
-                />
-              </Stack>
-            </Box>
 
             <Box component="form" onSubmit={handleLogin}>
               <Stack spacing={2.5}>
