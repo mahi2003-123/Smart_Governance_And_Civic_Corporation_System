@@ -162,6 +162,8 @@ export interface NotificationItem {
   read: boolean;
   createdAt: string;
   linkUrl?: string;
+  recipientId?: string;
+  ward?: string;
 }
 
 export interface SystemActivityLog {

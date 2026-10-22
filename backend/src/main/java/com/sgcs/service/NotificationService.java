@@ -24,13 +24,25 @@ public class NotificationService {
     private com.sgcs.repository.UserDeviceTokenRepository userDeviceTokenRepository;
 
     public List<Notification> getNotificationsForUser(String userId, String role, String ward) {
-        List<String> recipients = new ArrayList<>();
-        if (userId != null && !userId.isEmpty()) recipients.add(userId);
-        recipients.add("ALL");
-        if (role != null && !role.isEmpty()) recipients.add(role.toUpperCase());
-        if (ward != null && !ward.isEmpty()) recipients.add("ward_" + ward);
+        List<Notification> all = notificationRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
+        List<Notification> filtered = new ArrayList<>();
 
-        return notificationRepository.findByRecipientIdInOrderByCreatedAtDesc(recipients);
+        for (Notification n : all) {
+            String r = n.getRecipientId();
+            if (r == null || "ALL".equalsIgnoreCase(r)) {
+                filtered.add(n);
+            } else if (userId != null && r.equalsIgnoreCase(userId)) {
+                filtered.add(n);
+            } else if (role != null && r.equalsIgnoreCase(role)) {
+                filtered.add(n);
+            } else if (ward != null && r.toLowerCase().startsWith("ward_")) {
+                String noticeWard = r.substring(5).trim();
+                if (isSameWard(noticeWard, ward)) {
+                    filtered.add(n);
+                }
+            }
+        }
+        return filtered;
     }
 
     public Notification createNotification(Notification notification) {
@@ -97,5 +109,21 @@ public class NotificationService {
             com.sgcs.entity.UserDeviceToken token = new com.sgcs.entity.UserDeviceToken(userId, fcmToken, deviceType, deviceName);
             userDeviceTokenRepository.save(token);
         }
+    }
+
+    private boolean isSameWard(String wardA, String wardB) {
+        if (wardA == null || wardB == null) return false;
+        String a = wardA.trim().toLowerCase();
+        String b = wardB.trim().toLowerCase();
+        if (a.equals(b)) return true;
+
+        if (a.contains("ward ") && b.contains("ward ")) {
+            String numA = a.substring(a.indexOf("ward ") + 5).split(" ")[0].split("-")[0].trim();
+            String numB = b.substring(b.indexOf("ward ") + 5).split(" ")[0].split("-")[0].trim();
+            if (!numA.isEmpty() && numA.equals(numB)) {
+                return true;
+            }
+        }
+        return a.contains(b) || b.contains(a);
     }
 }

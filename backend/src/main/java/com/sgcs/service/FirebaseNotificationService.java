@@ -195,9 +195,12 @@ public class FirebaseNotificationService {
         if ("ALL".equalsIgnoreCase(cleanRecipient)) {
             tokens = tokenRepository.findByActiveTrue();
         } else if (cleanRecipient.toLowerCase().startsWith("ward_")) {
-            String ward = cleanRecipient.substring(5);
-            List<com.sgcs.entity.User> users = userRepository.findByWard(ward);
-            List<String> userIds = users.stream().map(com.sgcs.entity.User::getId).toList();
+            String targetWard = cleanRecipient.substring(5).trim();
+            List<com.sgcs.entity.User> allUsers = userRepository.findAll();
+            List<String> userIds = allUsers.stream()
+                .filter(u -> u.getWard() != null && isSameWard(u.getWard(), targetWard))
+                .map(com.sgcs.entity.User::getId)
+                .toList();
             tokens = userIds.isEmpty() ? List.of() : tokenRepository.findByUserIdInAndActiveTrue(userIds);
         } else if (List.of("CITIZEN", "WORKER", "ADMIN", "COUNCILLOR", "COMMISSIONER").contains(cleanRecipient.toUpperCase())) {
             List<com.sgcs.entity.User> users = userRepository.findByRoleIgnoreCase(cleanRecipient);
@@ -275,5 +278,21 @@ public class FirebaseNotificationService {
             }
         }
         return CompletableFuture.completedFuture(sent > 0 ? "sent" : "failed");
+    }
+
+    private boolean isSameWard(String wardA, String wardB) {
+        if (wardA == null || wardB == null) return false;
+        String a = wardA.trim().toLowerCase();
+        String b = wardB.trim().toLowerCase();
+        if (a.equals(b)) return true;
+
+        if (a.contains("ward ") && b.contains("ward ")) {
+            String numA = a.substring(a.indexOf("ward ") + 5).split(" ")[0].split("-")[0].trim();
+            String numB = b.substring(b.indexOf("ward ") + 5).split(" ")[0].split("-")[0].trim();
+            if (!numA.isEmpty() && numA.equals(numB)) {
+                return true;
+            }
+        }
+        return a.contains(b) || b.contains(a);
     }
 }

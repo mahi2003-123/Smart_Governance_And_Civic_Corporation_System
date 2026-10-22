@@ -21,6 +21,7 @@ import ReportProblemIcon from '@mui/icons-material/ReportProblem';
 import HowToVoteIcon from '@mui/icons-material/HowToVote';
 import FeedbackIcon from '@mui/icons-material/Feedback';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { notificationService } from '../../services/notificationService';
 import { NotificationItem } from '../../types';
 import {
@@ -32,6 +33,7 @@ import {
 
 export const NotificationPopover: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [pushPermission, setPushPermission] = useState<string>('default');
@@ -40,7 +42,7 @@ export const NotificationPopover: React.FC = () => {
 
   const fetchNotifs = async () => {
     try {
-      const data = await notificationService.getNotifications();
+      const data = await notificationService.getNotifications(user?.ward, user?.id, user?.role);
       setNotifications(data);
     } catch (e) {
       console.error(e);
@@ -63,7 +65,7 @@ export const NotificationPopover: React.FC = () => {
     return () => {
       if (unsub) unsub();
     };
-  }, []);
+  }, [user?.ward, user?.id, user?.role]);
 
   const handleEnablePush = async () => {
     setPushLoading(true);

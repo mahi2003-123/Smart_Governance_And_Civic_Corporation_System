@@ -22,6 +22,7 @@ import { noticeService } from '../../services/noticeService';
 import { WardNotice } from '../../types';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { WARDS_LIST } from '../../constants';
+import { matchesWard } from '../../utils/wardUtils';
 
 export const Notices: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -51,9 +52,19 @@ export const Notices: React.FC = () => {
   }, []);
 
   const filteredNotices = notices.filter((n) => {
-    const matchesWard = wardFilter === 'ALL' || n.ward === wardFilter;
+    const isSystemWideNotice =
+      !n.ward ||
+      n.ward.toUpperCase() === 'ALL' ||
+      n.ward.toLowerCase().includes('system wide') ||
+      n.ward.toLowerCase().includes('all wards');
+
+    const matchesWardFilter =
+      wardFilter === 'ALL' ||
+      isSystemWideNotice ||
+      matchesWard(n.ward, wardFilter);
+
     const matchesCategory = categoryFilter === 'ALL' || n.category === categoryFilter;
-    return matchesWard && matchesCategory;
+    return matchesWardFilter && matchesCategory;
   });
 
   if (loading) return <LoadingSpinner message="Loading Official Bulletins..." />;

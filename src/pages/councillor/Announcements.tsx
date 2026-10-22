@@ -182,7 +182,11 @@ export const Announcements: React.FC = () => {
       });
 
       setNotices([newNotice, ...notices]);
-      setSuccess(`Official Bulletin broadcasted successfully to all users! Notification alerts sent.`);
+      const isSystemScope = targetScope.includes('System Wide');
+      const audienceMsg = isSystemScope
+        ? 'System-Wide to all registered citizens across all municipal wards'
+        : `exclusively to registered residents of ${targetScope}`;
+      setSuccess(`Official bulletin broadcasted ${audienceMsg}! Push alerts and notifications sent.`);
       setTitle('');
       setContent('');
       setAttachmentFile(null);
@@ -455,7 +459,9 @@ export const Announcements: React.FC = () => {
                       '&:hover': { backgroundColor: '#304B3A' }
                     }}
                   >
-                    Broadcast Notice to All Users
+                    {targetScope.includes('System Wide')
+                      ? 'Broadcast System-Wide Notice'
+                      : `Broadcast Notice to ${councillorWard || targetScope}`}
                   </CustomButton>
                 </Box>
               </Stack>

@@ -39,13 +39,24 @@ export const noticeService = {
       noticesMemory = [created, ...noticesMemory];
     }
 
-    // Broadcast system notification to all users so everyone gets an alert
+    // Dispatch notification to specific ward or system-wide
     try {
+      const targetWard = created.ward ? created.ward.trim() : '';
+      const isSystemWide =
+        !targetWard ||
+        targetWard.toUpperCase() === 'ALL' ||
+        targetWard.toLowerCase().includes('system wide') ||
+        targetWard.toLowerCase().includes('all wards');
+
+      const recipientId = isSystemWide ? 'ALL' : `ward_${targetWard}`;
+
       await notificationService.addNotification({
         title: `📢 ${created.priority === 'EMERGENCY' ? 'EMERGENCY ALERT' : 'Official Ward Notice'}: ${created.title}`,
         message: `Published by ${created.publishedBy} (${created.ward}): ${created.content.substring(0, 100)}...`,
         type: 'NOTICE',
-        linkUrl: '/citizen/notices'
+        linkUrl: '/citizen/notices',
+        recipientId,
+        ward: isSystemWide ? undefined : targetWard,
       });
     } catch (e) {
       console.error('Notification broadcast error:', e);

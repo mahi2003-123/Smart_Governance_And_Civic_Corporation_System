@@ -48,8 +48,17 @@ public class NoticeService {
         try {
             String title = "📢 " + ("EMERGENCY".equalsIgnoreCase(saved.getPriority()) ? "EMERGENCY ALERT" : "Official Ward Notice") + ": " + saved.getTitle();
             String msg = "Published by " + (saved.getPublishedBy() != null ? saved.getPublishedBy() : "Ward Councillor") + " (" + saved.getWard() + "): " + (saved.getContent() != null && saved.getContent().length() > 100 ? saved.getContent().substring(0, 100) + "..." : saved.getContent());
+
+            String noticeWard = saved.getWard() != null ? saved.getWard().trim() : "";
+            boolean isSystemWide = noticeWard.isEmpty()
+                    || noticeWard.equalsIgnoreCase("ALL")
+                    || noticeWard.toLowerCase().contains("system wide")
+                    || noticeWard.toLowerCase().contains("all wards");
+
+            String recipientId = isSystemWide ? "ALL" : "ward_" + noticeWard;
+
             notificationService.createNotification(
-                "ALL",
+                recipientId,
                 title,
                 msg,
                 "NOTICE",
