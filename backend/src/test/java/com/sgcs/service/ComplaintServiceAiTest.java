@@ -119,6 +119,8 @@ public class ComplaintServiceAiTest {
         });
 
         when(complaintRepository.findAll()).thenAnswer(invocation -> new ArrayList<>(databaseStore.values()));
+        when(complaintRepository.findActiveComplaints()).thenAnswer(invocation -> new ArrayList<>(databaseStore.values()));
+        when(complaintRepository.findRecentActiveComplaintsByWard(anyString(), any(LocalDateTime.class), any())).thenAnswer(invocation -> new ArrayList<>(databaseStore.values()));
         when(complaintRepository.findById(anyString())).thenAnswer(invocation -> {
             String key = invocation.getArgument(0);
             return Optional.ofNullable(databaseStore.get(key));

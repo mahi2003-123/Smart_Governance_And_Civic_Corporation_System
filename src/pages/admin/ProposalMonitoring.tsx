@@ -27,11 +27,13 @@ import { AdminPageHeader } from '../../components/admin/AdminPageHeader';
 import { FilterBar, FilterOption } from '../../components/admin/FilterBar';
 import { ActionMenu, ActionMenuItem } from '../../components/admin/ActionMenu';
 import { ProposalItemCard } from '../../components/proposals/ProposalItemCard';
+import { AccessDeniedState } from '../../components/common/AccessDeniedState';
 import { useAuth } from '../../hooks/useAuth';
 
 export const ProposalMonitoring: React.FC = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [forbidden, setForbidden] = useState(false);
   const [proposals, setProposals] = useState<CommunityProposal[]>([]);
   const [wards, setWards] = useState<Ward[]>([]);
 
@@ -46,6 +48,7 @@ export const ProposalMonitoring: React.FC = () => {
   const userIdentifier = user?.email || user?.id || user?.fullName || 'anonymous';
 
   const fetchProposals = async () => {
+    setForbidden(false);
     try {
       const [pData, wData] = await Promise.all([
         proposalService.getProposals(undefined, userIdentifier),
@@ -53,8 +56,11 @@ export const ProposalMonitoring: React.FC = () => {
       ]);
       setProposals(pData);
       setWards(wData);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      if (e?.response?.status === 403 || e?.status === 403) {
+        setForbidden(true);
+      }
     }
   };
 
@@ -135,6 +141,10 @@ export const ProposalMonitoring: React.FC = () => {
       onChange: setStatusFilter,
     },
   ];
+
+  if (forbidden) {
+    return <AccessDeniedState message="You do not have administrative privileges to monitor community proposals." onRetry={fetchProposals} />;
+  }
 
   if (loading) return <LoadingSpinner message="Loading Community Proposal Registry..." />;
 

@@ -2,7 +2,7 @@ importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js
 importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js');
 
 // Activate new service worker immediately
-self.addEventListener('install', (event) => {
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
@@ -11,54 +11,49 @@ self.addEventListener('activate', (event) => {
 });
 
 const urlParams = new URLSearchParams(location.search);
-let firebaseConfig = {
-  apiKey: "AIzaSyBwoFo8fUwz-cu-vRUokqDdT5AuKPq-fTI",
-  authDomain: "sgcs-civic-system.firebaseapp.com",
-  projectId: "sgcs-civic-system",
-  storageBucket: "sgcs-civic-system.firebasestorage.app",
-  messagingSenderId: "343274833225",
-  appId: "1:343274833225:web:45e2517ce4d284b27b4698"
-};
+let firebaseConfig = null;
 
 try {
   if (urlParams.has('config')) {
     const parsed = JSON.parse(decodeURIComponent(urlParams.get('config')));
-    if (parsed && typeof parsed === 'object') {
-      firebaseConfig = { ...firebaseConfig, ...parsed };
+    if (parsed && typeof parsed === 'object' && parsed.apiKey) {
+      firebaseConfig = parsed;
     }
   }
-} catch (e) {
-  console.warn('[SW] Failed to parse config from SW url:', e);
+} catch {
+  console.warn('[SW] Failed to parse config from service worker URL');
 }
 
-try {
-  firebase.initializeApp(firebaseConfig);
-  const messaging = firebase.messaging();
+if (firebaseConfig && firebaseConfig.apiKey) {
+  try {
+    firebase.initializeApp(firebaseConfig);
+    const messaging = firebase.messaging();
 
-  messaging.onBackgroundMessage(function (payload) {
-    console.log('[SW] Received background message:', payload);
+    messaging.onBackgroundMessage(function (payload) {
+      console.log('[SW] Received background message');
 
-    const notificationTitle =
-      payload?.data?.title ||
-      payload?.notification?.title ||
-      'SGCS Civic Alert';
+      const notificationTitle =
+        payload?.data?.title ||
+        payload?.notification?.title ||
+        'SGCS Civic Alert';
 
-    const notificationOptions = {
-      body:
-        payload?.data?.body ||
-        payload?.notification?.body ||
-        'You have a new update in SGCS.',
-      icon: '/vite.svg',
-      badge: '/vite.svg',
-      vibrate: [200, 100, 200],
-      data: payload?.data || {},
-      tag: payload?.data?.taskId || payload?.data?.trackingNumber || undefined
-    };
+      const notificationOptions = {
+        body:
+          payload?.data?.body ||
+          payload?.notification?.body ||
+          'You have a new update in SGCS.',
+        icon: '/vite.svg',
+        badge: '/vite.svg',
+        vibrate: [200, 100, 200],
+        data: payload?.data || {},
+        tag: payload?.data?.taskId || payload?.data?.trackingNumber || undefined
+      };
 
-    self.registration.showNotification(notificationTitle, notificationOptions);
-  });
-} catch (e) {
-  console.warn('[SW] Firebase SW initialization skipped or failed:', e);
+      self.registration.showNotification(notificationTitle, notificationOptions);
+    });
+  } catch {
+    console.warn('[SW] Firebase background messaging initialization skipped or failed');
+  }
 }
 
 self.addEventListener('notificationclick', function (event) {

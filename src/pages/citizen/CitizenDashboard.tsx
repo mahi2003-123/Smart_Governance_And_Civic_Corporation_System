@@ -19,6 +19,7 @@ import { noticeService } from '../../services/noticeService';
 import { proposalService } from '../../services/proposalService';
 import { Complaint, WardNotice, CommunityProposal } from '../../types';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { AccessDeniedState } from '../../components/common/AccessDeniedState';
 import { StatusBadge } from '../../components/common/StatusBadge';
 
 export const CitizenDashboard: React.FC = () => {
@@ -26,6 +27,7 @@ export const CitizenDashboard: React.FC = () => {
   const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
+  const [forbidden, setForbidden] = useState(false);
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [notices, setNotices] = useState<WardNotice[]>([]);
   const [proposals, setProposals] = useState<CommunityProposal[]>([]);
@@ -33,6 +35,7 @@ export const CitizenDashboard: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      setForbidden(false);
       try {
         const [complaintData, noticeData, proposalData] = await Promise.all([
           complaintService.getComplaints(user?.id ? { citizenId: user.id } : undefined),
@@ -52,8 +55,11 @@ export const CitizenDashboard: React.FC = () => {
         setComplaints(userOwnComplaints);
         setNotices(noticeData);
         setProposals(proposalData);
-      } catch (e) {
+      } catch (e: any) {
         console.error(e);
+        if (e?.response?.status === 403 || e?.status === 403) {
+          setForbidden(true);
+        }
       } finally {
         setLoading(false);
       }
@@ -67,6 +73,10 @@ export const CitizenDashboard: React.FC = () => {
   ).length;
   const resolvedCount = complaints.filter((c) => c.status === 'RESOLVED').length;
   const proposalCount = proposals.length;
+
+  if (forbidden) {
+    return <AccessDeniedState message="You do not have permission to access this citizen portal dashboard." />;
+  }
 
   if (loading && complaints.length === 0) {
     return <LoadingSpinner message="Loading your civic portal..." />;

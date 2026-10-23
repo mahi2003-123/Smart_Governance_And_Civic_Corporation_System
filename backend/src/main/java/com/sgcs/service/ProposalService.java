@@ -29,7 +29,7 @@ public class ProposalService {
 
     public Proposal createProposal(Proposal proposal) {
         if (proposal.getId() == null || proposal.getId().isEmpty()) {
-            proposal.setId("prop_" + System.currentTimeMillis());
+            proposal.setId("prop_" + java.util.UUID.randomUUID().toString());
         }
         if (proposal.getUpvotes() == null) proposal.setUpvotes(0);
         if (proposal.getDownvotes() == null) proposal.setDownvotes(0);
@@ -114,7 +114,7 @@ public class ProposalService {
         return proposalRepository.save(proposal);
     }
 
-    public Proposal updateStatus(String id, String status, String notes) {
+    public Proposal updateStatus(String id, String status, String notes, String actorId, String actorName, String actorRole) {
         Proposal proposal = proposalRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Proposal not found: " + id));
 
@@ -126,9 +126,9 @@ public class ProposalService {
         Proposal saved = proposalRepository.save(proposal);
 
         auditService.logActivity(
-            "councillor",
-            "Ward Councillor",
-            "COUNCILLOR",
+            actorId != null ? actorId : "usr_councillor",
+            actorName != null ? actorName : "Ward Councillor",
+            actorRole != null ? actorRole : "COUNCILLOR",
             "Updated Proposal Status",
             "PROPOSAL",
             saved.getId(),
@@ -136,5 +136,9 @@ public class ProposalService {
         );
 
         return saved;
+    }
+
+    public Proposal updateStatus(String id, String status, String notes) {
+        return updateStatus(id, status, notes, "usr_councillor", "Ward Councillor", "COUNCILLOR");
     }
 }

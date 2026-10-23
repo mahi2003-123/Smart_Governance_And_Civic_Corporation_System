@@ -23,9 +23,11 @@ import { WardNotice } from '../../types';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { WARDS_LIST } from '../../constants';
 import { matchesWard } from '../../utils/wardUtils';
+import { AccessDeniedState } from '../../components/common/AccessDeniedState';
 
 export const Notices: React.FC = () => {
   const [loading, setLoading] = useState(true);
+  const [forbidden, setForbidden] = useState(false);
   const [notices, setNotices] = useState<WardNotice[]>([]);
   const [selectedNotice, setSelectedNotice] = useState<WardNotice | null>(null);
 
@@ -37,11 +39,15 @@ export const Notices: React.FC = () => {
 
   const loadNotices = async () => {
     setLoading(true);
+    setForbidden(false);
     try {
       const data = await noticeService.getNotices();
       setNotices(data);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      if (e?.response?.status === 403 || e?.status === 403) {
+        setForbidden(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -66,6 +72,10 @@ export const Notices: React.FC = () => {
     const matchesCategory = categoryFilter === 'ALL' || n.category === categoryFilter;
     return matchesWardFilter && matchesCategory;
   });
+
+  if (forbidden) {
+    return <AccessDeniedState message="You do not have clearance to view notices for this ward." onRetry={loadNotices} />;
+  }
 
   if (loading) return <LoadingSpinner message="Loading Official Bulletins..." />;
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   FormControl,
   InputLabel,
@@ -6,8 +6,12 @@ import {
   MenuItem,
   FormHelperText,
   SelectChangeEvent,
+  CircularProgress,
+  Button,
+  Box,
 } from '@mui/material';
-import { WARDS_LIST } from '../../constants';
+import { wardService } from '../../services/wardService';
+import { Ward } from '../../types';
 
 interface WardSelectorProps {
   value: string;
@@ -34,12 +38,34 @@ export const WardSelector: React.FC<WardSelectorProps> = ({
   size = 'medium',
   allowAllOption = false,
 }) => {
+  const [wards, setWards] = useState<Ward[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
+  const loadWards = useCallback(async (force = false) => {
+    setLoading(true);
+    setFetchError(null);
+    try {
+      const data = await wardService.getWards(force);
+      setWards(data);
+    } catch (err: any) {
+      setWards([]);
+      setFetchError('Failed to load wards from municipal server.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadWards();
+  }, [loadWards]);
+
   const handleChange = (event: SelectChangeEvent<string>) => {
     onChange(event.target.value);
   };
 
   return (
-    <FormControl fullWidth={fullWidth} error={error} required={required} size={size}>
+    <FormControl fullWidth={fullWidth} error={error || Boolean(fetchError)} required={required} size={size}>
       <InputLabel id="ward-selector-label" sx={{ fontWeight: 600 }}>
         {label}
       </InputLabel>
@@ -49,25 +75,52 @@ export const WardSelector: React.FC<WardSelectorProps> = ({
         value={value}
         label={label}
         onChange={handleChange}
-        disabled={disabled}
+        disabled={disabled || loading}
         sx={{
           borderRadius: '12px',
           fontWeight: 600,
           backgroundColor: '#FFFFFF',
         }}
+        endAdornment={
+          loading ? (
+            <Box sx={{ mr: 2, display: 'flex', alignItems: 'center' }}>
+              <CircularProgress size={16} sx={{ color: '#1F4D3A' }} />
+            </Box>
+          ) : null
+        }
       >
         {allowAllOption && (
           <MenuItem value="All Wards" sx={{ fontWeight: 600 }}>
             <em>All Wards</em>
           </MenuItem>
         )}
-        {WARDS_LIST.map((ward) => (
-          <MenuItem key={ward} value={ward} sx={{ fontWeight: 500 }}>
-            {ward}
-          </MenuItem>
-        ))}
+        {wards.map((ward) => {
+          const wardDisplayName = ward.name.toLowerCase().startsWith('ward')
+            ? ward.name
+            : `Ward ${ward.wardNumber} - ${ward.name}`;
+          return (
+            <MenuItem key={ward.id || ward.wardNumber} value={wardDisplayName} sx={{ fontWeight: 500 }}>
+              {wardDisplayName}
+            </MenuItem>
+          );
+        })}
       </Select>
-      {helperText && <FormHelperText>{helperText}</FormHelperText>}
+      {fetchError ? (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+          <FormHelperText error sx={{ m: 0 }}>
+            {fetchError}
+          </FormHelperText>
+          <Button
+            size="small"
+            onClick={() => loadWards(true)}
+            sx={{ fontSize: '0.72rem', textTransform: 'none', py: 0, px: 1, minWidth: 'auto', color: '#1F4D3A' }}
+          >
+            Retry
+          </Button>
+        </Box>
+      ) : helperText ? (
+        <FormHelperText>{helperText}</FormHelperText>
+      ) : null}
     </FormControl>
   );
 };

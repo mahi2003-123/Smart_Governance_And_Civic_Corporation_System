@@ -30,9 +30,11 @@ import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader';
 import { FilterBar, FilterOption } from '../../components/admin/FilterBar';
 import { ActionMenu, ActionMenuItem } from '../../components/admin/ActionMenu';
+import { AccessDeniedState } from '../../components/common/AccessDeniedState';
 
 export const ComplaintMonitoring: React.FC = () => {
   const [loading, setLoading] = useState(true);
+  const [forbidden, setForbidden] = useState(false);
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [wards, setWards] = useState<Ward[]>([]);
 
@@ -48,6 +50,7 @@ export const ComplaintMonitoring: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      setForbidden(false);
       try {
         const [cData, wData] = await Promise.all([
           complaintService.getComplaints(),
@@ -55,8 +58,11 @@ export const ComplaintMonitoring: React.FC = () => {
         ]);
         setComplaints(cData);
         setWards(wData);
-      } catch (e) {
+      } catch (e: any) {
         console.error(e);
+        if (e?.response?.status === 403 || e?.status === 403) {
+          setForbidden(true);
+        }
       } finally {
         setLoading(false);
       }
@@ -116,6 +122,10 @@ export const ComplaintMonitoring: React.FC = () => {
       onChange: setStatusFilter,
     },
   ];
+
+  if (forbidden) {
+    return <AccessDeniedState message="You do not have administrative privileges to monitor complaints." />;
+  }
 
   if (loading) return <LoadingSpinner message="Loading Complaint Monitoring System..." />;
 

@@ -1,7 +1,13 @@
 package com.sgcs.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "complaints", indexes = {
@@ -34,16 +40,16 @@ public class Complaint {
     @Column(nullable = false)
     private String ward;
 
-    @Column(name = "location_address")
+    @Column(name = "location_address", nullable = false)
     private String locationAddress;
 
     @Column(nullable = false)
-    private String status; // PENDING, IN_PROGRESS, RESOLVED, REJECTED
+    private String status = "PENDING"; // PENDING, IN_PROGRESS, RESOLVED, REJECTED
 
     @Column(name = "citizen_id", nullable = false)
     private String citizenId;
 
-    @Column(name = "citizen_name")
+    @Column(name = "citizen_name", nullable = false)
     private String citizenName;
 
     @Column(name = "citizen_phone")
@@ -55,23 +61,11 @@ public class Complaint {
     @Column(name = "assigned_worker_name")
     private String assignedWorkerName;
 
-    @Column(columnDefinition = "TEXT")
-    private String images; // Stored as comma-separated or JSON string
-
-    @Column(name = "completion_image", columnDefinition = "TEXT")
-    private String completionImage;
-
     @Column(name = "assigned_date")
     private LocalDateTime assignedDate;
 
     @Column(name = "due_date")
     private LocalDateTime dueDate;
-
-    @Column(name = "before_image", columnDefinition = "TEXT")
-    private String beforeImage;
-
-    @Column(name = "after_image", columnDefinition = "TEXT")
-    private String afterImage;
 
     @Column(name = "worker_notes", columnDefinition = "TEXT")
     private String workerNotes;
@@ -81,9 +75,6 @@ public class Complaint {
 
     @Column(name = "delay_notes", columnDefinition = "TEXT")
     private String delayNotes;
-
-    @Column(name = "delay_image", columnDefinition = "TEXT")
-    private String delayImage;
 
     // AI & Duplicate Tracking
     @Column(name = "ai_suggested_category")
@@ -113,6 +104,10 @@ public class Complaint {
     @Column(name = "is_duplicate_confirmed")
     private Boolean isDuplicateConfirmed;
 
+    @OneToMany(mappedBy = "complaint", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JsonIgnore
+    private List<ComplaintAttachment> attachments = new ArrayList<>();
+
     @Embeddable
     public static class ComplaintComment {
         private String id;
@@ -133,12 +128,12 @@ public class Complaint {
         private LocalDateTime createdAt;
 
         public ComplaintComment() {
-            this.id = "cmt_" + System.currentTimeMillis() + "_" + (int)(Math.random() * 1000);
+            this.id = "cmt_" + UUID.randomUUID().toString();
             this.createdAt = LocalDateTime.now();
         }
 
         public ComplaintComment(String authorName, String authorRole, String content, String authorAvatar) {
-            this.id = "cmt_" + System.currentTimeMillis() + "_" + (int)(Math.random() * 1000);
+            this.id = "cmt_" + UUID.randomUUID().toString();
             this.authorName = authorName;
             this.authorRole = authorRole != null ? authorRole : "CITIZEN";
             this.content = content;
@@ -185,12 +180,12 @@ public class Complaint {
         private String status;
 
         public ComplaintTimelineItem() {
-            this.id = "tl_" + System.currentTimeMillis() + "_" + (int)(Math.random() * 1000);
+            this.id = "tl_" + UUID.randomUUID().toString();
             this.timestamp = LocalDateTime.now();
         }
 
         public ComplaintTimelineItem(String title, String description, String actorName, String actorRole, String status) {
-            this.id = "tl_" + System.currentTimeMillis() + "_" + (int)(Math.random() * 1000);
+            this.id = "tl_" + UUID.randomUUID().toString();
             this.title = title;
             this.description = description;
             this.timestamp = LocalDateTime.now();
@@ -223,11 +218,11 @@ public class Complaint {
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "complaint_comments", joinColumns = @JoinColumn(name = "complaint_id"))
-    private java.util.List<ComplaintComment> comments = new java.util.ArrayList<>();
+    private List<ComplaintComment> comments = new ArrayList<>();
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "complaint_timeline", joinColumns = @JoinColumn(name = "complaint_id"))
-    private java.util.List<ComplaintTimelineItem> timeline = new java.util.ArrayList<>();
+    private List<ComplaintTimelineItem> timeline = new ArrayList<>();
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -282,23 +277,11 @@ public class Complaint {
     public String getAssignedWorkerName() { return assignedWorkerName; }
     public void setAssignedWorkerName(String assignedWorkerName) { this.assignedWorkerName = assignedWorkerName; }
 
-    public String getImages() { return images; }
-    public void setImages(String images) { this.images = images; }
-
-    public String getCompletionImage() { return completionImage; }
-    public void setCompletionImage(String completionImage) { this.completionImage = completionImage; }
-
     public LocalDateTime getAssignedDate() { return assignedDate; }
     public void setAssignedDate(LocalDateTime assignedDate) { this.assignedDate = assignedDate; }
 
     public LocalDateTime getDueDate() { return dueDate; }
     public void setDueDate(LocalDateTime dueDate) { this.dueDate = dueDate; }
-
-    public String getBeforeImage() { return beforeImage; }
-    public void setBeforeImage(String beforeImage) { this.beforeImage = beforeImage; }
-
-    public String getAfterImage() { return afterImage; }
-    public void setAfterImage(String afterImage) { this.afterImage = afterImage; }
 
     public String getWorkerNotes() { return workerNotes; }
     public void setWorkerNotes(String workerNotes) { this.workerNotes = workerNotes; }
@@ -308,9 +291,6 @@ public class Complaint {
 
     public String getDelayNotes() { return delayNotes; }
     public void setDelayNotes(String delayNotes) { this.delayNotes = delayNotes; }
-
-    public String getDelayImage() { return delayImage; }
-    public void setDelayImage(String delayImage) { this.delayImage = delayImage; }
 
     public String getAiSuggestedCategory() { return aiSuggestedCategory; }
     public void setAiSuggestedCategory(String aiSuggestedCategory) { this.aiSuggestedCategory = aiSuggestedCategory; }
@@ -345,9 +325,114 @@ public class Complaint {
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
-    public java.util.List<ComplaintComment> getComments() { return comments; }
-    public void setComments(java.util.List<ComplaintComment> comments) { this.comments = comments; }
+    public List<ComplaintComment> getComments() { return comments; }
+    public void setComments(List<ComplaintComment> comments) { this.comments = comments; }
 
-    public java.util.List<ComplaintTimelineItem> getTimeline() { return timeline; }
-    public void setTimeline(java.util.List<ComplaintTimelineItem> timeline) { this.timeline = timeline; }
+    public List<ComplaintTimelineItem> getTimeline() { return timeline; }
+    public void setTimeline(List<ComplaintTimelineItem> timeline) { this.timeline = timeline; }
+
+    public List<ComplaintAttachment> getAttachments() { return attachments; }
+    public void setAttachments(List<ComplaintAttachment> attachments) { this.attachments = attachments; }
+
+    // --- Attachment Helper Methods & Transient Fields for Backward Compatibility ---
+
+    public void addAttachment(String kind, String dataUrl) {
+        if (dataUrl == null || dataUrl.trim().isEmpty()) return;
+        if (this.attachments == null) this.attachments = new ArrayList<>();
+        ComplaintAttachment att = new ComplaintAttachment(this, kind, dataUrl.trim());
+        this.attachments.add(att);
+    }
+
+    public void setAttachment(String kind, String dataUrl) {
+        if (this.attachments == null) this.attachments = new ArrayList<>();
+        this.attachments.removeIf(a -> kind.equalsIgnoreCase(a.getKind()));
+        if (dataUrl != null && !dataUrl.trim().isEmpty()) {
+            addAttachment(kind, dataUrl);
+        }
+    }
+
+    private String findAttachmentUrl(String kind) {
+        if (attachments == null) return null;
+        return attachments.stream()
+            .filter(a -> kind.equalsIgnoreCase(a.getKind()))
+            .map(ComplaintAttachment::getDataUrl)
+            .findFirst()
+            .orElse(null);
+    }
+
+    @Transient
+    @JsonProperty("images")
+    public List<String> getImages() {
+        if (attachments == null || attachments.isEmpty()) return new ArrayList<>();
+        return attachments.stream()
+            .filter(a -> "REPORT".equalsIgnoreCase(a.getKind()))
+            .map(ComplaintAttachment::getDataUrl)
+            .collect(Collectors.toList());
+    }
+
+    public void setImages(List<?> imagesList) {
+        if (this.attachments == null) this.attachments = new ArrayList<>();
+        this.attachments.removeIf(a -> "REPORT".equalsIgnoreCase(a.getKind()));
+        if (imagesList != null) {
+            for (Object obj : imagesList) {
+                if (obj != null) {
+                    addAttachment("REPORT", obj.toString());
+                }
+            }
+        }
+    }
+
+    public void setImages(String imagesStr) {
+        if (this.attachments == null) this.attachments = new ArrayList<>();
+        this.attachments.removeIf(a -> "REPORT".equalsIgnoreCase(a.getKind()));
+        if (imagesStr != null && !imagesStr.trim().isEmpty()) {
+            String[] parts = imagesStr.split(",(?=(?:data:|http))");
+            for (String p : parts) {
+                if (!p.trim().isEmpty()) {
+                    addAttachment("REPORT", p.trim());
+                }
+            }
+        }
+    }
+
+    @Transient
+    @JsonProperty("beforeImage")
+    public String getBeforeImage() {
+        return findAttachmentUrl("BEFORE");
+    }
+
+    public void setBeforeImage(String beforeImage) {
+        setAttachment("BEFORE", beforeImage);
+    }
+
+    @Transient
+    @JsonProperty("afterImage")
+    public String getAfterImage() {
+        return findAttachmentUrl("AFTER");
+    }
+
+    public void setAfterImage(String afterImage) {
+        setAttachment("AFTER", afterImage);
+    }
+
+    @Transient
+    @JsonProperty("completionImage")
+    public String getCompletionImage() {
+        String c = findAttachmentUrl("COMPLETION");
+        return c != null ? c : findAttachmentUrl("AFTER");
+    }
+
+    public void setCompletionImage(String completionImage) {
+        setAttachment("COMPLETION", completionImage);
+    }
+
+    @Transient
+    @JsonProperty("delayImage")
+    public String getDelayImage() {
+        return findAttachmentUrl("DELAY");
+    }
+
+    public void setDelayImage(String delayImage) {
+        setAttachment("DELAY", delayImage);
+    }
 }

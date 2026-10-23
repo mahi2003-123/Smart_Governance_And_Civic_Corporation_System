@@ -30,7 +30,7 @@ public class NoticeService {
 
     public Notice createNotice(Notice notice) {
         if (notice.getId() == null || notice.getId().isEmpty()) {
-            notice.setId("notif_" + System.currentTimeMillis());
+            notice.setId("not_" + java.util.UUID.randomUUID().toString());
         }
         notice.setPublishDate(LocalDateTime.now());
         Notice saved = noticeRepository.save(notice);
@@ -69,5 +69,9 @@ public class NoticeService {
         }
 
         return saved;
+    }
+
+    public void deleteNotice(String id) {
+        noticeRepository.deleteById(id);
     }
 }

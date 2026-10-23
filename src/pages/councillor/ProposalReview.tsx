@@ -18,11 +18,13 @@ import { CustomTextField } from '../../components/common/CustomTextField';
 import { CustomButton } from '../../components/common/CustomButton';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { ProposalItemCard } from '../../components/proposals/ProposalItemCard';
+import { AccessDeniedState } from '../../components/common/AccessDeniedState';
 import { useAuth } from '../../hooks/useAuth';
 
 export const ProposalReview: React.FC = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [forbidden, setForbidden] = useState(false);
   const [proposals, setProposals] = useState<CommunityProposal[]>([]);
   const [activeReviewItem, setActiveReviewItem] = useState<{ item: CommunityProposal; action: ProposalStatus } | null>(null);
   const [notes, setNotes] = useState('');
@@ -32,11 +34,15 @@ export const ProposalReview: React.FC = () => {
 
   const fetchProposals = async () => {
     setLoading(true);
+    setForbidden(false);
     try {
       const data = await proposalService.getProposals(undefined, userIdentifier);
       setProposals(data);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      if (e?.response?.status === 403 || e?.status === 403) {
+        setForbidden(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -91,6 +97,10 @@ export const ProposalReview: React.FC = () => {
       setSubmitting(false);
     }
   };
+
+  if (forbidden) {
+    return <AccessDeniedState message="You do not have permission to review proposals for this ward." onRetry={fetchProposals} />;
+  }
 
   if (loading) return <LoadingSpinner message="Loading Community Proposals for Board Review..." />;
 

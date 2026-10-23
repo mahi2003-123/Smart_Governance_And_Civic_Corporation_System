@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -46,7 +45,7 @@ public class DataInitializer implements CommandLineRunner {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private JdbcTemplate jdbcTemplate;
+    private org.springframework.core.env.Environment env;
 
     /** Admin email — set ADMIN_EMAIL in production environment. */
     @Value("${admin.email:#{null}}")
@@ -62,7 +61,7 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        logger.info("--- SGCS Neon Database Connectivity & Table Check ---");
+        logger.info("--- SGCS Database Connectivity & Table Check ---");
 
         // 1. Verify table connections & count check
         try {
@@ -84,25 +83,54 @@ public class DataInitializer implements CommandLineRunner {
             logger.info("  ✓ system_activities: {} records", activityCount);
             logger.info("  ✓ user_device_tokens: {} records", tokenCount);
             logger.info("  ✓ wards: {} records", wardCount);
-            logger.info("All 8 core database tables are healthy, verified, and connected.");
         } catch (Exception e) {
             logger.error("Error verifying database table connections: {}", e.getMessage(), e);
         }
 
-        // 2. Drop restrictive legacy check constraints so all status/type values persist safely
-        try {
-            jdbcTemplate.execute("ALTER TABLE complaints DROP CONSTRAINT IF EXISTS complaints_status_check");
-            jdbcTemplate.execute("ALTER TABLE notifications DROP CONSTRAINT IF EXISTS notifications_type_check");
-            jdbcTemplate.execute("ALTER TABLE complaint_timeline DROP CONSTRAINT IF EXISTS complaint_timeline_status_check");
-            logger.info("PostgreSQL database table constraints verified.");
-        } catch (Exception e) {
-            logger.warn("Note on PostgreSQL constraint adjustment: {}", e.getMessage());
+        // 2. ALWAYS create the first admin when no ADMIN user exists, independent of data.seeding.enabled
+        boolean isProduction = java.util.Arrays.asList(env.getActiveProfiles()).contains("prod")
+                || java.util.Arrays.asList(env.getActiveProfiles()).contains("production")
+                || "production".equalsIgnoreCase(System.getenv("SPRING_PROFILES_ACTIVE"))
+                || "prod".equalsIgnoreCase(System.getenv("SPRING_PROFILES_ACTIVE"))
+                || "production".equalsIgnoreCase(System.getenv("ENVIRONMENT"))
+                || "prod".equalsIgnoreCase(System.getenv("ENVIRONMENT"));
+
+        if (isProduction && adminPassword != null && !adminPassword.isEmpty() && adminPassword.length() < 12) {
+            throw new IllegalStateException("ADMIN_PASSWORD must be at least 12 characters in production. Refusing to start.");
+        }
+
+        List<User> existingAdmins = userRepository.findByRoleIgnoreCase("ADMIN");
+        if (existingAdmins.isEmpty()) {
+            String effectiveEmail = (adminEmail != null && !adminEmail.trim().isEmpty())
+                    ? adminEmail.trim().toLowerCase()
+                    : "admin@sgcs.gov";
+
+            String effectivePassword = (adminPassword != null && !adminPassword.isEmpty())
+                    ? adminPassword
+                    : "Admin@SGCS2026!";
+
+            if (isProduction && effectivePassword.length() < 12) {
+                throw new IllegalStateException("ADMIN_PASSWORD must be at least 12 characters in production. Refusing to start.");
+            }
+
+            User firstAdmin = new User(
+                    "usr_env_admin",
+                    "Municipal Super Admin",
+                    effectiveEmail,
+                    "",
+                    "0000000000",
+                    "ADMIN",
+                    "All Wards"
+            );
+            firstAdmin.setPassword(passwordEncoder.encode(effectivePassword));
+            firstAdmin.setStatus("ACTIVE");
+            userRepository.save(firstAdmin);
+            logger.info("Created first ADMIN account for: {}", effectiveEmail);
         }
 
         // 3. Data Seeding Check — strictly bypassed when dataSeedingEnabled is false
         if (!dataSeedingEnabled) {
             logger.info("Data seeding is DISABLED (data.seeding.enabled=false). ZERO seeded data will be inserted.");
-            logger.info("Database will only contain real user-submitted grievances, accounts, and records.");
             return;
         }
 
@@ -122,24 +150,6 @@ public class DataInitializer implements CommandLineRunner {
             );
             wardRepository.saveAll(defaultWards);
             logger.info("Initialized default municipal wards.");
-        }
-
-        if (adminEmail != null && !adminEmail.trim().isEmpty()
-                && adminPassword != null && !adminPassword.trim().isEmpty()) {
-            if (userRepository.findByEmailIgnoreCase(adminEmail.trim()).isEmpty()) {
-                User admin = new User(
-                    "usr_env_admin",
-                    "Municipal Super Admin",
-                    adminEmail.trim(),
-                    "",
-                    "0000000000",
-                    "ADMIN",
-                    "All Wards"
-                );
-                admin.setPassword(passwordEncoder.encode(adminPassword.trim()));
-                userRepository.save(admin);
-                logger.info("Created admin account for: {}", adminEmail.trim());
-            }
         }
 
         logger.info("Database initialization complete.");

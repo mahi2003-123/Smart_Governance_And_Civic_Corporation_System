@@ -8,29 +8,34 @@ import axios from 'axios';
 // In production (Vercel) it MUST be set in the Vercel project dashboard.
 // ---------------------------------------------------------------------------
 
-const resolveApiBaseUrl = (): string => {
+const resolveApiBaseUrl = (): { url: string; missing: boolean } => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
 
   if (envUrl && typeof envUrl === 'string' && envUrl.trim() !== '') {
     const sanitized = envUrl.trim().replace(/\/+$/, '');
-    return sanitized.endsWith('/api') ? sanitized : `${sanitized}/api`;
+    return {
+      url: sanitized.endsWith('/api') ? sanitized : `${sanitized}/api`,
+      missing: false,
+    };
   }
 
   // Local development fall-through
   if (
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1')
+    import.meta.env.DEV ||
+    (typeof window !== 'undefined' &&
+      (window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1'))
   ) {
-    return 'http://localhost:5000/api';
+    return { url: 'http://localhost:5000/api', missing: false };
   }
 
-  // Production fallback to standard hosted Render service
-  return 'https://smart-governance-and-civic-corporation.onrender.com/api';
+  // Production requires VITE_API_BASE_URL to be set
+  return { url: '', missing: true };
 };
 
-export const BASE_URL = resolveApiBaseUrl();
-export const isApiBaseUrlMissing = false;
+const resolved = resolveApiBaseUrl();
+export const BASE_URL = resolved.url;
+export const isApiBaseUrlMissing = resolved.missing;
 
 const api = axios.create({
   baseURL: BASE_URL,

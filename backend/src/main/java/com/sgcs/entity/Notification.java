@@ -32,12 +32,12 @@ public class Notification {
     private LocalDateTime createdAt;
 
     public Notification() {
-        this.id = "notif_" + System.currentTimeMillis() + "_" + (int)(Math.random() * 1000);
+        this.id = "notif_" + java.util.UUID.randomUUID().toString();
         this.createdAt = LocalDateTime.now();
     }
 
     public Notification(String recipientId, String title, String message, String type, String linkUrl) {
-        this.id = "notif_" + System.currentTimeMillis() + "_" + (int)(Math.random() * 1000);
+        this.id = "notif_" + java.util.UUID.randomUUID().toString();
         this.recipientId = recipientId;
         this.title = title;
         this.message = message;

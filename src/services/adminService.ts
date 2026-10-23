@@ -7,6 +7,12 @@ export const adminService = {
       const res = await api.get('/admin/analytics');
       if (res.data) return res.data;
     } catch (err: any) {
+      if (err.response?.status === 403) {
+        const forbiddenErr: any = new Error(err.response?.data?.error || 'Access Denied: Admin authorization required.');
+        forbiddenErr.response = err.response;
+        forbiddenErr.status = 403;
+        throw forbiddenErr;
+      }
       console.error('[adminService] Backend analytics fetch error:', err);
     }
 
@@ -31,8 +37,23 @@ export const adminService = {
       return [];
     } catch (err: any) {
       console.error('[adminService] Backend user fetch error:', err);
-      throw new Error(err.response?.data?.error || err.message || 'Failed to load users from database.');
+      const wrapped: any = new Error(err.response?.data?.error || err.message || 'Failed to load users from database.');
+      wrapped.response = err.response;
+      wrapped.status = err.response?.status;
+      throw wrapped;
     }
+  },
+
+  getWorkers: async (ward?: string): Promise<User[]> => {
+    try {
+      const res = await api.get('/admin/workers', { params: { ward } });
+      if (res.data && Array.isArray(res.data)) {
+        return res.data.map((u: any) => ({ ...u, role: 'WORKER', status: 'ACTIVE' }));
+      }
+    } catch (err: any) {
+      console.warn('[adminService] Backend worker fetch error:', err);
+    }
+    return [];
   },
 
   createUser: async (userData: {
@@ -87,7 +108,10 @@ export const adminService = {
       return [];
     } catch (err: any) {
       console.error('[adminService] Backend wards fetch error:', err);
-      throw new Error(err.response?.data?.error || err.message || 'Failed to load wards from database.');
+      const wrapped: any = new Error(err.response?.data?.error || err.message || 'Failed to load wards from database.');
+      wrapped.response = err.response;
+      wrapped.status = err.response?.status;
+      throw wrapped;
     }
   },
 

@@ -33,6 +33,8 @@ import { CustomButton } from '../../components/common/CustomButton';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { matchesWard } from '../../utils/wardUtils';
 import { WARDS_LIST } from '../../constants';
+import { validateAndResizeImage } from '../../utils/imageUtils';
+import { AccessDeniedState } from '../../components/common/AccessDeniedState';
 
 const WARDS_SCOPE_OPTIONS = [
   'System Wide (All Registered Users)',
@@ -122,14 +124,19 @@ export const Announcements: React.FC = () => {
   const [publishing, setPublishing] = useState(false);
   const [success, setSuccess] = useState('');
   const [previewNotice, setPreviewNotice] = useState<WardNotice | null>(null);
+  const [forbidden, setForbidden] = useState(false);
 
   const fetchNotices = async () => {
     setLoading(true);
+    setForbidden(false);
     try {
       const data = await noticeService.getNotices();
       setNotices(data);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      if (e?.response?.status === 403 || e?.status === 403) {
+        setForbidden(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -140,25 +147,36 @@ export const Announcements: React.FC = () => {
   }, []);
 
   // File upload handler
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const fileType = file.type.includes('pdf')
-      ? 'pdf'
-      : file.type.includes('image')
-      ? 'image'
-      : 'other';
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setAttachmentFile({
-        name: file.name,
-        url: event.target?.result as string,
-        type: fileType
-      });
-    };
-    reader.readAsDataURL(file);
+    if (file.type.includes('pdf')) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert('File size exceeds the 2 MB limit.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setAttachmentFile({
+          name: file.name,
+          url: event.target?.result as string,
+          type: 'pdf',
+        });
+      };
+      reader.readAsDataURL(file);
+    } else {
+      try {
+        const resized = await validateAndResizeImage(file);
+        setAttachmentFile({
+          name: file.name,
+          url: resized,
+          type: 'image',
+        });
+      } catch (err: any) {
+        alert(err.message || 'Invalid image file.');
+      }
+    }
   };
 
   const handlePublishNotice = async (e: React.FormEvent) => {
@@ -197,6 +215,10 @@ export const Announcements: React.FC = () => {
       setPublishing(false);
     }
   };
+
+  if (forbidden) {
+    return <AccessDeniedState message="You do not have councillor clearance to broadcast announcements for this ward." onRetry={fetchNotices} />;
+  }
 
   if (loading) return <LoadingSpinner message="Loading Ward Broadcast Engine..." />;
 
@@ -418,7 +440,7 @@ export const Announcements: React.FC = () => {
                       <input
                         type="file"
                         hidden
-                        accept="image/*,.pdf"
+                        accept="image/jpeg,image/png,image/webp,.pdf"
                         onChange={handleFileUpload}
                       />
                     </Box>

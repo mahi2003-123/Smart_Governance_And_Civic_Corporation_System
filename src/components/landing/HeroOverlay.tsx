@@ -229,7 +229,12 @@ export const HeroOverlay: React.FC<HeroOverlayProps> = ({
           }}
         >
           {slide.headlineLine1} <br />
-          <span dangerouslySetInnerHTML={{ __html: slide.headlineLine2.replace('//', '<span style="color: #D97706;">//</span>') }} />
+          {slide.headlineLine2.split('//').map((part, idx, arr) => (
+            <React.Fragment key={idx}>
+              {part}
+              {idx < arr.length - 1 && <span style={{ color: '#D97706' }}>//</span>}
+            </React.Fragment>
+          ))}
         </Typography>
 
         {/* Subtext Paragraph */}

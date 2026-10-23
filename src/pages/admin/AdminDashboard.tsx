@@ -9,10 +9,12 @@ import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader';
 import { AdminStat } from '../../components/admin/AdminStat';
 import { ActivityFeed } from '../../components/admin/ActivityFeed';
+import { AccessDeniedState } from '../../components/common/AccessDeniedState';
 
 export const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [forbidden, setForbidden] = useState(false);
   const [analytics, setAnalytics] = useState<CivicAnalytics | null>(null);
   const [activities, setActivities] = useState<SystemActivityLog[]>([]);
   const [wards, setWards] = useState<Ward[]>([]);
@@ -23,6 +25,7 @@ export const AdminDashboard: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      setForbidden(false);
       try {
         const [analyticsData, activityData, wardData, userData] = await Promise.all([
           adminService.getAnalytics(),
@@ -37,14 +40,21 @@ export const AdminDashboard: React.FC = () => {
         setTotalCitizens(userData.filter((u) => u.role === 'CITIZEN').length);
         setTotalCouncillors(userData.filter((u) => u.role === 'COUNCILLOR').length);
         setTotalWorkers(userData.filter((u) => u.role === 'WORKER').length);
-      } catch (e) {
+      } catch (e: any) {
         console.error(e);
+        if (e?.response?.status === 403 || e?.status === 403) {
+          setForbidden(true);
+        }
       } finally {
         setLoading(false);
       }
     };
     fetchData();
   }, []);
+
+  if (forbidden) {
+    return <AccessDeniedState message="You do not have administrative privileges to access the Super Admin Dashboard." />;
+  }
 
   if (loading || !analytics) {
     return <LoadingSpinner message="Loading Super Admin System Overview..." />;

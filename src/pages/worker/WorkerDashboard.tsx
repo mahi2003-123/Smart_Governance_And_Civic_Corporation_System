@@ -23,6 +23,7 @@ import BuildIcon from '@mui/icons-material/Build';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import PhoneIcon from '@mui/icons-material/Phone';
+import { validateAndResizeImage } from '../../utils/imageUtils';
 import PersonIcon from '@mui/icons-material/Person';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -47,6 +48,7 @@ import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { HeaderBreadcrumb } from '../../components/layout/HeaderBreadcrumb';
 import { WelcomeCard } from '../../components/cards/WelcomeCard';
 import { StatCard } from '../../components/cards/StatCard';
+import { AccessDeniedState } from '../../components/common/AccessDeniedState';
 import { CustomTextField } from '../../components/common/CustomTextField';
 import { CustomButton } from '../../components/common/CustomButton';
 
@@ -65,6 +67,7 @@ export const WorkerDashboard: React.FC = () => {
   const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
+  const [forbidden, setForbidden] = useState(false);
   const [assignedTasks, setAssignedTasks] = useState<Complaint[]>([]);
   const [selectedTask, setSelectedTask] = useState<Complaint | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
@@ -104,6 +107,7 @@ export const WorkerDashboard: React.FC = () => {
 
   const fetchTasks = async () => {
     setLoading(true);
+    setForbidden(false);
     try {
       const allData = await complaintService.getComplaints();
       
@@ -114,8 +118,11 @@ export const WorkerDashboard: React.FC = () => {
       });
 
       setAssignedTasks(myTasks);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      if (e?.response?.status === 403 || e?.status === 403) {
+        setForbidden(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -251,14 +258,16 @@ export const WorkerDashboard: React.FC = () => {
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string | null) => void) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string | null) => void) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setter(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const resized = await validateAndResizeImage(file);
+        setter(resized);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Invalid image file';
+        alert(msg);
+      }
       e.target.value = '';
     }
   };
@@ -347,6 +356,10 @@ export const WorkerDashboard: React.FC = () => {
       : tabValue === 3
       ? pendingApprovalTasks
       : completedTasks;
+
+  if (forbidden) {
+    return <AccessDeniedState message="You do not have permission to access these worker task records." onRetry={fetchTasks} />;
+  }
 
   if (loading) return <LoadingSpinner message="Loading assigned tasks..." />;
 
@@ -919,14 +932,14 @@ export const WorkerDashboard: React.FC = () => {
               <input
                 ref={beforeInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
                 style={{ display: 'none' }}
                 onChange={(e) => handleFileUpload(e, setBeforePhoto)}
               />
               <input
                 ref={afterInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
                 style={{ display: 'none' }}
                 onChange={(e) => handleFileUpload(e, setAfterPhoto)}
               />
@@ -1101,7 +1114,7 @@ export const WorkerDashboard: React.FC = () => {
                 <input
                   ref={delayInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp"
                   style={{ display: 'none' }}
                   onChange={(e) => handleFileUpload(e, setDelayPhoto)}
                 />

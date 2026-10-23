@@ -25,11 +25,14 @@ import { STATUS_COLORS, PRIORITY_COLORS } from '../../utils/constants';
 import { CustomTextField } from '../../components/common/CustomTextField';
 import { CustomButton } from '../../components/common/CustomButton';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { validateAndResizeImage } from '../../utils/imageUtils';
+import { AccessDeniedState } from '../../components/common/AccessDeniedState';
 
 export const AssignedTasks: React.FC = () => {
   const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
+  const [forbidden, setForbidden] = useState(false);
   const [tasks, setTasks] = useState<Complaint[]>([]);
   const [activeTask, setActiveTask] = useState<Complaint | null>(null);
 
@@ -39,6 +42,7 @@ export const AssignedTasks: React.FC = () => {
 
   const fetchTasks = async () => {
     setLoading(true);
+    setForbidden(false);
     try {
       const data = await complaintService.getComplaints();
       const myTasks = data.filter((c) => {
@@ -61,8 +65,11 @@ export const AssignedTasks: React.FC = () => {
         return false;
       });
       setTasks(myTasks);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      if (e?.response?.status === 403 || e?.status === 403) {
+        setForbidden(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -88,13 +95,15 @@ export const AssignedTasks: React.FC = () => {
     }
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(e.target.files[0]);
+      try {
+        const resized = await validateAndResizeImage(e.target.files[0]);
+        setPhotoPreview(resized);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Invalid image file';
+        alert(msg);
+      }
     }
   };
 
@@ -122,6 +131,10 @@ export const AssignedTasks: React.FC = () => {
       setSubmitting(false);
     }
   };
+
+  if (forbidden) {
+    return <AccessDeniedState message="You do not have permission to access these worker repair tasks." onRetry={fetchTasks} />;
+  }
 
   if (loading) return <LoadingSpinner message="Loading assigned field repair tasks..." />;
 
@@ -360,7 +373,7 @@ export const AssignedTasks: React.FC = () => {
                     '&:hover': { bgcolor: '#E8EFE9' },
                   }}
                 >
-                  <input type="file" accept="image/*" hidden onChange={handlePhotoUpload} />
+                  <input type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={handlePhotoUpload} />
                   <CloudUploadIcon sx={{ fontSize: 36, color: '#496A57', mb: 1 }} />
                   <Typography variant="body2" sx={{ fontWeight: 600, color: '#202522' }}>
                     Click to Take or Attach On-Site Repair Photo

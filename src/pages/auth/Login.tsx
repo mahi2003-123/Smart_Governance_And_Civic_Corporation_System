@@ -59,7 +59,7 @@ export const Login: React.FC = () => {
     }
 
     if (!email.trim() || !password.trim()) {
-      setError('Please enter both email address and password.');
+      setError('Email and password are required.');
       return;
     }
 
@@ -256,12 +256,13 @@ export const Login: React.FC = () => {
               </Alert>
             )}
 
-            <Box component="form" onSubmit={handleLogin}>
+            <Box component="form" onSubmit={handleLogin} noValidate>
               <Stack spacing={2.5}>
                 <FormControl fullWidth variant="outlined">
                   <InputLabel id="login-email-label">Email Address</InputLabel>
                   <OutlinedInput
                     id="login-email-input"
+                    name="email"
                     label="Email Address"
                     placeholder="Enter registered email address"
                     type="email"
@@ -281,6 +282,7 @@ export const Login: React.FC = () => {
                   <InputLabel id="login-password-label">Password</InputLabel>
                   <OutlinedInput
                     id="login-password-input"
+                    name="password"
                     label="Password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"

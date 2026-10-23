@@ -138,7 +138,7 @@ export const UnauthorizedPage: React.FC = () => {
           403
         </Typography>
         <Typography variant="h4" sx={{ fontWeight: 700, color: '#1A232A', mb: 2 }}>
-          Access Restricted
+          Access Denied
         </Typography>
         <Typography variant="body1" sx={{ color: '#5A6672', maxWidth: 500, mx: 'auto', mb: 4 }}>
           You do not have the required administrative clearance to access this module. Please switch to an authorized role or return to safety.

@@ -1,8 +1,10 @@
 package com.sgcs.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -13,27 +15,23 @@ import java.util.List;
 
 /**
  * Central CORS configuration bean.
- * Allows requests from:
- *   - https://sgcs-frontend.onrender.com (Production Render Frontend)
- *   - Configured origins in CORS_ALLOWED_ORIGINS
- *   - Local development origins (localhost:5173, 127.0.0.1:5173, localhost:3000, 127.0.0.1:3000)
+ * Configured only from CORS_ALLOWED_ORIGINS (or cors.allowed.origins).
+ * Localhost development origins are permitted only when the "dev" profile is active.
  */
 @Configuration
 public class CorsConfig {
 
-    public static final String PRODUCTION_FRONTEND_ORIGIN = "https://sgcs-frontend.onrender.com";
+    @Autowired(required = false)
+    private Environment environment;
 
-    @Value("${cors.allowed.origins:http://localhost:5173,https://sgcs-frontend.onrender.com}")
+    @Value("${cors.allowed.origins:}")
     private String corsAllowedOriginsRaw;
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         List<String> origins = new ArrayList<>();
 
-        // 1. Always allow production Render frontend origin
-        origins.add(PRODUCTION_FRONTEND_ORIGIN);
-
-        // 2. Parse and normalize configured origins from environment / properties
+        // 1. Parse and normalize configured origins from environment / properties (CORS_ALLOWED_ORIGINS)
         if (corsAllowedOriginsRaw != null && !corsAllowedOriginsRaw.trim().isEmpty()) {
             for (String o : corsAllowedOriginsRaw.split(",")) {
                 String normalized = normalizeOrigin(o);
@@ -43,16 +41,19 @@ public class CorsConfig {
             }
         }
 
-        // 3. Always allow local development origins
-        List<String> localDevOrigins = List.of(
-            "http://localhost:5173",
-            "http://127.0.0.1:5173",
-            "http://localhost:3000",
-            "http://127.0.0.1:3000"
-        );
-        for (String devOrigin : localDevOrigins) {
-            if (!origins.contains(devOrigin)) {
-                origins.add(devOrigin);
+        // 2. Allow localhost development origins only when the "dev" profile is active
+        boolean isDev = environment != null && Arrays.asList(environment.getActiveProfiles()).contains("dev");
+        if (isDev) {
+            List<String> localDevOrigins = List.of(
+                "http://localhost:5173",
+                "http://127.0.0.1:5173",
+                "http://localhost:3000",
+                "http://127.0.0.1:3000"
+            );
+            for (String devOrigin : localDevOrigins) {
+                if (!origins.contains(devOrigin)) {
+                    origins.add(devOrigin);
+                }
             }
         }
 

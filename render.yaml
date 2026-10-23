@@ -30,12 +30,19 @@ services:
           property: password
       - key: JWT_SECRET
         generateValue: true
+      - key: DATA_SEEDING_ENABLED
+        value: "false"
       - key: AI_SERVICE_URL
-        value: https://smart-governance-and-civic-corporation-7q2c.onrender.com
-      # Set these in the Render dashboard (not committed):
-      # - key: CORS_ALLOWED_ORIGINS      e.g. https://sgcs.vercel.app
-      # - key: ADMIN_EMAIL               e.g. admin@yourdomain.com
-      # - key: ADMIN_PASSWORD            strong secret
+        value: https://sgcs-ai-service.onrender.com
+      # Shared secret between backend and AI service - set manually to match in both services
+      - key: AI_INTERNAL_KEY
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
       # - key: FIREBASE_ENABLED          true  (optional, only if Firebase creds are supplied)
       # - key: FIREBASE_CREDENTIALS_JSON  (optional, paste the service-account JSON)
 
@@ -49,6 +56,10 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: ENVIRONMENT
+        value: production
+      - key: AI_INTERNAL_KEY
+        generateValue: true
 
 # 3. PostgreSQL Database
 databases:

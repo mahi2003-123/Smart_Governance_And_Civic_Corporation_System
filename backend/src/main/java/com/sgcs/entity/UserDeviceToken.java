@@ -32,7 +32,7 @@ public class UserDeviceToken {
     private LocalDateTime updatedAt;
 
     public UserDeviceToken() {
-        this.id = "tok_" + System.currentTimeMillis() + "_" + (int)(Math.random() * 1000);
+        this.id = "tok_" + java.util.UUID.randomUUID().toString();
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
         this.active = true;

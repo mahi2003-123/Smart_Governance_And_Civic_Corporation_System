@@ -26,12 +26,12 @@ public class Proposal {
         private LocalDateTime createdAt;
 
         public ProposalComment() {
-            this.id = "cmt_" + System.currentTimeMillis() + "_" + (int)(Math.random() * 1000);
+            this.id = "cmt_" + java.util.UUID.randomUUID().toString();
             this.createdAt = LocalDateTime.now();
         }
 
         public ProposalComment(String authorName, String authorRole, String content) {
-            this.id = "cmt_" + System.currentTimeMillis() + "_" + (int)(Math.random() * 1000);
+            this.id = "cmt_" + java.util.UUID.randomUUID().toString();
             this.authorName = authorName;
             this.authorRole = authorRole != null ? authorRole : "CITIZEN";
             this.content = content;

@@ -29,7 +29,7 @@ public class ComplaintDto {
     private String citizenPhone;
     private String assignedWorkerId;
     private String assignedWorkerName;
-    private String images;
+    private java.util.List<String> images;
     private String completionImage;
     private LocalDateTime assignedDate;
     private LocalDateTime dueDate;
@@ -129,8 +129,8 @@ public class ComplaintDto {
     public String getAssignedWorkerName() { return assignedWorkerName; }
     public void setAssignedWorkerName(String assignedWorkerName) { this.assignedWorkerName = assignedWorkerName; }
 
-    public String getImages() { return images; }
-    public void setImages(String images) { this.images = images; }
+    public java.util.List<String> getImages() { return images; }
+    public void setImages(java.util.List<String> images) { this.images = images; }
 
     public String getCompletionImage() { return completionImage; }
     public void setCompletionImage(String completionImage) { this.completionImage = completionImage; }

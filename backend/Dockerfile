@@ -10,8 +10,11 @@ RUN mvn clean package -DskipTests
 # Stage 2: Run the generated Spring Boot JAR
 FROM eclipse-temurin:17-jre
 WORKDIR /app
-# Copy only the compiled fat JAR from the build stage
-COPY --from=build /app/target/*.jar app.jar
 
-# Use 70% of the container RAM for the JVM heap; avoids OOM on Render free tier
-ENTRYPOINT ["java", "-XX:MaxRAMPercentage=70", "-jar", "app.jar"]
+# Run as non-root user
+RUN addgroup --system sgcsgroup && adduser --system --ingroup sgcsgroup sgcsuser
+COPY --from=build --chown=sgcsuser:sgcsgroup /app/target/*.jar app.jar
+USER sgcsuser
+
+# Use 70% of the container RAM for the JVM heap; avoids OOM on Render free tier; enforce UTC
+ENTRYPOINT ["java", "-Duser.timezone=UTC", "-XX:MaxRAMPercentage=70", "-jar", "app.jar"]

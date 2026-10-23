@@ -28,11 +28,13 @@ import { complaintService } from '../../services/complaintService';
 import { Complaint } from '../../types';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { StatusBadge } from '../../components/common/StatusBadge';
+import { AccessDeniedState } from '../../components/common/AccessDeniedState';
 
 export const ComplaintHistory: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [forbidden, setForbidden] = useState(false);
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
@@ -40,6 +42,7 @@ export const ComplaintHistory: React.FC = () => {
 
   const loadComplaints = async () => {
     setLoading(true);
+    setForbidden(false);
     try {
       const data = await complaintService.getComplaints(user?.id ? { citizenId: user.id } : undefined);
       // Filter strictly to current citizen's own complaints
@@ -51,8 +54,11 @@ export const ComplaintHistory: React.FC = () => {
           (user.email && c.citizenPhone === user.email)
       );
       setComplaints(userOwnComplaints);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      if (e?.response?.status === 403 || e?.status === 403) {
+        setForbidden(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -85,6 +91,10 @@ export const ComplaintHistory: React.FC = () => {
       const dateB = new Date(b.createdAt).getTime();
       return sortBy === 'NEWEST' ? dateB - dateA : dateA - dateB;
     });
+
+  if (forbidden) {
+    return <AccessDeniedState message="You do not have permission to view these grievance records." onRetry={loadComplaints} />;
+  }
 
   if (loading) return <LoadingSpinner message="Loading grievance records..." />;
 

@@ -23,10 +23,10 @@ public class Ward {
 
     private Integer population;
 
-    @Column(name = "active_complaints")
+    @Transient
     private Integer activeComplaints = 0;
 
-    @Column(name = "resolved_complaints")
+    @Transient
     private Integer resolvedComplaints = 0;
 
     public Ward() {}

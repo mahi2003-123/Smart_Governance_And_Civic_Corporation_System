@@ -29,19 +29,41 @@ public class AuthService {
     @Autowired
     private AuditService auditService;
 
+    @Autowired
+    private com.sgcs.security.LoginRateLimiter loginRateLimiter;
+
     public AuthDto.AuthResponse login(AuthDto.LoginRequest request) {
-        String email = request.getEmail().trim().toLowerCase();
-        String password = request.getPassword().trim();
+        return login(request, "127.0.0.1");
+    }
+
+    public AuthDto.AuthResponse login(AuthDto.LoginRequest request, String clientIp) {
+        String email = request.getEmail() != null ? request.getEmail().trim().toLowerCase() : "";
+        String password = request.getPassword(); // Requirement 3: Do NOT trim passwords
+
+        // Requirement 4: Rate limit check (max 5 failed attempts per email+IP per 15 min, then 429)
+        loginRateLimiter.checkRateLimit(email, clientIp);
 
         Optional<User> userOpt = userRepository.findByEmailIgnoreCase(email);
         if (userOpt.isEmpty()) {
+            handleFailedLogin(email, clientIp);
             throw new BadRequestException("Invalid email or password.");
         }
 
         User user = userOpt.get();
-        if (!passwordEncoder.matches(password, user.getPassword())) {
+
+        // Requirement 4: reject users whose status is not ACTIVE with generic message
+        if (user.getStatus() != null && !"ACTIVE".equalsIgnoreCase(user.getStatus())) {
+            handleFailedLogin(email, clientIp);
             throw new BadRequestException("Invalid email or password.");
         }
+
+        if (password == null || !passwordEncoder.matches(password, user.getPassword())) {
+            handleFailedLogin(email, clientIp);
+            throw new BadRequestException("Invalid email or password.");
+        }
+
+        // Login success: clear failed attempts
+        loginRateLimiter.clear(email, clientIp);
 
         String token = jwtUtils.generateToken(user);
 
@@ -58,11 +80,34 @@ public class AuthService {
         return new AuthDto.AuthResponse(true, user, token);
     }
 
+    private void handleFailedLogin(String email, String clientIp) {
+        loginRateLimiter.recordFailedAttempt(email, clientIp);
+        try {
+            // Requirement 4: small constant-time-ish delay on failure
+            Thread.sleep(150);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
     public AuthDto.AuthResponse register(AuthDto.RegisterRequest request) {
         String email = request.getEmail().trim().toLowerCase();
         
+        // Requirement 10: Registration should not reveal whether an email exists (generic message)
         if (userRepository.existsByEmailIgnoreCase(email)) {
-            throw new BadRequestException("Email address is already registered in SGCS database.");
+            throw new BadRequestException("Unable to complete registration with the provided details. If you already have an account, please log in.");
+        }
+
+        // Requirement 3: Password policy for register: min 8 chars, 1 letter, 1 number. Do NOT trim passwords.
+        String rawPassword = request.getPassword();
+        com.sgcs.security.PasswordPolicy.validate(rawPassword);
+
+        // Phone validation
+        if (request.getPhone() != null && !request.getPhone().trim().isEmpty()) {
+            String cleanPhone = request.getPhone().replaceAll("[\\s\\-\\+]", "");
+            if (!cleanPhone.matches("^[0-9]{10,15}$")) {
+                throw new BadRequestException("Phone number must be a valid number of 10 to 15 digits.");
+            }
         }
 
         String role = "CITIZEN";
@@ -82,10 +127,11 @@ public class AuthService {
         user.setId("usr_" + UUID.randomUUID().toString());
         user.setFullName(request.getFullName().trim());
         user.setEmail(email);
-        user.setPassword(passwordEncoder.encode(request.getPassword().trim()));
+        user.setPassword(passwordEncoder.encode(rawPassword));
         user.setPhone(request.getPhone() != null ? request.getPhone().trim() : "");
         user.setRole(role);
         user.setWard(ward);
+        user.setStatus("ACTIVE");
         user.setCreatedAt(LocalDateTime.now());
 
         User saved = userRepository.save(user);
@@ -114,11 +160,17 @@ public class AuthService {
         if (request.getFullName() != null && !request.getFullName().trim().isEmpty()) {
             user.setFullName(request.getFullName().trim());
         }
-        if (request.getPhone() != null) {
+        if (request.getPhone() != null && !request.getPhone().trim().isEmpty()) {
+            String cleanPhone = request.getPhone().replaceAll("[\\s\\-\\+]", "");
+            if (!cleanPhone.matches("^[0-9]{10,15}$")) {
+                throw new BadRequestException("Phone number must be a valid number of 10 to 15 digits.");
+            }
             user.setPhone(request.getPhone().trim());
         }
-        if (request.getWard() != null && !request.getWard().trim().isEmpty()) {
-            user.setWard(request.getWard().trim());
+        // Requirement 7: remove the ability to change ward. Only ADMIN can change ward via admin endpoint.
+        // Any ward value sent in request is strictly ignored.
+        if (request.getAddress() != null) {
+            user.setAddress(request.getAddress().trim());
         }
         
         User saved = userRepository.save(user);

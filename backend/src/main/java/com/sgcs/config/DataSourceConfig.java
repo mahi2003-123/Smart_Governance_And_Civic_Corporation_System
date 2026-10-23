@@ -45,6 +45,19 @@ public class DataSourceConfig {
             envDbUrl = rawDatasourceUrl;
         }
 
+        if (envDbUrl != null && envDbUrl.trim().startsWith("jdbc:h2:")) {
+            HikariConfig h2Config = new HikariConfig();
+            h2Config.setDriverClassName("org.h2.Driver");
+            h2Config.setJdbcUrl(envDbUrl.trim());
+            h2Config.setUsername(rawUsername != null && !rawUsername.trim().isEmpty() ? rawUsername.trim() : "sa");
+            h2Config.setPassword(rawPassword != null ? rawPassword : "");
+            h2Config.setMaximumPoolSize(5);
+            h2Config.setMinimumIdle(1);
+            h2Config.setPoolName("SGCS-Test-H2-Pool");
+            logger.info("Initializing H2 in-memory test DataSource: {}", envDbUrl.trim());
+            return new HikariDataSource(h2Config);
+        }
+
         HikariConfig config = new HikariConfig();
         config.setDriverClassName("org.postgresql.Driver");
 

@@ -14,14 +14,20 @@ public class UserPrincipal implements UserDetails {
     private String email;
     private String role;
     private String ward;
+    private String phone;
     private Collection<? extends GrantedAuthority> authorities;
 
     public UserPrincipal(String id, String fullName, String email, String role, String ward, Collection<? extends GrantedAuthority> authorities) {
+        this(id, fullName, email, role, ward, "", authorities);
+    }
+
+    public UserPrincipal(String id, String fullName, String email, String role, String ward, String phone, Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.fullName = fullName;
         this.email = email;
         this.role = role;
         this.ward = ward;
+        this.phone = phone != null ? phone : "";
         this.authorities = authorities;
     }
 
@@ -39,6 +45,7 @@ public class UserPrincipal implements UserDetails {
             user.getEmail(),
             roleName,
             user.getWard(),
+            user.getPhone() != null ? user.getPhone() : "",
             authorities
         );
     }
@@ -48,6 +55,7 @@ public class UserPrincipal implements UserDetails {
     public String getEmail() { return email; }
     public String getRole() { return role; }
     public String getWard() { return ward; }
+    public String getPhone() { return phone; }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() { return authorities; }

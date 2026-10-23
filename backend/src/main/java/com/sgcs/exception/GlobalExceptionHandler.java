@@ -68,11 +68,46 @@ public class GlobalExceptionHandler {
         ));
     }
 
+    @ExceptionHandler(TooManyRequestsException.class)
+    public ResponseEntity<Map<String, Object>> handleTooManyRequests(TooManyRequestsException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(Map.of(
+                "status", 429,
+                "error", ex.getMessage() != null ? ex.getMessage() : "Too many requests"
+        ));
+    }
+
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleDataIntegrityViolation(org.springframework.dao.DataIntegrityViolationException ex) {
+        String message = "Database constraint violation occurred";
+        String rootMsg = ex.getRootCause() != null ? ex.getRootCause().getMessage() : ex.getMessage();
+        if (rootMsg != null) {
+            if (rootMsg.contains("uq_complaint_citizen_feedback")) {
+                message = "Feedback has already been submitted for this complaint";
+            } else if (rootMsg.contains("duplicate key") || rootMsg.contains("unique constraint")) {
+                message = "A record with this identifier or unique attribute already exists";
+            } else if (rootMsg.contains("violates check constraint")) {
+                message = "Provided value violates database validation rules";
+            } else if (rootMsg.contains("violates not-null constraint")) {
+                message = "A required field was missing or null";
+            }
+        }
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("status", 400);
+        body.put("error", message);
+        body.put("details", rootMsg);
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex) {
+        String msg = (ex.getMessage() != null && !ex.getMessage().trim().isEmpty())
+                ? ex.getMessage()
+                : "Access Denied: You do not have permission to perform this action";
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
                 "status", 403,
-                "error", "Access Denied: You do not have permission to perform this action"
+                "error", msg
         ));
     }
 

@@ -19,10 +19,12 @@ import { useAuth } from '../../hooks/useAuth';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { WardSelector } from '../../components/common/WardSelector';
 import { ProposalItemCard } from '../../components/proposals/ProposalItemCard';
+import { AccessDeniedState } from '../../components/common/AccessDeniedState';
 
 export const Proposals: React.FC = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [forbidden, setForbidden] = useState(false);
   const [proposals, setProposals] = useState<CommunityProposal[]>([]);
   const [openModal, setOpenModal] = useState(false);
 
@@ -46,11 +48,17 @@ export const Proposals: React.FC = () => {
 
   const loadProposals = async () => {
     setLoading(true);
+    setForbidden(false);
     try {
       const data = await proposalService.getProposals(undefined, userIdentifier);
       setProposals(data);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      if (e?.response?.status === 403 || e?.status === 403) {
+        setForbidden(true);
+      } else {
+        setError(e?.response?.data?.message || e?.message || 'Failed to load community proposals.');
+      }
     } finally {
       setLoading(false);
     }
@@ -125,6 +133,10 @@ export const Proposals: React.FC = () => {
     }
   };
 
+  if (forbidden) {
+    return <AccessDeniedState message="You do not have permission to access community proposals for this ward." onRetry={loadProposals} />;
+  }
+
   if (loading) return <LoadingSpinner message="Loading Community Proposals..." />;
 
   return (
@@ -159,6 +171,11 @@ export const Proposals: React.FC = () => {
       </Box>
 
       {/* Proposals List */}
+      {error && !openModal && (
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError('')}>
+          {error}
+        </Alert>
+      )}
       <Stack spacing={3}>
         {proposals.length === 0 ? (
           <Box sx={{ p: 4, color: '#68706B', textAlign: 'center', backgroundColor: '#FFFFFF', borderRadius: '8px', border: '1px solid #E5E8E4' }}>

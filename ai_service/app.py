@@ -1,5 +1,4 @@
-from fastapi import FastAPI, HTTPException, Body
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, HTTPException, Body, Header, Depends
 from pydantic import BaseModel, model_validator
 import logging
 from typing import Optional, List, Dict, Any, Set
@@ -46,15 +45,25 @@ async def lifespan(app: FastAPI):
     # Cleanup on shutdown
     ai_system.clear()
 
-app = FastAPI(title="SGCS AI Service", lifespan=lifespan)
+# Disable /docs and /openapi.json in production
+env_val = os.getenv("ENVIRONMENT") or os.getenv("ENV") or ("production" if os.getenv("RENDER") else "development")
+is_production = env_val.strip().lower() in ("production", "prod")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+app = FastAPI(
+    title="SGCS AI Service",
+    lifespan=lifespan,
+    docs_url=None if is_production else "/docs",
+    redoc_url=None if is_production else "/redoc",
+    openapi_url=None if is_production else "/openapi.json"
 )
+
+# Shared-secret authentication dependency
+def verify_internal_key(x_internal_key: Optional[str] = Header(None, alias="X-Internal-Key")):
+    expected_key = os.getenv("AI_INTERNAL_KEY", "").strip()
+    if not expected_key:
+        raise HTTPException(status_code=401, detail="Unauthorized: AI_INTERNAL_KEY is not configured on the server")
+    if not x_internal_key or x_internal_key.strip() != expected_key:
+        raise HTTPException(status_code=401, detail="Unauthorized: Invalid or missing X-Internal-Key header")
 
 class PredictRequest(BaseModel):
     complaint_text: Optional[str] = None
@@ -66,7 +75,10 @@ class PredictRequest(BaseModel):
         content = self.complaint_text or self.description or self.text
         if not content or not str(content).strip():
             raise ValueError('Complaint text/description cannot be empty')
-        self.complaint_text = str(content).strip()
+        text_val = str(content).strip()
+        if len(text_val) > 2000:
+            raise HTTPException(status_code=413, detail="Complaint text exceeds maximum limit of 2000 characters")
+        self.complaint_text = text_val
         return self
 
 class DuplicateCheckInput(BaseModel):
@@ -77,12 +89,23 @@ class DuplicateCheckInput(BaseModel):
     new_created_at: Optional[str] = ""
     existing_complaints: List[Dict[str, Any]]
 
+    @model_validator(mode='after')
+    def validate_limits(self):
+        if self.new_complaint and len(str(self.new_complaint)) > 2000:
+            raise HTTPException(status_code=413, detail="New complaint text exceeds maximum limit of 2000 characters")
+        if self.existing_complaints is not None:
+            if len(self.existing_complaints) > 500:
+                raise HTTPException(status_code=413, detail="existing_complaints cannot exceed 500 items")
+            for idx, item in enumerate(self.existing_complaints):
+                t = str(item.get("text", "") or "")
+                if len(t) > 2000:
+                    raise HTTPException(status_code=413, detail=f"Complaint at index {idx} exceeds maximum text limit of 2000 characters")
+        return self
+
 @app.get("/health")
 def health_check():
-    model_loaded = ai_system["clf"] is not None
     return {
-        "status": "UP",
-        "model_loaded": model_loaded
+        "status": "UP"
     }
 
 def handle_prediction(text: str):
@@ -101,16 +124,22 @@ def handle_prediction(text: str):
         logging.error(f"Prediction error: {str(e)}")
         raise HTTPException(status_code=500, detail="Error during AI prediction")
 
-@app.post("/predict")
+@app.post("/predict", dependencies=[Depends(verify_internal_key)])
 def predict_endpoint(request: PredictRequest):
+    if len(request.complaint_text) > 2000:
+        raise HTTPException(status_code=413, detail="Complaint text exceeds maximum limit of 2000 characters")
     return handle_prediction(request.complaint_text)
 
-@app.post("/ai/classify-complaint")
+@app.post("/ai/classify-complaint", dependencies=[Depends(verify_internal_key)])
 def classify_endpoint(request: PredictRequest):
+    if len(request.complaint_text) > 2000:
+        raise HTTPException(status_code=413, detail="Complaint text exceeds maximum limit of 2000 characters")
     return handle_prediction(request.complaint_text)
 
-@app.post("/classify")
+@app.post("/classify", dependencies=[Depends(verify_internal_key)])
 def classify_alt_endpoint(request: PredictRequest):
+    if len(request.complaint_text) > 2000:
+        raise HTTPException(status_code=413, detail="Complaint text exceeds maximum limit of 2000 characters")
     return handle_prediction(request.complaint_text)
 
 # ----------------- Robust Duplicate Detection -----------------
@@ -159,13 +188,22 @@ def root_check():
         "model_loaded": ai_system["clf"] is not None
     }
 
-@app.post("/duplicate-check")
-@app.post("/ai/duplicate-check")
+@app.post("/duplicate-check", dependencies=[Depends(verify_internal_key)])
+@app.post("/ai/duplicate-check", dependencies=[Depends(verify_internal_key)])
 def duplicate_check(data: DuplicateCheckInput):
     new_text = str(data.new_complaint or "").strip()
     new_loc = str(data.new_location or "").strip()
     new_cat = str(data.new_category or "").strip().upper()
     existing = data.existing_complaints
+
+    if len(new_text) > 2000:
+        raise HTTPException(status_code=413, detail="New complaint text exceeds maximum limit of 2000 characters")
+    if len(existing) > 500:
+        raise HTTPException(status_code=413, detail="existing_complaints exceeds maximum limit of 500 items")
+    for idx, item in enumerate(existing):
+        t = str(item.get("text", "") or "")
+        if len(t) > 2000:
+            raise HTTPException(status_code=413, detail=f"Complaint at index {idx} exceeds maximum text limit of 2000 characters")
 
     if not new_text or not existing:
         return {"possible_duplicate_id": None, "similarity": 0.0}

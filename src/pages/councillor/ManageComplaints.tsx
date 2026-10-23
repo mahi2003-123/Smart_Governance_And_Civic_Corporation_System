@@ -16,12 +16,14 @@ import { AssignWorkerModal } from '../../components/modals/AssignWorkerModal';
 import { VerifyProofModal } from '../../components/modals/VerifyProofModal';
 import { matchesWard } from '../../utils/wardUtils';
 import { CustomTextField } from '../../components/common/CustomTextField';
+import { AccessDeniedState } from '../../components/common/AccessDeniedState';
 
 export const ManageComplaints: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   
   const [loading, setLoading] = useState(true);
+  const [forbidden, setForbidden] = useState(false);
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [assignDialogComplaint, setAssignDialogComplaint] = useState<Complaint | null>(null);
   const [verifyModalComplaint, setVerifyModalComplaint] = useState<Complaint | null>(null);
@@ -34,11 +36,15 @@ export const ManageComplaints: React.FC = () => {
 
   const fetchComplaints = async () => {
     setLoading(true);
+    setForbidden(false);
     try {
       const data = await complaintService.getComplaints();
       setComplaints(data);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      if (e?.response?.status === 403 || e?.status === 403) {
+        setForbidden(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -135,6 +141,10 @@ export const ManageComplaints: React.FC = () => {
     const matchStat = statusFilter === 'ALL' || c.status === statusFilter;
     return matchSearch && matchCat && matchPri && matchStat;
   }).sort((a,b) => new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime());
+
+  if (forbidden) {
+    return <AccessDeniedState message="You do not have permission to view or manage complaints for this ward." onRetry={fetchComplaints} />;
+  }
 
   if (loading && complaints.length === 0) return <LoadingSpinner message="Loading Dashboard & Complaints..." />;
 
@@ -328,6 +338,10 @@ export const ManageComplaints: React.FC = () => {
         allComplaints={complaints}
         onClose={() => setAssignDialogComplaint(null)}
         onConfirm={handleConfirmAssign}
+        onComplaintUpdated={(updated) => {
+          setComplaints((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+          setAssignDialogComplaint(updated);
+        }}
       />
 
       <VerifyProofModal

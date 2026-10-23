@@ -55,3 +55,8 @@ ai_service/__pycache__/
 # Database backups & local scratch
 backups/
 git_modified.txt
+
+# Playwright test artifacts
+playwright-tests/playwright-report/
+playwright-tests/test-results/
+test-results/

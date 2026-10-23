@@ -43,24 +43,28 @@ public class ComplaintService {
     private com.sgcs.repository.UserRepository userRepository;
 
     @Autowired
+    private com.sgcs.repository.ComplaintFeedbackRepository complaintFeedbackRepository;
+
+    @Autowired
+    private com.sgcs.security.AccessGuard accessGuard;
+
+    @Autowired
     @Qualifier("aiRestTemplate")
     private RestTemplate restTemplate;
 
-    @Value("${ai.service.url:https://smart-governance-and-civic-corporation-7q2c.onrender.com}")
+    @Autowired(required = false)
+    private com.sgcs.security.ImageValidator imageValidator;
+
+    @Value("${ai.service.url:}")
     private String aiServiceUrl;
+
+    @Value("${ai.internal.key:}")
+    private String aiInternalKey;
 
     public List<String> getAiCandidateBaseUrls() {
         List<String> urls = new ArrayList<>();
         if (aiServiceUrl != null && !aiServiceUrl.trim().isEmpty()) {
             urls.add(aiServiceUrl.trim());
-        }
-        String localDev = "http://localhost:8000";
-        if (!urls.contains(localDev)) {
-            urls.add(localDev);
-        }
-        String livePrimary = "https://smart-governance-and-civic-corporation-7q2c.onrender.com";
-        if (!urls.contains(livePrimary)) {
-            urls.add(livePrimary);
         }
         return urls;
     }
@@ -70,9 +74,7 @@ public class ComplaintService {
     }
 
     public List<Complaint> getActiveComplaints() {
-        return complaintRepository.findAll().stream()
-            .filter(c -> List.of("PENDING", "ASSIGNED", "IN_PROGRESS").contains(c.getStatus().toUpperCase()))
-            .toList();
+        return complaintRepository.findActiveComplaints();
     }
 
     public Optional<Complaint> getComplaintById(String id) {
@@ -99,6 +101,55 @@ public class ComplaintService {
 
     public List<Complaint> getComplaintsForWorker(String workerId, String workerName, String ward) {
         return getComplaintsForWorker(workerId, workerName, null, ward);
+    }
+
+    private final java.security.SecureRandom secureRandom = new java.security.SecureRandom();
+
+    public Complaint createComplaint(com.sgcs.dto.CreateComplaintRequest request, com.sgcs.security.UserPrincipal principal) {
+        Complaint complaint = new Complaint();
+        complaint.setId("cmp_" + UUID.randomUUID().toString());
+
+        String trackingNumber;
+        int attempts = 0;
+        do {
+            int rand = 1000 + secureRandom.nextInt(9000);
+            trackingNumber = "SGCS-" + java.time.Year.now().getValue() + "-" + rand;
+            attempts++;
+        } while (complaintRepository.existsByTrackingNumber(trackingNumber) && attempts < 20);
+
+        complaint.setTrackingNumber(trackingNumber);
+        complaint.setTitle(request.getTitle() != null ? request.getTitle().trim() : "");
+        complaint.setDescription(request.getDescription() != null ? request.getDescription().trim() : "");
+        complaint.setCategory(request.getCategory() != null && !request.getCategory().trim().isEmpty() ? request.getCategory().trim() : "OTHER");
+        complaint.setWard(request.getWard() != null ? request.getWard().trim() : "");
+        complaint.setLocationAddress(request.getLocationAddress() != null ? request.getLocationAddress().trim() : "");
+        complaint.setStatus("PENDING");
+
+        String reqPriority = request.getPriority() != null ? request.getPriority().trim().toUpperCase() : "MEDIUM";
+        if ("URGENT".equals(reqPriority) || "HIGH".equals(reqPriority) || "CRITICAL".equals(reqPriority)) {
+            complaint.setPriority("MEDIUM");
+        } else if ("LOW".equals(reqPriority) || "MEDIUM".equals(reqPriority)) {
+            complaint.setPriority(reqPriority);
+        } else {
+            complaint.setPriority("MEDIUM");
+        }
+
+        if (request.getImages() != null) {
+            if (imageValidator != null) {
+                imageValidator.validateComplaintImages(request.getImages());
+            }
+            if (request.getImages() instanceof List<?> list) {
+                complaint.setImages(String.join(",", list.stream().map(Object::toString).toList()));
+            } else {
+                complaint.setImages(request.getImages().toString());
+            }
+        }
+
+        complaint.setCitizenId(principal.getId());
+        complaint.setCitizenName(principal.getFullName());
+        complaint.setCitizenPhone(principal.getPhone());
+
+        return createComplaint(complaint);
     }
 
     public Complaint createComplaint(Complaint complaint) {
@@ -186,6 +237,9 @@ public class ComplaintService {
                     try {
                         org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
                         headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+                        if (aiInternalKey != null && !aiInternalKey.trim().isEmpty()) {
+                            headers.set("X-Internal-Key", aiInternalKey.trim());
+                        }
                         org.springframework.http.HttpEntity<Map<String, String>> aiEntity = new org.springframework.http.HttpEntity<>(aiRequest, headers);
 
                         aiResponse = restTemplate.postForEntity(cleanBase + endpoint, aiEntity, Map.class);
@@ -251,9 +305,19 @@ public class ComplaintService {
 
             // 2. Duplicate Detection
             final String currentComplaintId = saved.getId();
-            List<Complaint> activeComplaints = getActiveComplaints().stream()
-                .filter(c -> !c.getId().equals(currentComplaintId))
-                .toList();
+            List<Complaint> activeComplaints;
+            if (saved.getWard() != null && !saved.getWard().trim().isEmpty()) {
+                LocalDateTime ninetyDaysAgo = LocalDateTime.now().minusDays(90);
+                activeComplaints = complaintRepository.findRecentActiveComplaintsByWard(
+                    saved.getWard().trim(),
+                    ninetyDaysAgo,
+                    org.springframework.data.domain.PageRequest.of(0, 200)
+                ).stream()
+                 .filter(c -> c != null && c.getId() != null && !c.getId().equals(currentComplaintId))
+                 .toList();
+            } else {
+                activeComplaints = java.util.Collections.emptyList();
+            }
 
             if (!activeComplaints.isEmpty()) {
                 Map<String, Object> dupReq = new HashMap<>();
@@ -289,6 +353,9 @@ public class ComplaintService {
                         try {
                             org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
                             headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+                            if (aiInternalKey != null && !aiInternalKey.trim().isEmpty()) {
+                                headers.set("X-Internal-Key", aiInternalKey.trim());
+                            }
                             org.springframework.http.HttpEntity<Map<String, Object>> dupEntity = new org.springframework.http.HttpEntity<>(dupReq, headers);
 
                             dupRes = restTemplate.postForEntity(cleanBase + endpoint, dupEntity, Map.class);
@@ -357,6 +424,9 @@ public class ComplaintService {
                 try {
                     org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
                     headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+                    if (aiInternalKey != null && !aiInternalKey.trim().isEmpty()) {
+                        headers.set("X-Internal-Key", aiInternalKey.trim());
+                    }
                     org.springframework.http.HttpEntity<Map<String, String>> aiEntity = new org.springframework.http.HttpEntity<>(aiRequest, headers);
                     ResponseEntity<Map> resp = restTemplate.postForEntity(cleanBase + endpoint, aiEntity, Map.class);
                     if (resp != null && resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
@@ -519,32 +589,46 @@ public class ComplaintService {
                 
         complaint.setIsDuplicateConfirmed(isDuplicate);
         if (isDuplicate) {
-            complaint.setMasterComplaintId(masterId);
-            Complaint master = complaintRepository.findById(masterId).orElse(null);
-            if (master != null) {
-                complaint.setStatus("LINKED");
-                
-                complaint.getTimeline().add(0, new Complaint.ComplaintTimelineItem(
-                    "Linked to Master Ticket",
-                    "This complaint was linked to an existing issue: " + master.getTrackingNumber(),
-                    councillorName,
-                    "COUNCILLOR",
-                    "LINKED"
+            Complaint master = (masterId != null && !masterId.trim().isEmpty())
+                    ? complaintRepository.findByIdOrTrackingNumber(masterId.trim(), masterId.trim()).orElse(null)
+                    : null;
+            String effectiveMasterId = master != null ? master.getId() : (masterId != null ? masterId.trim() : null);
+            String masterTracking = master != null ? master.getTrackingNumber() : effectiveMasterId;
+
+            complaint.setMasterComplaintId(effectiveMasterId);
+            complaint.setPossibleDuplicateId(effectiveMasterId);
+            complaint.setStatus("LINKED");
+            
+            complaint.getTimeline().add(0, new Complaint.ComplaintTimelineItem(
+                "Linked to Master Ticket",
+                "This complaint was linked to an existing issue: " + masterTracking,
+                councillorName,
+                "COUNCILLOR",
+                "LINKED"
+            ));
+            
+            // Notify Citizen
+            if (complaint.getCitizenId() != null) {
+                notificationService.createNotification(new Notification(
+                    complaint.getCitizenId(),
+                    "Complaint Linked",
+                    "Your complaint has been linked to an existing civic issue #" + masterTracking,
+                    "COMPLAINT",
+                    "/citizen/history/" + complaint.getId()
                 ));
-                
-                // Notify Citizen
-                if (complaint.getCitizenId() != null) {
-                    notificationService.createNotification(new Notification(
-                        complaint.getCitizenId(),
-                        "Complaint Linked",
-                        "Your complaint has been linked to an existing civic issue #" + master.getTrackingNumber(),
-                        "COMPLAINT",
-                        "/citizen/history/" + complaint.getId()
-                    ));
-                }
             }
         } else {
+            complaint.setIsDuplicateConfirmed(false);
             complaint.setMasterComplaintId(null);
+            complaint.setPossibleDuplicateId(null);
+            complaint.setDuplicateSimilarityScore(null);
+            complaint.getTimeline().add(0, new Complaint.ComplaintTimelineItem(
+                "Marked as Unique",
+                "Complaint verified as unique and separate from potential duplicate tickets.",
+                councillorName,
+                "COUNCILLOR",
+                complaint.getStatus()
+            ));
         }
         
         Complaint saved = complaintRepository.save(complaint);
@@ -739,6 +823,13 @@ public class ComplaintService {
             throw new IllegalArgumentException("A valid resolved/after photo is mandatory to mark a task as completed.");
         }
 
+        if (imageValidator != null) {
+            imageValidator.validateSingleImage(afterImage, "afterImage");
+            if (beforeImage != null && !beforeImage.trim().isEmpty()) {
+                imageValidator.validateSingleImage(beforeImage, "beforeImage");
+            }
+        }
+
         Complaint complaint = complaintRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
 
@@ -874,6 +965,10 @@ public class ComplaintService {
     }
 
     public Complaint reportDelay(String id, String workerId, String workerName, String reason, String notes, String delayImage) {
+        if (delayImage != null && !delayImage.trim().isEmpty() && imageValidator != null) {
+            imageValidator.validateSingleImage(delayImage, "delayImage");
+        }
+
         Complaint complaint = complaintRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
 
@@ -1014,5 +1109,52 @@ public class ComplaintService {
             }
         }
         return saved;
+    }
+
+    public com.sgcs.entity.ComplaintFeedback submitFeedback(String complaintId, com.sgcs.security.UserPrincipal principal, com.sgcs.dto.CreateFeedbackRequest request) {
+        Complaint complaint = getComplaintById(complaintId)
+            .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + complaintId));
+
+        if (!"RESOLVED".equalsIgnoreCase(complaint.getStatus())) {
+            throw new com.sgcs.exception.BadRequestException("Feedback can only be submitted for RESOLVED complaints");
+        }
+
+        accessGuard.checkCitizenCanSubmitFeedback(principal, complaint);
+
+        if (complaintFeedbackRepository.existsByComplaintIdAndCitizenId(complaint.getId(), principal.getId())) {
+            throw new com.sgcs.exception.BadRequestException("Feedback has already been submitted for this complaint");
+        }
+
+        com.sgcs.entity.ComplaintFeedback feedback = new com.sgcs.entity.ComplaintFeedback(
+            complaint.getId(),
+            principal.getId(),
+            request.getRating().shortValue(),
+            request.getSatisfied(),
+            request.getComment()
+        );
+
+        com.sgcs.entity.ComplaintFeedback saved = complaintFeedbackRepository.save(feedback);
+
+        auditService.logActivity(
+            principal.getId(),
+            principal.getFullName(),
+            principal.getRole(),
+            "Submitted Citizen Feedback",
+            "COMPLAINT",
+            complaint.getId(),
+            "Citizen rated complaint resolution: " + request.getRating() + "/5"
+        );
+
+        return saved;
+    }
+
+    public com.sgcs.entity.ComplaintFeedback getFeedback(String complaintId, com.sgcs.security.UserPrincipal principal) {
+        Complaint complaint = getComplaintById(complaintId)
+            .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + complaintId));
+
+        accessGuard.checkCanReadComplaint(principal, complaint);
+
+        return complaintFeedbackRepository.findByComplaintId(complaint.getId())
+            .orElseThrow(() -> new ResourceNotFoundException("No feedback found for complaint " + complaintId));
     }
 }

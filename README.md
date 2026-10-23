@@ -105,11 +105,13 @@ The `render.yaml` at the repo root declares the backend and AI services. The fro
 | `DB_NAME` | ✅ (auto) | Injected by Render from database config |
 | `DB_USERNAME` | ✅ (auto) | Injected by Render from database config |
 | `DB_PASSWORD` | ✅ (auto) | Injected by Render from database config |
-| `JWT_SECRET` | ✅ | Long random string — use Render's **Generate** button |
-| `CORS_ALLOWED_ORIGINS` | ✅ | Comma-separated Vercel domain, e.g. `https://sgcs.vercel.app` |
-| `ADMIN_EMAIL` | ✅ | Email address for the seeded super-admin account |
-| `ADMIN_PASSWORD` | ✅ | Password for the seeded super-admin account |
+| `JWT_SECRET` | ✅ | Minimum 32 bytes (256 bits) random secret key — use Render's **Generate** button |
+| `AI_INTERNAL_KEY` | ✅ | Shared secret between backend & AI service — generate on AI service, copy to backend |
 | `AI_SERVICE_URL` | ✅ | URL of AI service, e.g. `https://sgcs-ai-service.onrender.com` |
+| `CORS_ALLOWED_ORIGINS` | ✅ | Comma-separated frontend domains, e.g. `https://sgcs.vercel.app` |
+| `ADMIN_EMAIL` | ✅ | Email address for the first admin account (auto-created on startup) |
+| `ADMIN_PASSWORD` | ✅ | Password for the first admin account (min 12 chars in production) |
+| `DATA_SEEDING_ENABLED` | Optional | `false` (default) — keeps demo data seeding strictly off |
 | `FIREBASE_ENABLED` | Optional | `true` to enable push notifications (requires credentials) |
 | `FIREBASE_CREDENTIALS_JSON` | Optional | Paste the Firebase service-account JSON as a single-line env var |
 

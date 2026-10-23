@@ -1,7 +1,7 @@
 package com.sgcs.security;
 
+import javax.crypto.SecretKey;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.FilterChain;
 import org.junit.jupiter.api.AfterEach;
@@ -13,7 +13,6 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,15 +24,19 @@ public class JwtAuthenticationFilterTest {
 
     private JwtAuthenticationFilter filter;
     private JwtUtils jwtUtils;
+    private com.sgcs.repository.UserRepository userRepository;
     private final String secret = "dummy_jwt_secret_key_12345678901234567890123456789012345678901234567890";
 
     @BeforeEach
     public void setup() {
         filter = new JwtAuthenticationFilter();
         jwtUtils = new JwtUtils();
+        userRepository = mock(com.sgcs.repository.UserRepository.class);
         ReflectionTestUtils.setField(jwtUtils, "jwtSecret", secret);
         ReflectionTestUtils.setField(jwtUtils, "jwtExpirationMs", 86400000L);
         ReflectionTestUtils.setField(filter, "jwtUtils", jwtUtils);
+        ReflectionTestUtils.setField(filter, "userRepository", userRepository);
+        JwtAuthenticationFilter.clearCache();
         SecurityContextHolder.clearContext();
     }
 
@@ -59,7 +62,13 @@ public class JwtAuthenticationFilterTest {
     @Test
     @DisplayName("Should authenticate request when valid Bearer token is provided")
     public void testValidBearerTokenAuthenticates() throws Exception {
-        Key key = Keys.hmacShaKeyFor(secret.getBytes());
+        com.sgcs.entity.User mockUser = new com.sgcs.entity.User(
+                "usr_citizen_1", "Citizen User", "citizen@sgcs.gov", "password", "9876543210", "CITIZEN", "Ward 1"
+        );
+        mockUser.setStatus("ACTIVE");
+        when(userRepository.findById("usr_citizen_1")).thenReturn(java.util.Optional.of(mockUser));
+
+        SecretKey key = Keys.hmacShaKeyFor(secret.getBytes());
         Map<String, Object> claims = new HashMap<>();
         claims.put("id", "usr_citizen_1");
         claims.put("email", "citizen@sgcs.gov");
@@ -68,11 +77,12 @@ public class JwtAuthenticationFilterTest {
         claims.put("fullName", "Citizen User");
 
         String token = Jwts.builder()
-                .setClaims(claims)
-                .setSubject("usr_citizen_1")
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 3600000))
-                .signWith(key, SignatureAlgorithm.HS256)
+                .claims(claims)
+                .subject("usr_citizen_1")
+                .issuer(JwtUtils.ISSUER)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 3600000))
+                .signWith(key)
                 .compact();
 
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/complaints");

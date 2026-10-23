@@ -1,19 +1,26 @@
 package com.sgcs.service;
 
+import com.sgcs.dto.CreateUserRequest;
+import com.sgcs.entity.Complaint;
 import com.sgcs.entity.User;
 import com.sgcs.entity.Ward;
+import com.sgcs.exception.BadRequestException;
+import com.sgcs.exception.ResourceNotFoundException;
 import com.sgcs.repository.ComplaintRepository;
 import com.sgcs.repository.NoticeRepository;
 import com.sgcs.repository.ProposalRepository;
 import com.sgcs.repository.UserRepository;
 import com.sgcs.repository.WardRepository;
+import com.sgcs.security.AccessGuard;
+import com.sgcs.security.PasswordPolicy;
+import com.sgcs.security.UserPrincipal;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
-
-import org.springframework.security.crypto.password.PasswordEncoder;
+import java.util.stream.Collectors;
 
 @Service
 public class AdminService {
@@ -39,50 +46,92 @@ public class AdminService {
     @Autowired
     private AuditService auditService;
 
+    @Autowired
+    private AccessGuard accessGuard;
+
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
-    public User createUser(User user) {
-        String email = user.getEmail().trim().toLowerCase();
+    public User createUser(CreateUserRequest request) {
+        return createUser(request, null);
+    }
 
+    public User createUser(CreateUserRequest request, UserPrincipal adminPrincipal) {
+        if (request.getFullName() == null || request.getFullName().trim().isEmpty()) {
+            throw new BadRequestException("Full name is required.");
+        }
+        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+            throw new BadRequestException("Email is required.");
+        }
+
+        String email = request.getEmail().trim().toLowerCase();
         if (!email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
-            throw new RuntimeException("Please enter a valid email address (e.g. user@example.com).");
+            throw new BadRequestException("Please enter a valid email address (e.g. user@example.com).");
         }
 
         if (userRepository.existsByEmailIgnoreCase(email)) {
-            throw new RuntimeException("Email address \"" + email + "\" is already registered in the system.");
+            throw new BadRequestException("Email address \"" + email + "\" is already registered in the system.");
         }
 
-        if (user.getPhone() != null && !user.getPhone().trim().isEmpty()) {
-            String cleanPhone = user.getPhone().replaceAll("[\\s\\-\\+]", "");
+        // Validate role is one of CITIZEN, COUNCILLOR, WORKER (ADMIN creation only via env seed)
+        if (request.getRole() == null || (!request.getRole().equalsIgnoreCase("CITIZEN")
+                && !request.getRole().equalsIgnoreCase("COUNCILLOR")
+                && !request.getRole().equalsIgnoreCase("WORKER"))) {
+            throw new BadRequestException("Role must be one of: CITIZEN, COUNCILLOR, WORKER");
+        }
+        String role = request.getRole().toUpperCase().trim();
+
+        // Validate ward exists
+        if (request.getWard() == null || request.getWard().trim().isEmpty()) {
+            throw new BadRequestException("Ward is required.");
+        }
+        accessGuard.validateWardExists(request.getWard().trim());
+
+        if (request.getPhone() != null && !request.getPhone().trim().isEmpty()) {
+            String cleanPhone = request.getPhone().replaceAll("[\\s\\-\\+]", "");
             String numberToCheck = (cleanPhone.startsWith("91") && cleanPhone.length() == 12) ? cleanPhone.substring(2) : cleanPhone;
             if (!numberToCheck.matches("^[6-9]\\d{9}$")) {
-                throw new RuntimeException("Phone number must be a 10-digit mobile number starting with 6, 7, 8, or 9.");
+                throw new BadRequestException("Phone number must be a 10-digit mobile number starting with 6, 7, 8, or 9.");
             }
         }
 
         // Enforce strict 1 Councillor per ward constraint
-        if ("COUNCILLOR".equalsIgnoreCase(user.getRole()) && user.getWard() != null && !user.getWard().equalsIgnoreCase("All Wards")) {
-            String targetWard = user.getWard().trim();
+        if ("COUNCILLOR".equalsIgnoreCase(role) && !request.getWard().equalsIgnoreCase("All Wards")) {
+            String targetWard = request.getWard().trim();
             List<User> allCouncillors = userRepository.findByRoleIgnoreCase("COUNCILLOR");
             
             for (User c : allCouncillors) {
                 if (c.getWard() != null && isSameWard(c.getWard(), targetWard)) {
-                    throw new RuntimeException("Ward \"" + targetWard + "\" already has an assigned Ward Councillor (" + c.getFullName() + " - " + c.getEmail() + "). Only 1 Councillor is permitted per municipal ward.");
+                    throw new BadRequestException("Ward \"" + targetWard + "\" already has an assigned Ward Councillor (" + c.getFullName() + " - " + c.getEmail() + "). Only 1 Councillor is permitted per municipal ward.");
                 }
             }
         }
 
-        user.setId("usr_" + System.currentTimeMillis());
+        User user = new User();
+        user.setId("usr_" + UUID.randomUUID().toString());
+        user.setFullName(request.getFullName().trim());
         user.setEmail(email);
+        user.setRole(role);
+        user.setWard(request.getWard().trim());
+        user.setSpecialization(request.getSpecialization());
+        user.setPhone(request.getPhone() != null ? request.getPhone().trim() : "");
         user.setStatus("ACTIVE");
         user.setCreatedAt(LocalDateTime.now());
-        
-        String rawPassword = (user.getPassword() != null && !user.getPassword().trim().isEmpty()) 
-            ? user.getPassword().trim() 
-            : "password123";
-        user.setPassword(passwordEncoder.encode(rawPassword));
+
+        // Password handling: do NOT trim password
+        String rawPassword = request.getPassword();
+        String temporaryPassword = null;
+        if (rawPassword != null && !rawPassword.isEmpty()) {
+            PasswordPolicy.validate(rawPassword);
+            user.setPassword(passwordEncoder.encode(rawPassword));
+            user.setMustChangePassword(false);
+        } else {
+            temporaryPassword = PasswordPolicy.generateTemporaryPassword();
+            user.setPassword(passwordEncoder.encode(temporaryPassword));
+            user.setMustChangePassword(true);
+            user.setTemporaryPassword(temporaryPassword);
+        }
 
         User saved = userRepository.save(user);
 
@@ -97,9 +146,12 @@ public class AdminService {
             }
         }
 
+        String adminId = adminPrincipal != null ? adminPrincipal.getId() : "admin";
+        String adminName = adminPrincipal != null ? adminPrincipal.getFullName() : "Super Admin";
+
         auditService.logActivity(
-            "admin",
-            "Super Admin",
+            adminId,
+            adminName,
             "ADMIN",
             "Created User Account",
             "ADMIN",
@@ -107,64 +159,135 @@ public class AdminService {
             "Created " + saved.getRole() + " account for " + saved.getFullName() + " (" + saved.getEmail() + ")" + (saved.getWard() != null ? " assigned to " + saved.getWard() : "")
         );
 
+        if (temporaryPassword != null) {
+            saved.setTemporaryPassword(temporaryPassword);
+        }
+
         return saved;
     }
 
     public User updateUserStatus(String userId, String status) {
-        Optional<User> userOpt = userRepository.findById(userId);
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            user.setStatus(status);
-            User saved = userRepository.save(user);
+        return updateUserStatus(userId, status, null);
+    }
 
-            auditService.logActivity(
-                "admin",
-                "Super Admin",
-                "ADMIN",
-                "Updated User Status",
-                "ADMIN",
-                saved.getId(),
-                "Updated account status of " + saved.getFullName() + " to " + status
-            );
-
-            return saved;
-        } else {
-            throw new RuntimeException("User not found with ID: " + userId);
+    public User updateUserStatus(String userId, String status, UserPrincipal adminPrincipal) {
+        if (status == null || (!status.equalsIgnoreCase("ACTIVE") && !status.equalsIgnoreCase("INACTIVE"))) {
+            throw new BadRequestException("Invalid status: must be ACTIVE or INACTIVE");
         }
+        String targetStatus = status.toUpperCase().trim();
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
+
+        // Requirement 9: an admin cannot deactivate their own account or the last active ADMIN
+        if (adminPrincipal != null && adminPrincipal.getId().equals(userId) && "INACTIVE".equals(targetStatus)) {
+            throw new BadRequestException("You cannot deactivate your own admin account.");
+        }
+
+        if ("ADMIN".equalsIgnoreCase(user.getRole()) && "INACTIVE".equals(targetStatus) && "ACTIVE".equalsIgnoreCase(user.getStatus())) {
+            long activeAdmins = userRepository.findByRoleIgnoreCase("ADMIN").stream()
+                    .filter(u -> "ACTIVE".equalsIgnoreCase(u.getStatus()))
+                    .count();
+            if (activeAdmins <= 1) {
+                throw new BadRequestException("Cannot deactivate the last active administrator account.");
+            }
+        }
+
+        user.setStatus(targetStatus);
+        User saved = userRepository.save(user);
+
+        String adminId = adminPrincipal != null ? adminPrincipal.getId() : "admin";
+        String adminName = adminPrincipal != null ? adminPrincipal.getFullName() : "Super Admin";
+
+        auditService.logActivity(
+            adminId,
+            adminName,
+            "ADMIN",
+            "Updated User Status",
+            "ADMIN",
+            saved.getId(),
+            "Updated account status of " + saved.getFullName() + " to " + targetStatus
+        );
+
+        return saved;
     }
 
     public void deleteUser(String userId) {
-        Optional<User> userOpt = userRepository.findById(userId);
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
+        deleteUser(userId, null);
+    }
 
-            // Clear ward assignment ONLY if the ward's councillor matches this exact user
-            if ("COUNCILLOR".equalsIgnoreCase(user.getRole()) && user.getWard() != null) {
-                List<Ward> wards = wardRepository.findAll();
-                for (Ward w : wards) {
-                    if (w.getCouncillorEmail() != null && w.getCouncillorEmail().equalsIgnoreCase(user.getEmail())) {
-                        w.setCouncillorName("Unassigned");
-                        w.setCouncillorEmail("");
-                        wardRepository.save(w);
-                    }
+    public void deleteUser(String userId, UserPrincipal adminPrincipal) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
+
+        // Requirement 9: an admin cannot delete their own account or the last active ADMIN
+        if (adminPrincipal != null && adminPrincipal.getId().equals(userId)) {
+            throw new BadRequestException("You cannot delete your own admin account.");
+        }
+
+        if ("ADMIN".equalsIgnoreCase(user.getRole())) {
+            long activeAdmins = userRepository.findByRoleIgnoreCase("ADMIN").stream()
+                    .filter(u -> "ACTIVE".equalsIgnoreCase(u.getStatus()))
+                    .count();
+            if (activeAdmins <= 1) {
+                throw new BadRequestException("Cannot delete the last active administrator account.");
+            }
+        }
+
+        // Clear ward assignment ONLY if the ward's councillor matches this exact user
+        if ("COUNCILLOR".equalsIgnoreCase(user.getRole()) && user.getWard() != null) {
+            List<Ward> wards = wardRepository.findAll();
+            for (Ward w : wards) {
+                if (w.getCouncillorEmail() != null && w.getCouncillorEmail().equalsIgnoreCase(user.getEmail())) {
+                    w.setCouncillorName("Unassigned");
+                    w.setCouncillorEmail("");
+                    wardRepository.save(w);
                 }
             }
-
-            // Strictly delete ONLY the targeted single user by primary key ID
-            userRepository.deleteById(userId);
-
-            auditService.logActivity(
-                "admin",
-                "Super Admin",
-                "ADMIN",
-                "Deleted User Account",
-                "ADMIN",
-                user.getId(),
-                "Deleted " + user.getRole() + " user record: " + user.getFullName() + " (" + user.getEmail() + ")"
-            );
-        } else {
-            throw new RuntimeException("User not found with ID: " + userId);
         }
+
+        // Strictly delete ONLY the targeted single user by primary key ID
+        userRepository.deleteById(userId);
+
+        String adminId = adminPrincipal != null ? adminPrincipal.getId() : "admin";
+        String adminName = adminPrincipal != null ? adminPrincipal.getFullName() : "Super Admin";
+
+        auditService.logActivity(
+            adminId,
+            adminName,
+            "ADMIN",
+            "Deleted User Account",
+            "ADMIN",
+            user.getId(),
+            "Deleted " + user.getRole() + " user record: " + user.getFullName() + " (" + user.getEmail() + ")"
+        );
+    }
+
+    public User updateUserWard(String userId, String newWard, UserPrincipal adminPrincipal) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
+        if (newWard == null || newWard.trim().isEmpty()) {
+            throw new BadRequestException("Ward is required");
+        }
+        accessGuard.validateWardExists(newWard.trim());
+
+        user.setWard(newWard.trim());
+        User saved = userRepository.save(user);
+
+        String adminId = adminPrincipal != null ? adminPrincipal.getId() : "admin";
+        String adminName = adminPrincipal != null ? adminPrincipal.getFullName() : "Super Admin";
+
+        auditService.logActivity(
+            adminId,
+            adminName,
+            "ADMIN",
+            "Updated User Ward",
+            "ADMIN",
+            saved.getId(),
+            "Updated ward of " + saved.getFullName() + " to " + newWard
+        );
+
+        return saved;
     }
 
     private boolean isSameWard(String wardA, String wardB) {
@@ -184,12 +307,29 @@ public class AdminService {
     }
 
     public List<Ward> getAllWards() {
-        return wardRepository.findAll();
+        List<Ward> wards = wardRepository.findAll();
+        List<Complaint> complaints = complaintRepository.findAll();
+        for (Ward w : wards) {
+            int active = 0;
+            int resolved = 0;
+            for (Complaint c : complaints) {
+                if (c.getWard() != null && isSameWard(c.getWard(), w.getName())) {
+                    if ("RESOLVED".equalsIgnoreCase(c.getStatus())) {
+                        resolved++;
+                    } else {
+                        active++;
+                    }
+                }
+            }
+            w.setActiveComplaints(active);
+            w.setResolvedComplaints(resolved);
+        }
+        return wards;
     }
 
     public Ward createWard(Ward ward) {
         if (ward.getId() == null || ward.getId().isEmpty()) {
-            ward.setId("w_" + System.currentTimeMillis());
+            ward.setId("w_" + java.util.UUID.randomUUID().toString());
         }
         return wardRepository.save(ward);
     }
@@ -210,6 +350,20 @@ public class AdminService {
         analytics.put("resolvedComplaints", resolved);
         analytics.put("totalProposals", totalProposals);
         analytics.put("activeNotices", activeNotices);
+
+        List<Complaint> allComplaints = complaintRepository.findAll();
+        Map<String, Long> categoryMap = allComplaints.stream()
+                .filter(c -> c.getCategory() != null && !c.getCategory().trim().isEmpty())
+                .collect(Collectors.groupingBy(Complaint::getCategory, Collectors.counting()));
+        List<Map<String, Object>> categoryBreakdown = categoryMap.entrySet().stream()
+                .map(e -> {
+                    Map<String, Object> item = new HashMap<>();
+                    item.put("category", e.getKey());
+                    item.put("count", e.getValue());
+                    return item;
+                })
+                .collect(Collectors.toList());
+        analytics.put("categoryBreakdown", categoryBreakdown);
 
         return analytics;
     }

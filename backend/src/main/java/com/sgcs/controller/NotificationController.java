@@ -1,9 +1,11 @@
 package com.sgcs.controller;
 
 import com.sgcs.entity.Notification;
+import com.sgcs.exception.ResourceNotFoundException;
+import com.sgcs.repository.NotificationRepository;
+import com.sgcs.security.AccessGuard;
 import com.sgcs.security.UserPrincipal;
 import com.sgcs.service.NotificationService;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,12 @@ public class NotificationController {
 
     @Autowired
     private NotificationService notificationService;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
+
+    @Autowired
+    private AccessGuard accessGuard;
 
     private UserPrincipal getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -40,15 +48,22 @@ public class NotificationController {
         return ResponseEntity.ok(list);
     }
 
-    @PostMapping
-    public ResponseEntity<Notification> createNotification(@Valid @RequestBody Notification notification) {
-        Notification created = notificationService.createNotification(notification);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
-    }
+    // Rule C: Removed public POST /api/notifications (notifications are created only by server code)
 
     @PatchMapping("/{id}/read")
     public ResponseEntity<Notification> markAsRead(@PathVariable String id) {
-        Notification updated = notificationService.markAsRead(id);
+        UserPrincipal user = getCurrentUser();
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        Notification notification = notificationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Notification not found with id: " + id));
+
+        // Rule C: markAsRead only if the notification belongs to the caller (recipient id equals user id, or ward_<theirWard>, or ALL)
+        accessGuard.checkCanMarkNotificationRead(user, notification);
+
+        Notification updated = notificationService.markAsRead(id, user.getId());
         return ResponseEntity.ok(updated);
     }
 

@@ -8,17 +8,21 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Autowired
@@ -43,44 +47,71 @@ public class SecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource))
+            .headers(headers -> headers
+                .contentTypeOptions(Customizer.withDefaults())
+                .frameOptions(HeadersConfigurer.FrameOptionsConfig::deny)
+                .referrerPolicy(referrer -> referrer.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                .httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).maxAgeInSeconds(31536000))
+            )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .exceptionHandling(exceptions -> exceptions
                 .authenticationEntryPoint(jwtAuthenticationEntryPoint)
                 .accessDeniedHandler(jwtAccessDeniedHandler)
             )
             .authorizeHttpRequests(auth -> auth
-                // Explicitly allow all preflight OPTIONS requests before authentication checks
+                // Allow all preflight OPTIONS requests before authentication checks
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/api/health", "/api/system-status").permitAll()
+                
+                // Public endpoints
+                .requestMatchers("/api/health").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/complaints/track/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/wards/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/complaints/predict-category").permitAll()
 
-                // Section 2: Bulk Delete Endpoints (ADMIN only)
+                // Admin-only system status
+                .requestMatchers("/api/system-status").hasRole("ADMIN")
+
+                // Predict category requires authenticated user
+                .requestMatchers("/api/complaints/predict-category").hasAnyRole("CITIZEN", "COUNCILLOR", "ADMIN")
+
+                // Bulk Delete Endpoints (ADMIN only)
                 .requestMatchers(HttpMethod.DELETE, "/api/complaints", "/api/proposals", "/api/notices", "/api/notifications").hasRole("ADMIN")
 
                 // Admin Endpoints
-                .requestMatchers(HttpMethod.GET, "/api/admin/users", "/api/admin/wards").hasAnyRole("ADMIN", "COUNCILLOR")
+                .requestMatchers(HttpMethod.GET, "/api/admin/workers", "/api/admin/wards").hasAnyRole("ADMIN", "COUNCILLOR")
+                .requestMatchers(HttpMethod.GET, "/api/admin/users").hasRole("ADMIN")
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                // Complaints Endpoints
-                .requestMatchers(HttpMethod.POST, "/api/complaints", "/api/complaints/**").hasAnyRole("CITIZEN", "COUNCILLOR", "WORKER", "ADMIN")
-                .requestMatchers(HttpMethod.PATCH, "/api/complaints/**").hasAnyRole("CITIZEN", "COUNCILLOR", "WORKER", "ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/complaints/**").hasAnyRole("COUNCILLOR", "WORKER", "ADMIN")
+                // Fine-grained Complaints Endpoints
+                .requestMatchers(HttpMethod.POST, "/api/complaints").hasRole("CITIZEN")
+                .requestMatchers(HttpMethod.POST, "/api/complaints/*/start", "/api/complaints/*/complete", "/api/complaints/*/delay").hasAnyRole("WORKER", "ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/complaints/*/start", "/api/complaints/*/complete", "/api/complaints/*/delay").hasAnyRole("WORKER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/complaints/*/approve", "/api/complaints/*/reject-proof").hasAnyRole("COUNCILLOR", "ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/complaints/*/approve", "/api/complaints/*/reject-proof").hasAnyRole("COUNCILLOR", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/complaints/*/assign", "/api/complaints/*/ai-category", "/api/complaints/*/link-duplicate").hasAnyRole("COUNCILLOR", "ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/complaints/*/assign", "/api/complaints/*/ai-category", "/api/complaints/*/link-duplicate").hasAnyRole("COUNCILLOR", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/complaints/*/comment", "/api/complaints/*/comments").hasAnyRole("CITIZEN", "WORKER", "COUNCILLOR", "ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/complaints/*/status").hasAnyRole("WORKER", "COUNCILLOR", "ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/complaints/*/priority").hasAnyRole("COUNCILLOR", "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/complaints/**").hasRole("ADMIN")
 
                 // Proposals Endpoints
-                .requestMatchers(HttpMethod.POST, "/api/proposals", "/api/proposals/**").hasAnyRole("CITIZEN", "COUNCILLOR", "WORKER", "ADMIN")
-                .requestMatchers(HttpMethod.PATCH, "/api/proposals/**").hasAnyRole("CITIZEN", "COUNCILLOR", "WORKER", "ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/proposals/**").hasAnyRole("COUNCILLOR", "WORKER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/proposals").hasAnyRole("CITIZEN", "COUNCILLOR", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/proposals/*/vote").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/proposals/*/comment", "/api/proposals/*/comments").authenticated()
+                .requestMatchers(HttpMethod.PATCH, "/api/proposals/*/review", "/api/proposals/*/status").hasAnyRole("COUNCILLOR", "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/proposals/**").hasRole("ADMIN")
 
-                // Notices Endpoints
-                .requestMatchers(HttpMethod.POST, "/api/notices", "/api/notices/**").hasAnyRole("COUNCILLOR", "WORKER", "ADMIN")
-                .requestMatchers(HttpMethod.PATCH, "/api/notices/**").hasAnyRole("COUNCILLOR", "WORKER", "ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/notices/**").hasAnyRole("COUNCILLOR", "WORKER", "ADMIN")
+                // Notices Endpoints (WORKER removed)
+                .requestMatchers(HttpMethod.POST, "/api/notices", "/api/notices/**").hasAnyRole("COUNCILLOR", "ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/notices/**").hasAnyRole("COUNCILLOR", "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/notices/**").hasAnyRole("COUNCILLOR", "ADMIN")
 
-                // Notifications Endpoints
-                .requestMatchers(HttpMethod.POST, "/api/notifications", "/api/notifications/**").hasAnyRole("CITIZEN", "COUNCILLOR", "WORKER", "ADMIN")
-                .requestMatchers(HttpMethod.PATCH, "/api/notifications/**").hasAnyRole("CITIZEN", "COUNCILLOR", "WORKER", "ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/notifications/**").hasAnyRole("COUNCILLOR", "WORKER", "ADMIN")
+                // Notifications Endpoints (Public POST removed, deny client creation)
+                .requestMatchers(HttpMethod.POST, "/api/notifications").denyAll()
+                .requestMatchers(HttpMethod.PATCH, "/api/notifications/*/read", "/api/notifications/read-all").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/notifications/device-token").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/notifications/**").hasRole("ADMIN")
 
                 // Authenticated GET requests
                 .requestMatchers(HttpMethod.GET, "/api/complaints/**", "/api/proposals/**", "/api/notices/**", "/api/notifications/**").authenticated()

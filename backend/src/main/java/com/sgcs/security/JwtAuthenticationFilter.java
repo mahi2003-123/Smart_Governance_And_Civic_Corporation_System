@@ -1,5 +1,7 @@
 package com.sgcs.security;
 
+import com.sgcs.entity.User;
+import com.sgcs.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -16,12 +18,38 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Autowired
     private JwtUtils jwtUtils;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    private static class CachedUser {
+        final User user;
+        final long timestamp;
+        CachedUser(User user, long timestamp) {
+            this.user = user;
+            this.timestamp = timestamp;
+        }
+    }
+
+    private static final ConcurrentHashMap<String, CachedUser> userCache = new ConcurrentHashMap<>();
+
+    public static void clearCache() {
+        userCache.clear();
+    }
+
+    public static void evictUser(String userId) {
+        if (userId != null) {
+            userCache.remove(userId);
+        }
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -36,28 +64,81 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String jwt = parseJwt(request);
             if (jwt != null && jwtUtils.validateToken(jwt)) {
                 Claims claims = jwtUtils.getClaimsFromToken(jwt);
-                String id = claims.get("id", String.class);
-                String email = claims.get("email", String.class);
-                String role = claims.get("role", String.class);
-                String ward = claims.get("ward", String.class);
-                String fullName = claims.get("fullName", String.class);
+                String userId = claims.get("id", String.class);
+                if (userId == null || userId.trim().isEmpty()) {
+                    userId = claims.getSubject();
+                }
 
-                if (role != null) {
-                    String roleName = role.toUpperCase();
-                    if (roleName.startsWith("ROLE_")) {
-                        roleName = roleName.substring(5);
+                if (userId != null && !userId.trim().isEmpty()) {
+                    // Requirement 5: Load user from DB (cache for 60s)
+                    long now = System.currentTimeMillis();
+                    CachedUser cached = userCache.get(userId);
+                    User user = null;
+                    if (cached != null && (now - cached.timestamp < 60_000L)) {
+                        user = cached.user;
+                    } else {
+                        Optional<User> userOpt = userRepository.findById(userId);
+                        if (userOpt.isPresent()) {
+                            user = userOpt.get();
+                            userCache.put(userId, new CachedUser(user, now));
+                        } else {
+                            userCache.remove(userId);
+                        }
                     }
 
+                    // Reject if user is missing
+                    if (user == null) {
+                        SecurityContextHolder.clearContext();
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+
+                    // Reject if user is not ACTIVE
+                    if (user.getStatus() != null && !"ACTIVE".equalsIgnoreCase(user.getStatus())) {
+                        SecurityContextHolder.clearContext();
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+
+                    // Reject if role in DB differs from token
+                    String tokenRole = claims.get("role", String.class);
+                    String dbRole = user.getRole();
+                    if (tokenRole != null && tokenRole.toUpperCase().startsWith("ROLE_")) {
+                        tokenRole = tokenRole.substring(5);
+                    }
+                    if (dbRole != null && dbRole.toUpperCase().startsWith("ROLE_")) {
+                        dbRole = dbRole.substring(5);
+                    }
+                    if (tokenRole != null && dbRole != null && !tokenRole.equalsIgnoreCase(dbRole)) {
+                        SecurityContextHolder.clearContext();
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+
+                    // Reject if ward in DB differs from token
+                    String tokenWard = claims.get("ward", String.class);
+                    String dbWard = user.getWard();
+                    String normTokenWard = tokenWard != null ? tokenWard.trim().toLowerCase() : "";
+                    String normDbWard = dbWard != null ? dbWard.trim().toLowerCase() : "";
+                    if (!normTokenWard.equals(normDbWard)) {
+                        SecurityContextHolder.clearContext();
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+
+                    // Requirement 5: Use DB role and ward for principal, not token claims
+                    String roleName = dbRole != null ? dbRole.toUpperCase() : "CITIZEN";
                     List<SimpleGrantedAuthority> authorities = List.of(
                             new SimpleGrantedAuthority("ROLE_" + roleName)
                     );
 
                     UserPrincipal principal = new UserPrincipal(
-                            id != null ? id : claims.getSubject(),
-                            fullName != null ? fullName : "",
-                            email != null ? email : "",
+                            user.getId(),
+                            user.getFullName() != null ? user.getFullName() : "",
+                            user.getEmail() != null ? user.getEmail() : "",
                             roleName,
-                            ward != null ? ward : "",
+                            user.getWard() != null ? user.getWard() : "",
+                            user.getPhone() != null ? user.getPhone() : "",
                             authorities
                     );
 

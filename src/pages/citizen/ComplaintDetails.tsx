@@ -12,6 +12,8 @@ import {
   FormControlLabel,
   Radio,
   Divider,
+  Rating,
+  CircularProgress,
 } from '@mui/material';
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
@@ -25,6 +27,7 @@ import { complaintService } from '../../services/complaintService';
 import { Complaint } from '../../types';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { StatusBadge } from '../../components/common/StatusBadge';
+import { AccessDeniedState } from '../../components/common/AccessDeniedState';
 
 export const ComplaintDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -32,23 +35,37 @@ export const ComplaintDetails: React.FC = () => {
   const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
+  const [forbidden, setForbidden] = useState(false);
   const [complaint, setComplaint] = useState<Complaint | null>(null);
   const [newComment, setNewComment] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
 
   // Feedback State
-  const [feedbackRating, setFeedbackRating] = useState<'Satisfied' | 'Not Satisfied'>('Satisfied');
-  const [feedbackComment, setFeedbackComment] = useState('');
-  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [existingFeedback, setExistingFeedback] = useState<any>(null);
+  const [feedbackRatingStars, setFeedbackRatingStars] = useState<number>(5);
+  const [feedbackSatisfied, setFeedbackSatisfied] = useState<boolean>(true);
+  const [feedbackComment, setFeedbackComment] = useState<string>('');
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState<boolean>(false);
+  const [feedbackError, setFeedbackError] = useState<string | null>(null);
 
   const loadData = async () => {
     if (!id) return;
     setLoading(true);
+    setForbidden(false);
     try {
       const data = await complaintService.getComplaintById(id);
       setComplaint(data);
-    } catch (e) {
+      if (data?.status === 'RESOLVED') {
+        try {
+          const fb = await complaintService.getFeedback(data.id);
+          if (fb) setExistingFeedback(fb);
+        } catch (_) {}
+      }
+    } catch (e: any) {
       console.error(e);
+      if (e?.response?.status === 403 || e?.status === 403) {
+        setForbidden(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -78,9 +95,23 @@ export const ComplaintDetails: React.FC = () => {
     }
   };
 
-  const handleFeedbackSubmit = (e: React.FormEvent) => {
+  const handleFeedbackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFeedbackSubmitted(true);
+    if (!id) return;
+    setFeedbackSubmitting(true);
+    setFeedbackError(null);
+    try {
+      const res = await complaintService.submitFeedback(id, {
+        rating: feedbackRatingStars,
+        satisfied: feedbackSatisfied,
+        comment: feedbackComment.trim() || undefined,
+      });
+      setExistingFeedback(res);
+    } catch (err: any) {
+      setFeedbackError(err.response?.data?.error || err.message || 'Failed to submit feedback');
+    } finally {
+      setFeedbackSubmitting(false);
+    }
   };
 
   const handleBack = () => {
@@ -101,6 +132,14 @@ export const ComplaintDetails: React.FC = () => {
   };
 
   if (loading) return <LoadingSpinner message="Loading complaint record..." />;
+
+  if (forbidden) {
+    return (
+      <AccessDeniedState
+        message="You are only authorized to view complaints that you have registered under your citizen account, or complaints within your assigned ward/work order."
+      />
+    );
+  }
 
   if (!complaint)
     return (
@@ -403,34 +442,68 @@ export const ComplaintDetails: React.FC = () => {
             This issue has been marked as Resolved. Please let us know if you are satisfied with the municipal work executed.
           </Typography>
 
-          {feedbackSubmitted ? (
+          {existingFeedback ? (
             <Alert severity="success" sx={{ borderRadius: '6px', backgroundColor: '#E8EFE9', color: '#304B3A' }}>
-              Thank you. Your feedback has been recorded.
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  Thank you! Your resolution feedback has been recorded:
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  <Rating value={Number(existingFeedback.rating) || 5} readOnly size="small" />
+                  <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                    {existingFeedback.satisfied ? 'Satisfied with resolution' : 'Unsatisfied'}
+                  </Typography>
+                </Box>
+                {existingFeedback.comment && (
+                  <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#1C2A24' }}>
+                    "{existingFeedback.comment}"
+                  </Typography>
+                )}
+              </Box>
             </Alert>
-          ) : (
+          ) : user && user.id === complaint.citizenId ? (
             <Box component="form" onSubmit={handleFeedbackSubmit}>
+              {feedbackError && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {feedbackError}
+                </Alert>
+              )}
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="caption" sx={{ fontWeight: 600, color: '#202522', display: 'block', mb: 0.5 }}>
+                  Rating (1 to 5 Stars):
+                </Typography>
+                <Rating
+                  value={feedbackRatingStars}
+                  onChange={(_, val) => setFeedbackRatingStars(val || 5)}
+                  size="medium"
+                />
+              </Box>
+
+              <Typography variant="caption" sx={{ fontWeight: 600, color: '#202522', display: 'block', mb: 0.5 }}>
+                Was the issue resolved satisfactorily?
+              </Typography>
               <RadioGroup
                 row
-                value={feedbackRating}
-                onChange={(e) => setFeedbackRating(e.target.value as any)}
+                value={feedbackSatisfied ? 'Yes' : 'No'}
+                onChange={(e) => setFeedbackSatisfied(e.target.value === 'Yes')}
                 sx={{ mb: 2 }}
               >
                 <FormControlLabel
-                  value="Satisfied"
+                  value="Yes"
                   control={<Radio sx={{ color: '#496A57', '&.Mui-checked': { color: '#496A57' } }} />}
                   label={
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontWeight: 500, color: '#202522', fontSize: '0.875rem' }}>
-                      <ThumbUpOutlinedIcon fontSize="small" sx={{ color: '#527A5E' }} /> Satisfied with resolution
+                      <ThumbUpOutlinedIcon fontSize="small" sx={{ color: '#527A5E' }} /> Yes, Satisfied
                     </Box>
                   }
                   sx={{ mr: 4 }}
                 />
                 <FormControlLabel
-                  value="Not Satisfied"
+                  value="No"
                   control={<Radio sx={{ color: '#B45D59', '&.Mui-checked': { color: '#B45D59' } }} />}
                   label={
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontWeight: 500, color: '#202522', fontSize: '0.875rem' }}>
-                      <ThumbDownOutlinedIcon fontSize="small" sx={{ color: '#B45D59' }} /> Unsatisfied
+                      <ThumbDownOutlinedIcon fontSize="small" sx={{ color: '#B45D59' }} /> No, Unsatisfied
                     </Box>
                   }
                 />
@@ -449,6 +522,8 @@ export const ComplaintDetails: React.FC = () => {
               <Button
                 type="submit"
                 variant="contained"
+                disabled={feedbackSubmitting}
+                startIcon={feedbackSubmitting ? <CircularProgress size={16} color="inherit" /> : null}
                 sx={{
                   borderRadius: '8px',
                   backgroundColor: '#496A57',
@@ -458,9 +533,13 @@ export const ComplaintDetails: React.FC = () => {
                   '&:hover': { backgroundColor: '#304B3A' },
                 }}
               >
-                Submit Feedback
+                {feedbackSubmitting ? 'Submitting...' : 'Submit Feedback'}
               </Button>
             </Box>
+          ) : (
+            <Typography variant="body2" sx={{ color: '#68706B', fontStyle: 'italic' }}>
+              Feedback has not been submitted by the citizen yet.
+            </Typography>
           )}
         </Box>
       )}

@@ -73,7 +73,7 @@ export const Register: React.FC = () => {
       errors.email = 'Please enter a valid email address (e.g. user@example.com).';
     }
 
-    const cleanPhone = phone.replace(/[\s\-\+]/g, '');
+    const cleanPhone = phone.replace(/[\s\-+]/g, '');
     const numberToCheck = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone.slice(2) : cleanPhone;
     if (!phone.trim()) {
       errors.phone = 'Mobile phone number is required.';

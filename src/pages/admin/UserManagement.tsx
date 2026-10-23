@@ -38,9 +38,11 @@ import { AdminPageHeader } from '../../components/admin/AdminPageHeader';
 import { FilterBar, FilterOption } from '../../components/admin/FilterBar';
 import { ActionMenu, ActionMenuItem } from '../../components/admin/ActionMenu';
 import { CustomTextField } from '../../components/common/CustomTextField';
+import { AccessDeniedState } from '../../components/common/AccessDeniedState';
 
 export const UserManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
+  const [forbidden, setForbidden] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [wards, setWards] = useState<Ward[]>([]);
 
@@ -67,6 +69,7 @@ export const UserManagement: React.FC = () => {
 
   const fetchData = async () => {
     setLoading(true);
+    setForbidden(false);
     try {
       const [uData, wData] = await Promise.all([
         adminService.getUsers(),
@@ -77,8 +80,11 @@ export const UserManagement: React.FC = () => {
       if (wData.length > 0) {
         setFormData((prev) => ({ ...prev, ward: `Ward ${wData[0].wardNumber} - ${wData[0].name}` }));
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      if (e?.response?.status === 403 || e?.status === 403) {
+        setForbidden(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -246,6 +252,10 @@ export const UserManagement: React.FC = () => {
       onChange: setWardFilter,
     },
   ];
+
+  if (forbidden) {
+    return <AccessDeniedState message="You do not have administrative privileges to manage users." onRetry={fetchData} />;
+  }
 
   if (loading) return <LoadingSpinner message="Loading User Directory..." />;
 

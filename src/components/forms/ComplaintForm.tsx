@@ -19,6 +19,7 @@ import BadgeIcon from '@mui/icons-material/Badge';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { CustomTextField } from '../common/CustomTextField';
 import { CustomButton } from '../common/CustomButton';
+import { validateAndResizeImage } from '../../utils/imageUtils';
 import { ComplaintCategory, ComplaintPriority } from '../../types';
 import { COMPLAINT_CATEGORIES, COMPLAINT_PRIORITIES, WARDS_LIST } from '../../constants';
 
@@ -60,14 +61,16 @@ export const ComplaintForm: React.FC<ComplaintFormProps> = ({
     }, 400);
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const resized = await validateAndResizeImage(file);
+        setImagePreview(resized);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Invalid image file';
+        alert(msg);
+      }
     }
   };
 
@@ -265,13 +268,13 @@ export const ComplaintForm: React.FC<ComplaintFormProps> = ({
                 '&:hover': { bgcolor: '#F3EDEA' },
               }}
             >
-              <input type="file" accept="image/*" hidden onChange={handleImageUpload} />
+              <input type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={handleImageUpload} />
               <CloudUploadIcon sx={{ fontSize: 44, color: '#6D5B4A', mb: 1 }} />
               <Typography variant="subtitle2" fontWeight={700}>
                 Click or Drop Image Here
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                PNG, JPG up to 10MB accepted
+                PNG, JPG, WEBP up to 2MB accepted
               </Typography>
             </Paper>
           )}

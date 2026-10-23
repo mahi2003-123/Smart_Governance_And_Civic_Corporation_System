@@ -2,6 +2,7 @@ package com.sgcs.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "notices")
@@ -22,7 +23,7 @@ public class Notice {
     @Column(nullable = false)
     private String priority = "NORMAL"; // NORMAL, IMPORTANT, EMERGENCY
 
-    @Column(name = "published_by")
+    @Column(name = "published_by", nullable = false)
     private String publishedBy;
 
     @Column(name = "publish_date")
@@ -33,7 +34,17 @@ public class Notice {
 
     private String category = "General";
 
+    @Column(name = "attachment_url", columnDefinition = "TEXT")
+    private String attachmentUrl;
+
+    @Column(name = "attachment_name")
+    private String attachmentName;
+
+    @Column(name = "attachment_type")
+    private String attachmentType;
+
     public Notice() {
+        this.id = "not_" + UUID.randomUUID().toString();
         this.publishDate = LocalDateTime.now();
     }
 
@@ -63,4 +74,13 @@ public class Notice {
 
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
+
+    public String getAttachmentUrl() { return attachmentUrl; }
+    public void setAttachmentUrl(String attachmentUrl) { this.attachmentUrl = attachmentUrl; }
+
+    public String getAttachmentName() { return attachmentName; }
+    public void setAttachmentName(String attachmentName) { this.attachmentName = attachmentName; }
+
+    public String getAttachmentType() { return attachmentType; }
+    public void setAttachmentType(String attachmentType) { this.attachmentType = attachmentType; }
 }

@@ -3,6 +3,7 @@ package com.sgcs.config;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.env.Environment;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -14,19 +15,25 @@ import org.springframework.web.filter.CorsFilter;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class CorsConfigTest {
 
     private CorsConfig corsConfig;
+    private Environment mockEnv;
 
     @BeforeEach
     public void setup() {
         corsConfig = new CorsConfig();
+        mockEnv = mock(Environment.class);
+        when(mockEnv.getActiveProfiles()).thenReturn(new String[]{"dev"});
+        ReflectionTestUtils.setField(corsConfig, "environment", mockEnv);
         ReflectionTestUtils.setField(corsConfig, "corsAllowedOriginsRaw", "http://localhost:5173,https://sgcs-frontend.onrender.com");
     }
 
     @Test
-    @DisplayName("Should allow production frontend origin https://sgcs-frontend.onrender.com")
+    @DisplayName("Should allow production frontend origin when present in CORS_ALLOWED_ORIGINS")
     public void testProductionFrontendOriginAllowed() {
         CorsConfigurationSource source = corsConfig.corsConfigurationSource();
         MockHttpServletRequest request = new MockHttpServletRequest("OPTIONS", "/api/complaints");
@@ -37,13 +44,13 @@ public class CorsConfigTest {
         CorsConfiguration config = source.getCorsConfiguration(request);
         assertNotNull(config, "CORS configuration should be found for /api/complaints");
         assertTrue(config.getAllowedOrigins().contains("https://sgcs-frontend.onrender.com"),
-                "Allowed origins must contain the production frontend URL");
+                "Allowed origins must contain the configured frontend URL");
         assertEquals("https://sgcs-frontend.onrender.com", config.checkOrigin("https://sgcs-frontend.onrender.com"),
-                "checkOrigin must return the production frontend origin");
+                "checkOrigin must return the configured frontend origin");
     }
 
     @Test
-    @DisplayName("Should allow localhost and local dev origins")
+    @DisplayName("Should allow localhost and local dev origins when dev profile is active")
     public void testLocalDevOriginsAllowed() {
         CorsConfigurationSource source = corsConfig.corsConfigurationSource();
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/health");
@@ -53,6 +60,19 @@ public class CorsConfigTest {
         assertNotNull(config);
         assertTrue(config.getAllowedOrigins().contains("http://localhost:5173"));
         assertTrue(config.getAllowedOrigins().contains("http://127.0.0.1:5173"));
+    }
+
+    @Test
+    @DisplayName("Should NOT include localhost when dev profile is inactive and not in CORS_ALLOWED_ORIGINS")
+    public void testLocalDevDisallowedInProdWithoutConfig() {
+        when(mockEnv.getActiveProfiles()).thenReturn(new String[]{"prod"});
+        ReflectionTestUtils.setField(corsConfig, "corsAllowedOriginsRaw", "https://custom-app.com");
+        CorsConfigurationSource source = corsConfig.corsConfigurationSource();
+        CorsConfiguration config = source.getCorsConfiguration(new MockHttpServletRequest("GET", "/api/health"));
+        assertNotNull(config);
+        assertFalse(config.getAllowedOrigins().contains("http://localhost:5173"));
+        assertFalse(config.getAllowedOrigins().contains("http://127.0.0.1:5173"));
+        assertTrue(config.getAllowedOrigins().contains("https://custom-app.com"));
     }
 
     @Test
@@ -146,7 +166,7 @@ public class CorsConfigTest {
 
             assertEquals(200, response.getStatus(), "Preflight response status should be 200 OK for " + endpoint);
             assertEquals("https://sgcs-frontend.onrender.com", response.getHeader("Access-Control-Allow-Origin"),
-                    "Access-Control-Allow-Origin must match the requesting production origin for " + endpoint);
+                    "Access-Control-Allow-Origin must match the requesting origin for " + endpoint);
             assertTrue(response.getHeader("Access-Control-Allow-Methods").contains("POST"),
                     "Access-Control-Allow-Methods must allow POST for " + endpoint);
             assertTrue(response.getHeader("Access-Control-Allow-Headers").toLowerCase().contains("authorization"),

@@ -473,6 +473,10 @@ export const CouncillorDashboard: React.FC = () => {
         allComplaints={complaints}
         onClose={() => setAssignModalComplaint(null)}
         onConfirm={handleConfirmAssign}
+        onComplaintUpdated={(updated) => {
+          setComplaints((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+          setAssignModalComplaint(updated);
+        }}
       />
 
       {/* Councillor Verify Proof Modal */}

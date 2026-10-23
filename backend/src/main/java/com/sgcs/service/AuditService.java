@@ -15,7 +15,7 @@ public class AuditService {
 
     public void logActivity(String userId, String userName, String userRole, String action, String module, String reference, String details) {
         try {
-            String id = "act_" + System.currentTimeMillis() + "_" + (int)(Math.random() * 1000);
+            String id = "act_" + java.util.UUID.randomUUID().toString();
             SystemActivity activity = new SystemActivity(
                 id,
                 userId != null ? userId : "system",

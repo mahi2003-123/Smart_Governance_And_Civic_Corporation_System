@@ -1,8 +1,8 @@
 import React, { useRef, useState } from 'react';
-import { Box, Typography, Button, IconButton, Paper } from '@mui/material';
+import { Box, Typography, IconButton, Paper, Alert } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
-import ImageIcon from '@mui/icons-material/Image';
+import { validateAndResizeImage } from '../../utils/imageUtils';
 
 interface ImageUploadProps {
   images: string[];
@@ -17,10 +17,11 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   onChange,
   maxImages = 3,
   label = 'Attach Photo Evidence (Optional)',
-  helperText = 'Supported formats: JPG, PNG, WEBP (Max 5MB per file)',
+  helperText = 'Supported formats: JPG, PNG, WEBP (Max 2MB per file)',
 }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -28,23 +29,24 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     }
   };
 
-  const processFiles = (files: File[]) => {
-    const validFiles = files.filter((file) => file.type.startsWith('image/'));
+  const processFiles = async (files: File[]) => {
+    setErrorMessage(null);
     const newImageUrls: string[] = [];
 
-    validFiles.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          newImageUrls.push(event.target.result as string);
-          if (newImageUrls.length === validFiles.length) {
-            const combined = [...images, ...newImageUrls].slice(0, maxImages);
-            onChange(combined);
-          }
-        }
-      };
-      reader.readAsDataURL(file);
-    });
+    for (const file of files) {
+      try {
+        const resized = await validateAndResizeImage(file);
+        newImageUrls.push(resized);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Invalid image file';
+        setErrorMessage(msg);
+      }
+    }
+
+    if (newImageUrls.length > 0) {
+      const combined = [...images, ...newImageUrls].slice(0, maxImages);
+      onChange(combined);
+    }
   };
 
   const handleRemove = (index: number) => {
@@ -75,6 +77,12 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         {label}
       </Typography>
 
+      {errorMessage && (
+        <Alert severity="error" sx={{ mb: 1.5, borderRadius: '10px' }} onClose={() => setErrorMessage(null)}>
+          {errorMessage}
+        </Alert>
+      )}
+
       {images.length < maxImages && (
         <Paper
           elevation={0}
@@ -101,7 +109,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
             type="file"
             ref={fileInputRef}
             onChange={handleFileChange}
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp"
             multiple={maxImages > 1}
             style={{ display: 'none' }}
           />
@@ -155,7 +163,10 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
               />
               <IconButton
                 size="small"
-                onClick={() => handleRemove(index)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemove(index);
+                }}
                 sx={{
                   position: 'absolute',
                   top: 4,

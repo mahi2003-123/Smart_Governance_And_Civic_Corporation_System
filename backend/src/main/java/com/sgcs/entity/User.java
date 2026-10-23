@@ -2,7 +2,7 @@ package com.sgcs.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 @Table(name = "users")
@@ -18,8 +18,15 @@ public class User {
     private String email;
 
     @Column(name = "password_hash", nullable = false)
-    @JsonIgnore
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
+
+    @Column(name = "must_change_password")
+    private Boolean mustChangePassword = false;
+
+    @Transient
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private String temporaryPassword;
 
     private String phone;
 
@@ -27,6 +34,9 @@ public class User {
     private String role; // CITIZEN, COUNCILLOR, WORKER, ADMIN
 
     private String ward;
+
+    @Column(name = "address", columnDefinition = "TEXT")
+    private String address;
 
     @Column(name = "specialization")
     private String specialization;
@@ -76,6 +86,9 @@ public class User {
     public String getWard() { return ward; }
     public void setWard(String ward) { this.ward = ward; }
 
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+
     public String getSpecialization() { return specialization; }
     public void setSpecialization(String specialization) { this.specialization = specialization; }
 
@@ -84,4 +97,10 @@ public class User {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public Boolean getMustChangePassword() { return mustChangePassword; }
+    public void setMustChangePassword(Boolean mustChangePassword) { this.mustChangePassword = mustChangePassword; }
+
+    public String getTemporaryPassword() { return temporaryPassword; }
+    public void setTemporaryPassword(String temporaryPassword) { this.temporaryPassword = temporaryPassword; }
 }
