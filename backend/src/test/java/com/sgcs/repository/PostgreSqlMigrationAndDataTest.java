@@ -84,6 +84,18 @@ public class PostgreSqlMigrationAndDataTest {
             assertThat(complaintCols).doesNotContain("images", "before_image", "after_image", "completion_image", "delay_image");
             assertThat(complaintCols).contains("location_address", "citizen_name", "status", "tracking_number");
 
+            // Check system_activities has module column
+            List<String> actCols = new ArrayList<>();
+            try (PreparedStatement stmt = conn.prepareStatement(
+                    "SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'system_activities'")) {
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        actCols.add(rs.getString("column_name"));
+                    }
+                }
+            }
+            assertThat(actCols).contains("module");
+
             // Check notifications columns: "read" and "user_id" MUST NOT exist
             List<String> notifCols = new ArrayList<>();
             try (PreparedStatement stmt = conn.prepareStatement(
