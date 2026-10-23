@@ -33,6 +33,16 @@ public class CorsConfigTest {
     }
 
     @Test
+    @DisplayName("Should allow vercel app origin via origin patterns")
+    public void testVercelOriginAllowedViaPattern() {
+        CorsConfigurationSource source = corsConfig.corsConfigurationSource();
+        CorsConfiguration config = source.getCorsConfiguration(new MockHttpServletRequest("GET", "/api/health"));
+        assertNotNull(config);
+        assertEquals("https://sgcs-portal.vercel.app", config.checkOrigin("https://sgcs-portal.vercel.app"),
+                "checkOrigin must allow *.vercel.app origins via origin pattern");
+    }
+
+    @Test
     @DisplayName("Should allow production frontend origin when present in CORS_ALLOWED_ORIGINS")
     public void testProductionFrontendOriginAllowed() {
         CorsConfigurationSource source = corsConfig.corsConfigurationSource();

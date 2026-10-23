@@ -24,7 +24,7 @@ public class CorsConfig {
     @Autowired(required = false)
     private Environment environment;
 
-    @Value("${cors.allowed.origins:}")
+    @Value("${cors.allowed.origins:http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000,https://sgcs-frontend.onrender.com}")
     private String corsAllowedOriginsRaw;
 
     @Bean
@@ -59,6 +59,10 @@ public class CorsConfig {
 
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(origins);
+        configuration.setAllowedOriginPatterns(List.of(
+            "https://*.vercel.app",
+            "https://*.onrender.com"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList(
             "Authorization",
