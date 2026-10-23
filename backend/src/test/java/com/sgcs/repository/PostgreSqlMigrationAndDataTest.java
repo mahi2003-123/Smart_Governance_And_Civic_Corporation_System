@@ -96,6 +96,18 @@ public class PostgreSqlMigrationAndDataTest {
             }
             assertThat(actCols).contains("module");
 
+            // Check users has must_change_password, specialization, status, address
+            List<String> userCols = new ArrayList<>();
+            try (PreparedStatement stmt = conn.prepareStatement(
+                    "SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'users'")) {
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        userCols.add(rs.getString("column_name"));
+                    }
+                }
+            }
+            assertThat(userCols).contains("must_change_password", "specialization", "status", "address");
+
             // Check notifications columns: "read" and "user_id" MUST NOT exist
             List<String> notifCols = new ArrayList<>();
             try (PreparedStatement stmt = conn.prepareStatement(
