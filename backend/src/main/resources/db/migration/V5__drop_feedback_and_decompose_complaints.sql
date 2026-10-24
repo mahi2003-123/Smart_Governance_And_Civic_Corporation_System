@@ -47,8 +47,8 @@ CREATE TABLE IF NOT EXISTS complaint_ai_metadata (
     ai_model VARCHAR(100),
     ai_status VARCHAR(100),
     is_ai_category_accepted BOOLEAN DEFAULT FALSE,
-    master_complaint_id VARCHAR(100) REFERENCES complaints(id),
-    possible_duplicate_id VARCHAR(100) REFERENCES complaints(id),
+    master_complaint_id VARCHAR(100),
+    possible_duplicate_id VARCHAR(100),
     duplicate_similarity_score DOUBLE PRECISION,
     is_duplicate_confirmed BOOLEAN DEFAULT FALSE
 );
@@ -69,7 +69,7 @@ BEGIN
         )
         SELECT 
             id, ai_suggested_category, ai_confidence, ai_model, ai_status, is_ai_category_accepted,
-            master_complaint_id, possible_duplicate_id, duplicate_similarity_score, is_duplicate_confirmed
+            NULLIF(trim(master_complaint_id), ''), NULLIF(trim(possible_duplicate_id), ''), duplicate_similarity_score, is_duplicate_confirmed
         FROM complaints
         ON CONFLICT (complaint_id) DO UPDATE SET
             ai_suggested_category = EXCLUDED.ai_suggested_category,
