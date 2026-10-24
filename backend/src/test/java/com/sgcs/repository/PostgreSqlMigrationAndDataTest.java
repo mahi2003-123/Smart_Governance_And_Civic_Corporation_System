@@ -49,11 +49,12 @@ public class PostgreSqlMigrationAndDataTest {
                 }
             }
 
-            // Assert exactly 15 tables
-            List<String> expected15Tables = List.of(
+            // Assert exactly 16 tables after V5 decomposition and feedback drop
+            List<String> expected16Tables = List.of(
+                    "complaint_ai_metadata",
+                    "complaint_assignments",
                     "complaint_attachments",
                     "complaint_comments",
-                    "complaint_feedback",
                     "complaint_timeline",
                     "complaints",
                     "notices",
@@ -68,10 +69,11 @@ public class PostgreSqlMigrationAndDataTest {
                     "wards"
             );
 
-            assertThat(tables).containsExactlyInAnyOrderElementsOf(expected15Tables);
-            assertThat(tables).doesNotContain("proposal_votes");
+            assertThat(tables).containsExactlyInAnyOrderElementsOf(expected16Tables);
+            assertThat(tables).doesNotContain("proposal_votes", "complaint_feedback");
 
-            // Check complaints columns: images, before_image, after_image, completion_image, delay_image MUST NOT exist
+            // Check complaints columns: images, before_image, after_image, completion_image, delay_image,
+            // worker assignment, and AI metadata MUST NOT exist in complaints table (decomposed in V5)
             List<String> complaintCols = new ArrayList<>();
             try (PreparedStatement stmt = conn.prepareStatement(
                     "SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'complaints'")) {
@@ -81,8 +83,36 @@ public class PostgreSqlMigrationAndDataTest {
                     }
                 }
             }
-            assertThat(complaintCols).doesNotContain("images", "before_image", "after_image", "completion_image", "delay_image");
+            assertThat(complaintCols).doesNotContain(
+                    "images", "before_image", "after_image", "completion_image", "delay_image",
+                    "assigned_worker_id", "assigned_worker_name", "assigned_date", "due_date", "worker_notes", "delay_reason", "delay_notes",
+                    "ai_suggested_category", "ai_confidence", "ai_model", "ai_status", "is_ai_category_accepted", "master_complaint_id", "possible_duplicate_id"
+            );
             assertThat(complaintCols).contains("location_address", "citizen_name", "status", "tracking_number");
+
+            // Check complaint_assignments columns
+            List<String> assignmentCols = new ArrayList<>();
+            try (PreparedStatement stmt = conn.prepareStatement(
+                    "SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'complaint_assignments'")) {
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        assignmentCols.add(rs.getString("column_name"));
+                    }
+                }
+            }
+            assertThat(assignmentCols).contains("complaint_id", "assigned_worker_id", "worker_notes", "delay_reason");
+
+            // Check complaint_ai_metadata columns
+            List<String> aiCols = new ArrayList<>();
+            try (PreparedStatement stmt = conn.prepareStatement(
+                    "SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'complaint_ai_metadata'")) {
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        aiCols.add(rs.getString("column_name"));
+                    }
+                }
+            }
+            assertThat(aiCols).contains("complaint_id", "ai_suggested_category", "ai_confidence", "possible_duplicate_id");
 
             // Check system_activities has module column
             List<String> actCols = new ArrayList<>();
@@ -179,39 +209,19 @@ public class PostgreSqlMigrationAndDataTest {
                 }
             }
 
-            // Test feedback unique constraint per complaint and citizen
-            String citId = "usr_cit_" + UUID.randomUUID();
+            // Test complaint_assignments insert and linkage
             try (PreparedStatement stmt = conn.prepareStatement(
-                    "INSERT INTO users (id, full_name, email, password_hash, role, ward) VALUES (?, 'Citizen John', ?, 'hash', 'CITIZEN', 'Ward 1')")) {
-                stmt.setString(1, citId);
-                stmt.setString(2, citId + "@example.com");
+                    "INSERT INTO complaint_assignments (complaint_id, assigned_worker_name, worker_notes) VALUES (?, 'Worker Dave', 'Road patched cleanly')")) {
+                stmt.setString(1, compId);
                 stmt.executeUpdate();
             }
 
-            UUID fbId1 = UUID.randomUUID();
+            // Test complaint_ai_metadata insert and linkage
             try (PreparedStatement stmt = conn.prepareStatement(
-                    "INSERT INTO complaint_feedback (id, complaint_id, citizen_id, rating, satisfied, comment) " +
-                            "VALUES (?, ?, ?, 5, true, 'Great job resolving it quickly!')")) {
-                stmt.setObject(1, fbId1);
-                stmt.setString(2, compId);
-                stmt.setString(3, citId);
+                    "INSERT INTO complaint_ai_metadata (complaint_id, ai_suggested_category, ai_confidence) VALUES (?, 'Roads & Potholes', 0.98)")) {
+                stmt.setString(1, compId);
                 stmt.executeUpdate();
             }
-
-            // Duplicate feedback by same citizen for same complaint should throw unique constraint violation
-            UUID fbId2 = UUID.randomUUID();
-            boolean threwUniqueViolation = false;
-            try (PreparedStatement stmt = conn.prepareStatement(
-                    "INSERT INTO complaint_feedback (id, complaint_id, citizen_id, rating, satisfied, comment) " +
-                            "VALUES (?, ?, ?, 4, true, 'Second attempt')")) {
-                stmt.setObject(1, fbId2);
-                stmt.setString(2, compId);
-                stmt.setString(3, citId);
-                stmt.executeUpdate();
-            } catch (SQLException e) {
-                threwUniqueViolation = true;
-            }
-            assertThat(threwUniqueViolation).isTrue();
 
             // Test notification reads per-user isolation
             String notifId = "notif_" + UUID.randomUUID();

@@ -243,15 +243,6 @@ public class AccessGuard {
         throw new AccessDeniedException("Forbidden: Only councillors and admins may publish notices");
     }
 
-    public void checkCitizenCanSubmitFeedback(UserPrincipal principal, Complaint complaint) {
-        if (principal == null || !"CITIZEN".equalsIgnoreCase(principal.getRole())) {
-            throw new AccessDeniedException("Forbidden: Only citizens can submit feedback");
-        }
-        if (!principal.getId().equals(complaint.getCitizenId())) {
-            throw new AccessDeniedException("Forbidden: Only the citizen who submitted the complaint can provide feedback");
-        }
-    }
-
     public void checkCanDeleteNotice(UserPrincipal principal, Notice notice) {
         if (principal == null) throw new AccessDeniedException("Forbidden - Insufficient permissions");
         if (isAdmin(principal)) return;

@@ -81,9 +81,7 @@ public class GlobalExceptionHandler {
         String message = "Database constraint violation occurred";
         String rootMsg = ex.getRootCause() != null ? ex.getRootCause().getMessage() : ex.getMessage();
         if (rootMsg != null) {
-            if (rootMsg.contains("uq_complaint_citizen_feedback")) {
-                message = "Feedback has already been submitted for this complaint";
-            } else if (rootMsg.contains("duplicate key") || rootMsg.contains("unique constraint")) {
+            if (rootMsg.contains("duplicate key") || rootMsg.contains("unique constraint")) {
                 message = "A record with this identifier or unique attribute already exists";
             } else if (rootMsg.contains("violates check constraint")) {
                 message = "Provided value violates database validation rules";

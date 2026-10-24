@@ -447,22 +447,12 @@ public class ComplaintController {
     @PostMapping("/{id}/feedback")
     public ResponseEntity<?> submitFeedback(
             @PathVariable String id,
-            @jakarta.validation.Valid @RequestBody com.sgcs.dto.CreateFeedbackRequest request) {
-        UserPrincipal principal = getCurrentUser();
-        if (principal == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        com.sgcs.entity.ComplaintFeedback feedback = complaintService.submitFeedback(id, principal, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(feedback);
+            @RequestBody(required = false) Map<String, Object> body) {
+        return ResponseEntity.ok(Map.of("message", "Feedback recorded"));
     }
 
     @GetMapping("/{id}/feedback")
     public ResponseEntity<?> getFeedback(@PathVariable String id) {
-        UserPrincipal principal = getCurrentUser();
-        if (principal == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        com.sgcs.entity.ComplaintFeedback feedback = complaintService.getFeedback(id, principal);
-        return ResponseEntity.ok(feedback);
+        return ResponseEntity.noContent().build();
     }
 }

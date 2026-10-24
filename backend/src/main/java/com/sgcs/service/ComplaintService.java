@@ -43,9 +43,6 @@ public class ComplaintService {
     private com.sgcs.repository.UserRepository userRepository;
 
     @Autowired
-    private com.sgcs.repository.ComplaintFeedbackRepository complaintFeedbackRepository;
-
-    @Autowired
     private com.sgcs.security.AccessGuard accessGuard;
 
     @Autowired
@@ -1109,52 +1106,5 @@ public class ComplaintService {
             }
         }
         return saved;
-    }
-
-    public com.sgcs.entity.ComplaintFeedback submitFeedback(String complaintId, com.sgcs.security.UserPrincipal principal, com.sgcs.dto.CreateFeedbackRequest request) {
-        Complaint complaint = getComplaintById(complaintId)
-            .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + complaintId));
-
-        if (!"RESOLVED".equalsIgnoreCase(complaint.getStatus())) {
-            throw new com.sgcs.exception.BadRequestException("Feedback can only be submitted for RESOLVED complaints");
-        }
-
-        accessGuard.checkCitizenCanSubmitFeedback(principal, complaint);
-
-        if (complaintFeedbackRepository.existsByComplaintIdAndCitizenId(complaint.getId(), principal.getId())) {
-            throw new com.sgcs.exception.BadRequestException("Feedback has already been submitted for this complaint");
-        }
-
-        com.sgcs.entity.ComplaintFeedback feedback = new com.sgcs.entity.ComplaintFeedback(
-            complaint.getId(),
-            principal.getId(),
-            request.getRating().shortValue(),
-            request.getSatisfied(),
-            request.getComment()
-        );
-
-        com.sgcs.entity.ComplaintFeedback saved = complaintFeedbackRepository.save(feedback);
-
-        auditService.logActivity(
-            principal.getId(),
-            principal.getFullName(),
-            principal.getRole(),
-            "Submitted Citizen Feedback",
-            "COMPLAINT",
-            complaint.getId(),
-            "Citizen rated complaint resolution: " + request.getRating() + "/5"
-        );
-
-        return saved;
-    }
-
-    public com.sgcs.entity.ComplaintFeedback getFeedback(String complaintId, com.sgcs.security.UserPrincipal principal) {
-        Complaint complaint = getComplaintById(complaintId)
-            .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + complaintId));
-
-        accessGuard.checkCanReadComplaint(principal, complaint);
-
-        return complaintFeedbackRepository.findByComplaintId(complaint.getId())
-            .orElseThrow(() -> new ResourceNotFoundException("No feedback found for complaint " + complaintId));
     }
 }
