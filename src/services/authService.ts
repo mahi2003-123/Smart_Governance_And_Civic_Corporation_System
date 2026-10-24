@@ -17,6 +17,7 @@ export const authService = {
         createdAt: new Date().toISOString(),
       };
       localStorage.setItem('sgcs_auth_token', 'sgcs_token_admin_test');
+      localStorage.setItem('sgcs_auth_user', JSON.stringify(testAdmin));
       return { user: testAdmin, token: 'sgcs_token_admin_test' };
     }
 
@@ -30,6 +31,7 @@ export const authService = {
         createdAt: new Date().toISOString(),
       };
       localStorage.setItem('sgcs_auth_token', 'sgcs_token_citizen_test');
+      localStorage.setItem('sgcs_auth_user', JSON.stringify(testCitizen));
       return { user: testCitizen, token: 'sgcs_token_citizen_test' };
     }
 
@@ -78,6 +80,7 @@ export const authService = {
         createdAt: new Date().toISOString(),
       };
       localStorage.setItem('sgcs_auth_token', `sgcs_token_${mockRegistered.id}`);
+      localStorage.setItem('sgcs_auth_user', JSON.stringify(mockRegistered));
       return mockRegistered;
     }
 

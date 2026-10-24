@@ -191,6 +191,7 @@ export const SubmitComplaint: React.FC = () => {
       >
         <Stack spacing={3}>
           <TextField
+            id="complaint-title-input"
             fullWidth
             label="Complaint Title *"
             placeholder="e.g. Deep Pothole near Central Market Gate"
@@ -201,6 +202,7 @@ export const SubmitComplaint: React.FC = () => {
           />
 
           <TextField
+            id="complaint-description-input"
             fullWidth
             multiline
             rows={4}
@@ -255,6 +257,7 @@ export const SubmitComplaint: React.FC = () => {
           </Box>
 
           <TextField
+            id="complaint-location-input"
             fullWidth
             label="Specific Location / Street Address"
             placeholder="e.g. Opposite City Bank, Main Street"
@@ -281,6 +284,7 @@ export const SubmitComplaint: React.FC = () => {
           />
 
           <Button
+            id="complaint-submit-btn"
             type="submit"
             disabled={loading}
             variant="contained"
