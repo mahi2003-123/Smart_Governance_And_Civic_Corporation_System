@@ -1,8 +1,6 @@
 package com.sgcs.service;
 
 import com.sgcs.entity.Notification;
-import com.sgcs.entity.NotificationRead;
-import com.sgcs.repository.NotificationReadRepository;
 import com.sgcs.repository.NotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,9 +18,6 @@ public class NotificationService {
     private NotificationRepository notificationRepository;
 
     @Autowired
-    private NotificationReadRepository notificationReadRepository;
-
-    @Autowired
     private FirebaseNotificationService firebaseNotificationService;
 
     @Autowired
@@ -31,14 +26,6 @@ public class NotificationService {
     public List<Notification> getNotificationsForUser(String userId, String role, String ward) {
         List<Notification> all = notificationRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
         List<Notification> filtered = new ArrayList<>();
-
-        Set<String> readNotificationIds = new HashSet<>();
-        if (userId != null) {
-            List<NotificationRead> userReads = notificationReadRepository.findByIdUserId(userId);
-            for (NotificationRead nr : userReads) {
-                readNotificationIds.add(nr.getId().getNotificationId());
-            }
-        }
 
         for (Notification n : all) {
             String r = n.getRecipientId();
@@ -57,13 +44,6 @@ public class NotificationService {
             }
 
             if (match) {
-                // Determine read status per-user
-                boolean isReadForUser = n.isRead();
-                if (readNotificationIds.contains(n.getId())) {
-                    isReadForUser = true;
-                }
-                // Clone or set read status for response
-                n.setRead(isReadForUser);
                 filtered.add(n);
             }
         }
@@ -109,49 +89,23 @@ public class NotificationService {
         Optional<Notification> opt = notificationRepository.findById(id);
         if (opt.isPresent()) {
             Notification n = opt.get();
-            if (userId != null) {
-                if (!notificationReadRepository.existsByIdNotificationIdAndIdUserId(id, userId)) {
-                    notificationReadRepository.save(new NotificationRead(id, userId));
-                }
-                if (n.getRecipientId() != null && n.getRecipientId().equalsIgnoreCase(userId)) {
-                    n.setRead(true);
-                    return notificationRepository.save(n);
-                }
-            } else {
-                n.setRead(true);
-                return notificationRepository.save(n);
-            }
             n.setRead(true);
-            return n;
+            return notificationRepository.save(n);
         }
         throw new RuntimeException("Notification not found with id: " + id);
     }
 
     public void markAllAsReadForUser(String userId, String role, String ward) {
         List<Notification> list = getNotificationsForUser(userId, role, ward);
-        List<NotificationRead> newReads = new ArrayList<>();
-        List<Notification> directUpdates = new ArrayList<>();
-
         for (Notification n : list) {
-            if (userId != null && !notificationReadRepository.existsByIdNotificationIdAndIdUserId(n.getId(), userId)) {
-                newReads.add(new NotificationRead(n.getId(), userId));
-            }
-            if (userId != null && n.getRecipientId() != null && n.getRecipientId().equalsIgnoreCase(userId)) {
-                n.setRead(true);
-                directUpdates.add(n);
-            }
+            n.setRead(true);
         }
-
-        if (!newReads.isEmpty()) {
-            notificationReadRepository.saveAll(newReads);
-        }
-        if (!directUpdates.isEmpty()) {
-            notificationRepository.saveAll(directUpdates);
+        if (!list.isEmpty()) {
+            notificationRepository.saveAll(list);
         }
     }
 
     public void deleteAllNotifications() {
-        notificationReadRepository.deleteAll();
         notificationRepository.deleteAll();
     }
 

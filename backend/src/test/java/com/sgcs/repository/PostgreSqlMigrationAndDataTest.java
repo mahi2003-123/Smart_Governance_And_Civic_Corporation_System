@@ -49,14 +49,13 @@ public class PostgreSqlMigrationAndDataTest {
                 }
             }
 
-            // Assert exactly 14 tables after dropping feedback, assignments, and ai_metadata
-            List<String> expected14Tables = List.of(
+            // Assert exactly 13 tables after dropping feedback, assignments, ai_metadata, and notification_reads
+            List<String> expected13Tables = List.of(
                     "complaint_attachments",
                     "complaint_comments",
                     "complaint_timeline",
                     "complaints",
                     "notices",
-                    "notification_reads",
                     "notifications",
                     "proposal_comments",
                     "proposal_user_votes",
@@ -67,8 +66,8 @@ public class PostgreSqlMigrationAndDataTest {
                     "wards"
             );
 
-            assertThat(tables).containsExactlyInAnyOrderElementsOf(expected14Tables);
-            assertThat(tables).doesNotContain("proposal_votes", "complaint_feedback", "complaint_assignments", "complaint_ai_metadata");
+            assertThat(tables).containsExactlyInAnyOrderElementsOf(expected13Tables);
+            assertThat(tables).doesNotContain("proposal_votes", "complaint_feedback", "complaint_assignments", "complaint_ai_metadata", "notification_reads");
 
             // Check complaints columns: images, before_image, after_image, completion_image, delay_image MUST NOT exist
             List<String> complaintCols = new ArrayList<>();
@@ -189,7 +188,7 @@ public class PostgreSqlMigrationAndDataTest {
                 stmt.executeUpdate();
             }
 
-            // Test notification reads per-user isolation
+            // Test direct notifications read update
             String notifId = "notif_" + UUID.randomUUID();
             try (PreparedStatement stmt = conn.prepareStatement(
                     "INSERT INTO notifications (id, recipient_id, title, message, type, is_read) VALUES (?, 'ALL', 'System Update', 'Maintenance scheduled', 'NOTICE', false)")) {
@@ -197,39 +196,16 @@ public class PostgreSqlMigrationAndDataTest {
                 stmt.executeUpdate();
             }
 
-            // User A marks as read
-            String userAId = "usr_a_" + UUID.randomUUID();
-            String userBId = "usr_b_" + UUID.randomUUID();
-            try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO users (id, full_name, email, password_hash, role) VALUES (?, 'User A', ?, 'h', 'CITIZEN')")) {
-                stmt.setString(1, userAId);
-                stmt.setString(2, userAId + "@test.com");
-                stmt.executeUpdate();
-            }
-            try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO users (id, full_name, email, password_hash, role) VALUES (?, 'User B', ?, 'h', 'CITIZEN')")) {
-                stmt.setString(1, userBId);
-                stmt.setString(2, userBId + "@test.com");
+            try (PreparedStatement stmt = conn.prepareStatement("UPDATE notifications SET is_read = true WHERE id = ?")) {
+                stmt.setString(1, notifId);
                 stmt.executeUpdate();
             }
 
-            try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO notification_reads (notification_id, user_id) VALUES (?, ?)")) {
+            try (PreparedStatement stmt = conn.prepareStatement("SELECT is_read FROM notifications WHERE id = ?")) {
                 stmt.setString(1, notifId);
-                stmt.setString(2, userAId);
-                stmt.executeUpdate();
-            }
-
-            // User A has read row, User B does not
-            try (PreparedStatement stmt = conn.prepareStatement("SELECT COUNT(*) FROM notification_reads WHERE notification_id = ? AND user_id = ?")) {
-                stmt.setString(1, notifId);
-                stmt.setString(2, userAId);
                 try (ResultSet rs = stmt.executeQuery()) {
                     assertThat(rs.next()).isTrue();
-                    assertThat(rs.getInt(1)).isEqualTo(1);
-                }
-
-                stmt.setString(2, userBId);
-                try (ResultSet rs = stmt.executeQuery()) {
-                    assertThat(rs.next()).isTrue();
-                    assertThat(rs.getInt(1)).isEqualTo(0);
+                    assertThat(rs.getBoolean("is_read")).isTrue();
                 }
             }
         }
