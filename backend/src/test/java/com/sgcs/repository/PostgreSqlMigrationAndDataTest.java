@@ -49,10 +49,8 @@ public class PostgreSqlMigrationAndDataTest {
                 }
             }
 
-            // Assert exactly 16 tables after V5 decomposition and feedback drop
-            List<String> expected16Tables = List.of(
-                    "complaint_ai_metadata",
-                    "complaint_assignments",
+            // Assert exactly 14 tables after dropping feedback, assignments, and ai_metadata
+            List<String> expected14Tables = List.of(
                     "complaint_attachments",
                     "complaint_comments",
                     "complaint_timeline",
@@ -69,11 +67,10 @@ public class PostgreSqlMigrationAndDataTest {
                     "wards"
             );
 
-            assertThat(tables).containsExactlyInAnyOrderElementsOf(expected16Tables);
-            assertThat(tables).doesNotContain("proposal_votes", "complaint_feedback");
+            assertThat(tables).containsExactlyInAnyOrderElementsOf(expected14Tables);
+            assertThat(tables).doesNotContain("proposal_votes", "complaint_feedback", "complaint_assignments", "complaint_ai_metadata");
 
-            // Check complaints columns: images, before_image, after_image, completion_image, delay_image,
-            // worker assignment, and AI metadata MUST NOT exist in complaints table (decomposed in V5)
+            // Check complaints columns: images, before_image, after_image, completion_image, delay_image MUST NOT exist
             List<String> complaintCols = new ArrayList<>();
             try (PreparedStatement stmt = conn.prepareStatement(
                     "SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'complaints'")) {
@@ -83,36 +80,12 @@ public class PostgreSqlMigrationAndDataTest {
                     }
                 }
             }
-            assertThat(complaintCols).doesNotContain(
-                    "images", "before_image", "after_image", "completion_image", "delay_image",
+            assertThat(complaintCols).doesNotContain("images", "before_image", "after_image", "completion_image", "delay_image");
+            assertThat(complaintCols).contains(
+                    "location_address", "citizen_name", "status", "tracking_number",
                     "assigned_worker_id", "assigned_worker_name", "assigned_date", "due_date", "worker_notes", "delay_reason", "delay_notes",
                     "ai_suggested_category", "ai_confidence", "ai_model", "ai_status", "is_ai_category_accepted", "master_complaint_id", "possible_duplicate_id"
             );
-            assertThat(complaintCols).contains("location_address", "citizen_name", "status", "tracking_number");
-
-            // Check complaint_assignments columns
-            List<String> assignmentCols = new ArrayList<>();
-            try (PreparedStatement stmt = conn.prepareStatement(
-                    "SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'complaint_assignments'")) {
-                try (ResultSet rs = stmt.executeQuery()) {
-                    while (rs.next()) {
-                        assignmentCols.add(rs.getString("column_name"));
-                    }
-                }
-            }
-            assertThat(assignmentCols).contains("complaint_id", "assigned_worker_id", "worker_notes", "delay_reason");
-
-            // Check complaint_ai_metadata columns
-            List<String> aiCols = new ArrayList<>();
-            try (PreparedStatement stmt = conn.prepareStatement(
-                    "SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'complaint_ai_metadata'")) {
-                try (ResultSet rs = stmt.executeQuery()) {
-                    while (rs.next()) {
-                        aiCols.add(rs.getString("column_name"));
-                    }
-                }
-            }
-            assertThat(aiCols).contains("complaint_id", "ai_suggested_category", "ai_confidence", "possible_duplicate_id");
 
             // Check system_activities has module column
             List<String> actCols = new ArrayList<>();
@@ -209,16 +182,9 @@ public class PostgreSqlMigrationAndDataTest {
                 }
             }
 
-            // Test complaint_assignments insert and linkage
+            // Test complaints update with worker and AI metadata directly on complaints table
             try (PreparedStatement stmt = conn.prepareStatement(
-                    "INSERT INTO complaint_assignments (complaint_id, assigned_worker_name, worker_notes) VALUES (?, 'Worker Dave', 'Road patched cleanly')")) {
-                stmt.setString(1, compId);
-                stmt.executeUpdate();
-            }
-
-            // Test complaint_ai_metadata insert and linkage
-            try (PreparedStatement stmt = conn.prepareStatement(
-                    "INSERT INTO complaint_ai_metadata (complaint_id, ai_suggested_category, ai_confidence) VALUES (?, 'Roads & Potholes', 0.98)")) {
+                    "UPDATE complaints SET assigned_worker_name = 'Worker Dave', worker_notes = 'Road patched cleanly', ai_suggested_category = 'Roads & Potholes', ai_confidence = 0.98 WHERE id = ?")) {
                 stmt.setString(1, compId);
                 stmt.executeUpdate();
             }

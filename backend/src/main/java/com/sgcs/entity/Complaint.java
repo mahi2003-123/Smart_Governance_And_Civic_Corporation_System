@@ -14,11 +14,8 @@ import java.util.stream.Collectors;
     @Index(name = "idx_complaint_ward", columnList = "ward"),
     @Index(name = "idx_complaint_citizen", columnList = "citizen_id"),
     @Index(name = "idx_complaint_status", columnList = "status"),
+    @Index(name = "idx_complaint_worker", columnList = "assigned_worker_id"),
     @Index(name = "idx_complaint_created", columnList = "created_at DESC")
-})
-@SecondaryTables({
-    @SecondaryTable(name = "complaint_assignments", pkJoinColumns = @PrimaryKeyJoinColumn(name = "complaint_id", referencedColumnName = "id")),
-    @SecondaryTable(name = "complaint_ai_metadata", pkJoinColumns = @PrimaryKeyJoinColumn(name = "complaint_id", referencedColumnName = "id"))
 })
 public class Complaint {
 
@@ -58,53 +55,53 @@ public class Complaint {
     @Column(name = "citizen_phone")
     private String citizenPhone;
 
-    @Column(table = "complaint_assignments", name = "assigned_worker_id")
+    @Column(name = "assigned_worker_id")
     private String assignedWorkerId;
 
-    @Column(table = "complaint_assignments", name = "assigned_worker_name")
+    @Column(name = "assigned_worker_name")
     private String assignedWorkerName;
 
-    @Column(table = "complaint_assignments", name = "assigned_date")
+    @Column(name = "assigned_date")
     private LocalDateTime assignedDate;
 
-    @Column(table = "complaint_assignments", name = "due_date")
+    @Column(name = "due_date")
     private LocalDateTime dueDate;
 
-    @Column(table = "complaint_assignments", name = "worker_notes", columnDefinition = "TEXT")
+    @Column(name = "worker_notes", columnDefinition = "TEXT")
     private String workerNotes;
 
-    @Column(table = "complaint_assignments", name = "delay_reason")
+    @Column(name = "delay_reason")
     private String delayReason;
 
-    @Column(table = "complaint_assignments", name = "delay_notes", columnDefinition = "TEXT")
+    @Column(name = "delay_notes", columnDefinition = "TEXT")
     private String delayNotes;
 
     // AI & Duplicate Tracking
-    @Column(table = "complaint_ai_metadata", name = "ai_suggested_category")
+    @Column(name = "ai_suggested_category")
     private String aiSuggestedCategory;
 
-    @Column(table = "complaint_ai_metadata", name = "ai_confidence")
+    @Column(name = "ai_confidence")
     private Double aiConfidence;
     
-    @Column(table = "complaint_ai_metadata", name = "ai_model")
+    @Column(name = "ai_model")
     private String aiModel;
 
-    @Column(table = "complaint_ai_metadata", name = "ai_status")
+    @Column(name = "ai_status")
     private String aiStatus;
 
-    @Column(table = "complaint_ai_metadata", name = "is_ai_category_accepted")
+    @Column(name = "is_ai_category_accepted")
     private Boolean isAiCategoryAccepted;
 
-    @Column(table = "complaint_ai_metadata", name = "master_complaint_id")
+    @Column(name = "master_complaint_id")
     private String masterComplaintId;
 
-    @Column(table = "complaint_ai_metadata", name = "possible_duplicate_id")
+    @Column(name = "possible_duplicate_id")
     private String possibleDuplicateId;
 
-    @Column(table = "complaint_ai_metadata", name = "duplicate_similarity_score")
+    @Column(name = "duplicate_similarity_score")
     private Double duplicateSimilarityScore;
 
-    @Column(table = "complaint_ai_metadata", name = "is_duplicate_confirmed")
+    @Column(name = "is_duplicate_confirmed")
     private Boolean isDuplicateConfirmed;
 
     @OneToMany(mappedBy = "complaint", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
