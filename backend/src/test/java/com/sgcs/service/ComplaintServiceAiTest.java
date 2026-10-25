@@ -103,6 +103,7 @@ public class ComplaintServiceAiTest {
         ReflectionTestUtils.setField(complaintService, "notificationService", notificationService);
         ReflectionTestUtils.setField(complaintService, "firebaseNotificationService", firebaseNotificationService);
         ReflectionTestUtils.setField(complaintService, "userRepository", userRepository);
+        ReflectionTestUtils.setField(complaintService, "accessGuard", new com.sgcs.security.AccessGuard());
         ReflectionTestUtils.setField(complaintService, "restTemplate", testRestTemplate);
         ReflectionTestUtils.setField(complaintService, "aiServiceUrl", "https://smart-governance-and-civic-corporation-7q2c.onrender.com");
 
@@ -120,6 +121,7 @@ public class ComplaintServiceAiTest {
 
         when(complaintRepository.findAll()).thenAnswer(invocation -> new ArrayList<>(databaseStore.values()));
         when(complaintRepository.findActiveComplaints()).thenAnswer(invocation -> new ArrayList<>(databaseStore.values()));
+        when(complaintRepository.findRecentActiveComplaints(any(LocalDateTime.class))).thenAnswer(invocation -> new ArrayList<>(databaseStore.values()));
         when(complaintRepository.findRecentActiveComplaintsByWard(anyString(), any(LocalDateTime.class), any())).thenAnswer(invocation -> new ArrayList<>(databaseStore.values()));
         when(complaintRepository.findById(anyString())).thenAnswer(invocation -> {
             String key = invocation.getArgument(0);

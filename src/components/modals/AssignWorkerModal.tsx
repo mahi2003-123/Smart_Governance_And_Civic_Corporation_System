@@ -236,6 +236,37 @@ export const AssignWorkerModal: React.FC<AssignWorkerModalProps> = ({
     }
   };
 
+  const handleScanDuplicate = async () => {
+    if (!currentComplaint) return;
+    setAiLoading(true);
+    try {
+      const updated = await complaintService.checkDuplicate(currentComplaint.id);
+      setCurrentComplaint(updated);
+      onComplaintUpdated?.(updated);
+      if (updated.possibleDuplicateId) {
+        setSnackbar({
+          open: true,
+          message: `Duplicate profile detected! Match score: ${Math.round((updated.duplicateSimilarityScore || 0) * 100)}% with ${updated.possibleDuplicateId}`,
+          severity: 'warning',
+        });
+      } else {
+        setSnackbar({
+          open: true,
+          message: 'No duplicate complaints found in this ward. Verified as unique.',
+          severity: 'info',
+        });
+      }
+    } catch (e: any) {
+      setSnackbar({
+        open: true,
+        message: e.message || 'Failed to check duplicates.',
+        severity: 'error',
+      });
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   if (!currentComplaint) return null;
 
   return (
@@ -341,14 +372,25 @@ export const AssignWorkerModal: React.FC<AssignWorkerModalProps> = ({
               </Box>
             </Box>
           ) : (
-            <Box sx={{ px: 4, py: 2.5, bgcolor: '#ECFDF5', borderBottom: '1px solid #6EE7B7' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                 <AutoAwesomeIcon sx={{ color: '#059669', fontSize: 24 }} />
-                 <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#065F46' }}>Unique Complaint Verified</Typography>
+            <Box sx={{ px: 4, py: 2.5, bgcolor: '#ECFDF5', borderBottom: '1px solid #6EE7B7', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+              <Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                   <AutoAwesomeIcon sx={{ color: '#059669', fontSize: 24 }} />
+                   <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#065F46' }}>Unique Complaint Verified</Typography>
+                </Box>
+                <Typography variant="body2" sx={{ color: '#047857', mt: 0.5, ml: '36px' }}>
+                  Algorithm confirmed no identical active tasks in this ward. Safe to proceed.
+                </Typography>
               </Box>
-              <Typography variant="body2" sx={{ color: '#047857', mt: 0.5, ml: '36px' }}>
-                Algorithm confirmed no identical active tasks in this ward. Safe to proceed.
-              </Typography>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={handleScanDuplicate}
+                disabled={aiLoading}
+                sx={{ color: '#059669', borderColor: '#059669', textTransform: 'none', fontWeight: 600, '&:hover': { bgcolor: '#D1FAE5' } }}
+              >
+                {aiLoading ? 'Scanning...' : 'Re-scan Duplicates'}
+              </Button>
             </Box>
           )}
 

@@ -33,6 +33,9 @@ public interface ComplaintRepository extends JpaRepository<Complaint, String> {
     @Query("SELECT c FROM Complaint c WHERE c.status IS NOT NULL AND UPPER(c.status) IN ('PENDING', 'ASSIGNED', 'IN_PROGRESS') ORDER BY c.createdAt DESC")
     List<Complaint> findActiveComplaints();
 
+    @Query("SELECT c FROM Complaint c WHERE c.status IS NOT NULL AND UPPER(c.status) IN ('PENDING', 'ASSIGNED', 'IN_PROGRESS', 'PENDING_APPROVAL') AND c.createdAt >= :since ORDER BY c.createdAt DESC")
+    List<Complaint> findRecentActiveComplaints(@Param("since") LocalDateTime since);
+
     @Query("SELECT c FROM Complaint c WHERE c.ward = :ward AND c.status IS NOT NULL AND UPPER(c.status) IN ('PENDING', 'ASSIGNED', 'IN_PROGRESS') AND c.createdAt >= :since ORDER BY c.createdAt DESC")
     List<Complaint> findRecentActiveComplaintsByWard(
         @Param("ward") String ward,

@@ -410,6 +410,19 @@ public class ComplaintController {
         return ResponseEntity.ok(updated);
     }
 
+    @PostMapping("/{id}/check-duplicate")
+    public ResponseEntity<?> checkDuplicate(@PathVariable String id) {
+        UserPrincipal principal = getCurrentUser();
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        Complaint complaint = complaintService.getComplaintById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
+        accessGuard.checkCouncillorCanManageComplaint(principal, complaint, "evaluate duplicates for");
+        Complaint evaluated = complaintService.evaluateAndSaveDuplicateCheck(id);
+        return ResponseEntity.ok(evaluated);
+    }
+
     @PostMapping("/predict-category")
     public ResponseEntity<?> predictCategory(@RequestBody(required = false) Map<String, String> body) {
         UserPrincipal principal = getCurrentUser();

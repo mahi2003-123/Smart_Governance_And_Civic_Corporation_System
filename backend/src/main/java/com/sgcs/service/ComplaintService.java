@@ -9,8 +9,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -226,8 +230,9 @@ public class ComplaintService {
 
         // AI enrichment — complaint creation MUST NOT fail if the AI service is unavailable
         saved.setAiStatus("PENDING");
+        
+        // 1. Classification (Remote AI with fail-safe built-in classification engine)
         try {
-            // 1. Classification
             Map<String, String> aiRequest = new HashMap<>();
             String classificationText = (saved.getTitle() != null && !saved.getTitle().trim().isEmpty() ? saved.getTitle().trim() + ". " : "") + 
                                        (saved.getDescription() != null ? saved.getDescription().trim() : "");
@@ -286,126 +291,20 @@ public class ComplaintService {
                     }
                 }
             } else {
-                Map<String, Object> fallback = classifyWithBuiltInCivicEngine(classificationText);
-                String predictedCat = (String) fallback.get("category");
-                double parsedConf = ((Number) fallback.get("confidence")).doubleValue();
-                saved.setAiSuggestedCategory(predictedCat);
-                saved.setAiConfidence(parsedConf);
-                saved.setAiModel((String) fallback.get("model"));
-                saved.setAiStatus("COMPLETED");
-
-                if (predictedCat != null && parsedConf >= 0.25 && !"OTHER".equalsIgnoreCase(predictedCat)) {
-                    String currentCat = saved.getCategory();
-                    if (currentCat == null || currentCat.trim().isEmpty() || 
-                        "Other".equalsIgnoreCase(currentCat.trim()) || 
-                        "AUTO".equalsIgnoreCase(currentCat.trim()) ||
-                        "Auto-Detect".equalsIgnoreCase(currentCat.trim())) {
-                        saved.setCategory(predictedCat.toUpperCase().trim());
-                    }
-                }
-            }
-
-            // 2. Duplicate Detection
-            final String currentComplaintId = saved.getId();
-            List<Complaint> activeComplaints;
-            if (saved.getWard() != null && !saved.getWard().trim().isEmpty()) {
-                LocalDateTime ninetyDaysAgo = LocalDateTime.now().minusDays(90);
-                activeComplaints = complaintRepository.findRecentActiveComplaintsByWard(
-                    saved.getWard().trim(),
-                    ninetyDaysAgo,
-                    org.springframework.data.domain.PageRequest.of(0, 200)
-                ).stream()
-                 .filter(c -> c != null && c.getId() != null && !c.getId().equals(currentComplaintId))
-                 .toList();
-            } else {
-                activeComplaints = java.util.Collections.emptyList();
-            }
-
-            if (!activeComplaints.isEmpty()) {
-                Map<String, Object> dupReq = new HashMap<>();
-                String newFullText = (saved.getTitle() != null && !saved.getTitle().trim().isEmpty() ? saved.getTitle().trim() + ". " : "") + 
-                                     (saved.getDescription() != null ? saved.getDescription().trim() : "");
-                dupReq.put("new_complaint", newFullText);
-                dupReq.put("new_ward", saved.getWard());
-                dupReq.put("new_location", saved.getLocationAddress());
-                dupReq.put("new_category", (saved.getCategory() != null && !saved.getCategory().equalsIgnoreCase("Other")) ? saved.getCategory() : (saved.getAiSuggestedCategory() != null ? saved.getAiSuggestedCategory() : ""));
-                dupReq.put("new_created_at", saved.getCreatedAt() != null ? saved.getCreatedAt().toString() : java.time.LocalDateTime.now().toString());
-
-                List<Map<String, String>> existingList = new ArrayList<>();
-                for (Complaint ac : activeComplaints) {
-                    Map<String, String> item = new HashMap<>();
-                    item.put("id", ac.getId());
-                    String acFullText = (ac.getTitle() != null && !ac.getTitle().trim().isEmpty() ? ac.getTitle().trim() + ". " : "") + 
-                                        (ac.getDescription() != null ? ac.getDescription().trim() : "");
-                    item.put("text", acFullText);
-                    item.put("ward", ac.getWard());
-                    item.put("location", ac.getLocationAddress());
-                    String acCat = (ac.getCategory() != null && !ac.getCategory().equalsIgnoreCase("Other")) ? ac.getCategory() : (ac.getAiSuggestedCategory() != null ? ac.getAiSuggestedCategory() : "");
-                    item.put("category", acCat);
-                    item.put("status", ac.getStatus() != null ? ac.getStatus() : "");
-                    item.put("created_at", ac.getCreatedAt() != null ? ac.getCreatedAt().toString() : "");
-                    existingList.add(item);
-                }
-                dupReq.put("existing_complaints", existingList);
-
-                ResponseEntity<Map> dupRes = null;
-                for (String baseUrl : getAiCandidateBaseUrls()) {
-                    String cleanBase = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
-                    for (String endpoint : List.of("/ai/duplicate-check", "/duplicate-check")) {
-                        try {
-                            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-                            headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
-                            if (aiInternalKey != null && !aiInternalKey.trim().isEmpty()) {
-                                headers.set("X-Internal-Key", aiInternalKey.trim());
-                            }
-                            org.springframework.http.HttpEntity<Map<String, Object>> dupEntity = new org.springframework.http.HttpEntity<>(dupReq, headers);
-
-                            dupRes = restTemplate.postForEntity(cleanBase + endpoint, dupEntity, Map.class);
-                            if (dupRes != null && dupRes.getStatusCode().is2xxSuccessful() && dupRes.getBody() != null) {
-                                break;
-                            }
-                        } catch (Exception ex) {
-                            logger.debug("AI duplicate check attempt failed at {}{}: {}", cleanBase, endpoint, ex.getMessage());
-                        }
-                    }
-                    if (dupRes != null && dupRes.getStatusCode().is2xxSuccessful() && dupRes.getBody() != null) {
-                        break;
-                    }
-                }
-
-                if (dupRes != null && dupRes.getStatusCode().is2xxSuccessful() && dupRes.getBody() != null) {
-                    Map<String, Object> body = dupRes.getBody();
-                    String possId = (String) body.get("possible_duplicate_id");
-                    Object sim = body.get("similarity");
-                    if (possId != null) {
-                        saved.setPossibleDuplicateId(possId);
-                        if (sim instanceof Number) {
-                            saved.setDuplicateSimilarityScore(((Number) sim).doubleValue());
-                        }
-                    }
-                }
+                applyBuiltInClassificationFallback(saved, classificationText);
             }
         } catch (Exception e) {
-            logger.warn("Remote AI service unreachable — using embedded civic classification engine: {}", e.getMessage());
-            String fallbackText = (saved.getTitle() != null && !saved.getTitle().trim().isEmpty() ? saved.getTitle().trim() + ". " : "") + 
-                                  (saved.getDescription() != null ? saved.getDescription().trim() : "");
-            Map<String, Object> fallback = classifyWithBuiltInCivicEngine(fallbackText);
-            String fbCat = (String) fallback.get("category");
-            double fbConf = ((Number) fallback.get("confidence")).doubleValue();
-            saved.setAiSuggestedCategory(fbCat);
-            saved.setAiConfidence(fbConf);
-            saved.setAiModel((String) fallback.get("model"));
-            saved.setAiStatus("COMPLETED");
+            logger.warn("Remote AI classification failed, using built-in civic engine: {}", e.getMessage());
+            String classificationText = (saved.getTitle() != null && !saved.getTitle().trim().isEmpty() ? saved.getTitle().trim() + ". " : "") + 
+                                       (saved.getDescription() != null ? saved.getDescription().trim() : "");
+            applyBuiltInClassificationFallback(saved, classificationText);
+        }
 
-            if (fbCat != null && fbConf >= 0.25 && !"OTHER".equalsIgnoreCase(fbCat)) {
-                String currentCat = saved.getCategory();
-                if (currentCat == null || currentCat.trim().isEmpty() || 
-                    "Other".equalsIgnoreCase(currentCat.trim()) || 
-                    "AUTO".equalsIgnoreCase(currentCat.trim()) ||
-                    "Auto-Detect".equalsIgnoreCase(currentCat.trim())) {
-                    saved.setCategory(fbCat.toUpperCase().trim());
-                }
-            }
+        // 2. High-Accuracy Duplicate Detection (Dual-Engine: Embedded Semantic Proximity + Remote AI)
+        try {
+            runDuplicateDetection(saved);
+        } catch (Exception e) {
+            logger.warn("Duplicate detection encountered an error: {}", e.getMessage(), e);
         }
 
         // Second save: persist AI enrichment results onto the already-created entity
@@ -559,6 +458,520 @@ public class ComplaintService {
             return "HIGH";
         }
         return "MEDIUM";
+    }
+
+    private void applyBuiltInClassificationFallback(Complaint saved, String classificationText) {
+        Map<String, Object> fallback = classifyWithBuiltInCivicEngine(classificationText);
+        String predictedCat = (String) fallback.get("category");
+        double parsedConf = ((Number) fallback.get("confidence")).doubleValue();
+        saved.setAiSuggestedCategory(predictedCat);
+        saved.setAiConfidence(parsedConf);
+        saved.setAiModel((String) fallback.get("model"));
+        saved.setAiStatus("COMPLETED");
+
+        if (predictedCat != null && parsedConf >= 0.25 && !"OTHER".equalsIgnoreCase(predictedCat)) {
+            String currentCat = saved.getCategory();
+            if (currentCat == null || currentCat.trim().isEmpty() || 
+                "Other".equalsIgnoreCase(currentCat.trim()) || 
+                "AUTO".equalsIgnoreCase(currentCat.trim()) ||
+                "Auto-Detect".equalsIgnoreCase(currentCat.trim())) {
+                saved.setCategory(predictedCat.toUpperCase().trim());
+            }
+        }
+    }
+
+    public static class DuplicateResult {
+        private final String masterId;
+        private final double score;
+        private final String matchReason;
+
+        public DuplicateResult(String masterId, double score, String matchReason) {
+            this.masterId = masterId;
+            this.score = score;
+            this.matchReason = matchReason;
+        }
+
+        public String getMasterId() { return masterId; }
+        public double getScore() { return score; }
+        public String getMatchReason() { return matchReason; }
+    }
+
+    private static final Set<String> STOP_WORDS = Set.of(
+        "the", "is", "at", "which", "on", "a", "an", "and", "or", "in", "near", "to",
+        "for", "of", "from", "by", "with", "it", "this", "that", "there", "very", "please",
+        "has", "have", "been", "my", "our", "are", "was", "were", "sir", "madam",
+        "complaint", "issue", "problem", "kindly", "request", "help", "urgently", "action",
+        "take", "area", "ward", "colony", "block", "nagar"
+    );
+
+    private static final Set<String> CIVIC_HIGH_WEIGHT_KEYWORDS = Set.of(
+        "pothole", "potholes", "crater", "craters", "asphalt", "tar", "road", "street", "crack", "cracks", "patchwork", "divider", "speedbreaker",
+        "pipe", "pipeline", "leak", "leakage", "burst", "water", "drinking", "contamination", "dirty", "smell", "pressure", "valve", "tank", "tap",
+        "light", "lamp", "streetlight", "pole", "dark", "darkness", "bulb", "flicker", "flickering", "wiring", "shortcircuit", "illumination",
+        "garbage", "trash", "waste", "dump", "dumping", "bin", "dustbin", "overflow", "litter", "debris", "stench", "cleaning", "sweeping",
+        "drain", "drainage", "clog", "clogged", "sewer", "sewage", "gutter", "manhole", "nullah", "waterlogging", "water logging", "stagnant"
+    );
+
+    public void runDuplicateDetection(Complaint saved) {
+        final String currentComplaintId = saved.getId();
+        LocalDateTime sixMonthsAgo = LocalDateTime.now().minusDays(180);
+        double[] savedCoords = extractCoordinates(saved.getLocationAddress());
+        
+        List<Complaint> rawCandidates = complaintRepository.findRecentActiveComplaints(sixMonthsAgo);
+        if (rawCandidates == null || rawCandidates.isEmpty()) {
+            rawCandidates = complaintRepository.findRecentActiveComplaintsByWard(
+                saved.getWard() != null ? saved.getWard().trim() : "",
+                sixMonthsAgo,
+                org.springframework.data.domain.PageRequest.of(0, 200)
+            );
+        }
+        if (rawCandidates == null || rawCandidates.isEmpty()) {
+            rawCandidates = complaintRepository.findActiveComplaints();
+        }
+        if (rawCandidates == null) {
+            rawCandidates = Collections.emptyList();
+        }
+
+        List<Complaint> candidates = rawCandidates.stream()
+            .filter(c -> c != null && c.getId() != null && !c.getId().equals(currentComplaintId))
+            .filter(c -> {
+                if (saved.getWard() == null || saved.getWard().trim().isEmpty() ||
+                    c.getWard() == null || c.getWard().trim().isEmpty()) {
+                    return true;
+                }
+                if (checkWardsMatch(c.getWard(), saved.getWard())) {
+                    return true;
+                }
+                double[] cCoords = extractCoordinates(c.getLocationAddress());
+                if (savedCoords != null && cCoords != null) {
+                    return calculateHaversineMeters(savedCoords[0], savedCoords[1],
+                                                   cCoords[0], cCoords[1]) < 500.0;
+                }
+                return false;
+            })
+            .toList();
+
+        DuplicateResult builtInResult = detectDuplicateWithBuiltInCivicEngine(saved, candidates);
+
+        String bestDuplicateId = null;
+        Double bestScore = null;
+
+        if (builtInResult != null) {
+            bestDuplicateId = builtInResult.getMasterId();
+            bestScore = builtInResult.getScore();
+        }
+
+        // Also query remote AI microservice if accessible
+        if (!candidates.isEmpty()) {
+            try {
+                Map<String, Object> dupReq = new HashMap<>();
+                String newFullText = (saved.getTitle() != null && !saved.getTitle().trim().isEmpty() ? saved.getTitle().trim() + ". " : "") + 
+                                     (saved.getDescription() != null ? saved.getDescription().trim() : "");
+                dupReq.put("new_complaint", newFullText);
+                dupReq.put("new_ward", saved.getWard());
+                dupReq.put("new_location", saved.getLocationAddress());
+                if (savedCoords != null) {
+                    dupReq.put("new_latitude", savedCoords[0]);
+                    dupReq.put("new_longitude", savedCoords[1]);
+                }
+                dupReq.put("new_category", resolveEffectiveCategory(saved));
+                dupReq.put("new_created_at", saved.getCreatedAt() != null ? saved.getCreatedAt().toString() : java.time.LocalDateTime.now().toString());
+
+                List<Map<String, Object>> existingList = new ArrayList<>();
+                for (Complaint ac : candidates) {
+                    Map<String, Object> item = new HashMap<>();
+                    item.put("id", ac.getId());
+                    String acFullText = (ac.getTitle() != null && !ac.getTitle().trim().isEmpty() ? ac.getTitle().trim() + ". " : "") + 
+                                        (ac.getDescription() != null ? ac.getDescription().trim() : "");
+                    item.put("text", acFullText);
+                    item.put("ward", ac.getWard());
+                    item.put("location", ac.getLocationAddress());
+                    double[] acCoords = extractCoordinates(ac.getLocationAddress());
+                    if (acCoords != null) {
+                        item.put("latitude", acCoords[0]);
+                        item.put("longitude", acCoords[1]);
+                    }
+                    item.put("category", resolveEffectiveCategory(ac));
+                    item.put("status", ac.getStatus() != null ? ac.getStatus() : "");
+                    item.put("created_at", ac.getCreatedAt() != null ? ac.getCreatedAt().toString() : "");
+                    existingList.add(item);
+                }
+                dupReq.put("existing_complaints", existingList);
+
+                ResponseEntity<Map> dupRes = null;
+                for (String baseUrl : getAiCandidateBaseUrls()) {
+                    String cleanBase = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+                    for (String endpoint : List.of("/ai/duplicate-check", "/duplicate-check")) {
+                        try {
+                            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+                            headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+                            if (aiInternalKey != null && !aiInternalKey.trim().isEmpty()) {
+                                headers.set("X-Internal-Key", aiInternalKey.trim());
+                            }
+                            org.springframework.http.HttpEntity<Map<String, Object>> dupEntity = new org.springframework.http.HttpEntity<>(dupReq, headers);
+                            dupRes = restTemplate.postForEntity(cleanBase + endpoint, dupEntity, Map.class);
+                            if (dupRes != null && dupRes.getStatusCode().is2xxSuccessful() && dupRes.getBody() != null) {
+                                break;
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                    if (dupRes != null && dupRes.getStatusCode().is2xxSuccessful() && dupRes.getBody() != null) {
+                        break;
+                    }
+                }
+
+                if (dupRes != null && dupRes.getStatusCode().is2xxSuccessful() && dupRes.getBody() != null) {
+                    Map<String, Object> body = dupRes.getBody();
+                    String possId = (String) body.get("possible_duplicate_id");
+                    Object sim = body.get("similarity");
+                    if (possId != null && sim instanceof Number) {
+                        double aiScore = ((Number) sim).doubleValue();
+                        if (bestScore == null || aiScore > bestScore) {
+                            bestDuplicateId = possId;
+                            bestScore = aiScore;
+                        }
+                    }
+                }
+            } catch (Exception ex) {
+                logger.debug("Remote AI duplicate check invocation skipped/failed: {}", ex.getMessage());
+            }
+        }
+
+        if (bestDuplicateId != null) {
+            saved.setPossibleDuplicateId(bestDuplicateId);
+            saved.setDuplicateSimilarityScore(bestScore);
+            logger.info("Complaint #{} flagged as duplicate of {} with similarity score {}",
+                saved.getTrackingNumber(), bestDuplicateId, bestScore);
+        }
+    }
+
+    public DuplicateResult detectDuplicateWithBuiltInCivicEngine(Complaint newComp, List<Complaint> existingComplaints) {
+        if (newComp == null || existingComplaints == null || existingComplaints.isEmpty()) {
+            return null;
+        }
+
+        String newFullText = (newComp.getTitle() != null ? newComp.getTitle() + ". " : "") +
+                             (newComp.getDescription() != null ? newComp.getDescription() : "");
+        String newLoc = newComp.getLocationAddress();
+        String newCat = resolveEffectiveCategory(newComp);
+
+        Complaint bestMatch = null;
+        double highestScore = 0.0;
+        String bestReason = "";
+
+        for (Complaint ex : existingComplaints) {
+            if (ex.getId() == null || ex.getId().equals(newComp.getId())) continue;
+
+            // 1. Text Similarity
+            String exFullText = (ex.getTitle() != null ? ex.getTitle() + ". " : "") +
+                                (ex.getDescription() != null ? ex.getDescription() : "");
+            double textSim = calculateCivicTextSimilarity(newFullText, exFullText);
+
+            // 2. Location Similarity (GPS or Address)
+            double locSim = 0.0;
+            boolean hasGps = false;
+            double[] c1 = extractCoordinates(newLoc);
+            double[] c2 = extractCoordinates(ex.getLocationAddress());
+            if (c1 != null && c2 != null) {
+                hasGps = true;
+                double dist = calculateHaversineMeters(c1[0], c1[1], c2[0], c2[1]);
+                if (dist < 40.0) locSim = 1.0;
+                else if (dist < 100.0) locSim = 0.88;
+                else if (dist < 200.0) locSim = 0.72;
+                else if (dist < 400.0) locSim = 0.50;
+                else if (dist < 800.0) locSim = 0.25;
+                else locSim = 0.05;
+            } else {
+                locSim = calculateAddressSimilarity(newLoc, ex.getLocationAddress());
+            }
+
+            // 3. Category Match
+            String exCat = resolveEffectiveCategory(ex);
+            double catModifier = 0.0;
+            if (!newCat.isEmpty() && !exCat.isEmpty() && !"OTHER".equals(newCat) && !"OTHER".equals(exCat)) {
+                if (newCat.equalsIgnoreCase(exCat)) {
+                    catModifier = 0.15;
+                } else if (isRelatedCategory(newCat, exCat)) {
+                    catModifier = 0.05;
+                } else {
+                    catModifier = -0.20;
+                }
+            }
+
+            // 4. Temporal Proximity
+            double timeModifier = 0.0;
+            if (newComp.getCreatedAt() != null && ex.getCreatedAt() != null) {
+                long hoursBetween = Math.abs(Duration.between(newComp.getCreatedAt(), ex.getCreatedAt()).toHours());
+                if (hoursBetween <= 48) timeModifier = 0.10;
+                else if (hoursBetween <= 168) timeModifier = 0.05;
+                else if (hoursBetween > 1440) timeModifier = -0.05;
+            }
+
+            // 5. Final Combined Score Calculation
+            double totalScore;
+            if (hasGps && locSim >= 0.70) {
+                totalScore = (0.45 * textSim) + (0.40 * locSim) + catModifier + timeModifier;
+                if (textSim >= 0.35 && (catModifier >= 0.0)) {
+                    totalScore = Math.max(totalScore, 0.75 + (0.20 * textSim));
+                }
+            } else if (locSim >= 0.40) {
+                totalScore = (0.45 * textSim) + (0.35 * locSim) + catModifier + timeModifier;
+            } else {
+                totalScore = (0.75 * textSim) + (0.10 * locSim) + catModifier + timeModifier;
+            }
+
+            if (textSim >= 0.65) {
+                totalScore = Math.max(totalScore, textSim + 0.10);
+            }
+
+            totalScore = Math.max(0.0, Math.min(0.99, totalScore));
+
+            if (totalScore > highestScore) {
+                highestScore = totalScore;
+                bestMatch = ex;
+                bestReason = String.format("Match with #%s (Text: %.0f%%, Location: %.0f%%)",
+                    ex.getTrackingNumber(), textSim * 100, locSim * 100);
+            }
+        }
+
+        // Calibrated duplicate threshold: 0.48 (48%)
+        if (highestScore >= 0.48 && bestMatch != null) {
+            return new DuplicateResult(bestMatch.getId(), Math.round(highestScore * 100.0) / 100.0, bestReason);
+        }
+        return null;
+    }
+
+    public Complaint evaluateAndSaveDuplicateCheck(String complaintId) {
+        Complaint complaint = complaintRepository.findById(complaintId)
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with ID: " + complaintId));
+        
+        LocalDateTime sixMonthsAgo = LocalDateTime.now().minusDays(180);
+        double[] compCoords = extractCoordinates(complaint.getLocationAddress());
+
+        List<Complaint> rawCandidates = complaintRepository.findRecentActiveComplaints(sixMonthsAgo);
+        if (rawCandidates == null || rawCandidates.isEmpty()) {
+            rawCandidates = complaintRepository.findRecentActiveComplaintsByWard(
+                complaint.getWard() != null ? complaint.getWard().trim() : "",
+                sixMonthsAgo,
+                org.springframework.data.domain.PageRequest.of(0, 200)
+            );
+        }
+        if (rawCandidates == null || rawCandidates.isEmpty()) {
+            rawCandidates = complaintRepository.findActiveComplaints();
+        }
+        if (rawCandidates == null) {
+            rawCandidates = Collections.emptyList();
+        }
+
+        List<Complaint> candidates = rawCandidates.stream()
+                .filter(c -> c != null && c.getId() != null && !c.getId().equals(complaint.getId()))
+                .filter(c -> {
+                    if (complaint.getWard() == null || complaint.getWard().trim().isEmpty() ||
+                        c.getWard() == null || c.getWard().trim().isEmpty()) {
+                        return true;
+                    }
+                    if (checkWardsMatch(c.getWard(), complaint.getWard())) {
+                        return true;
+                    }
+                    double[] cCoords = extractCoordinates(c.getLocationAddress());
+                    if (compCoords != null && cCoords != null) {
+                        return calculateHaversineMeters(compCoords[0], compCoords[1],
+                                                       cCoords[0], cCoords[1]) < 500.0;
+                    }
+                    return false;
+                })
+                .toList();
+
+        DuplicateResult result = detectDuplicateWithBuiltInCivicEngine(complaint, candidates);
+        if (result != null) {
+            complaint.setPossibleDuplicateId(result.getMasterId());
+            complaint.setDuplicateSimilarityScore(result.getScore());
+            return complaintRepository.save(complaint);
+        } else {
+            if (complaint.getPossibleDuplicateId() != null && (complaint.getIsDuplicateConfirmed() == null || !complaint.getIsDuplicateConfirmed())) {
+                complaint.setPossibleDuplicateId(null);
+                complaint.setDuplicateSimilarityScore(null);
+                return complaintRepository.save(complaint);
+            }
+            return complaint;
+        }
+    }
+
+    public static double[] extractCoordinates(String location) {
+        if (location == null) return null;
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("(-?\\d{1,3}\\.\\d{4,})[\\s,]+(-?\\d{1,3}\\.\\d{4,})").matcher(location);
+        if (m.find()) {
+            try {
+                return new double[] { Double.parseDouble(m.group(1)), Double.parseDouble(m.group(2)) };
+            } catch (Exception ignored) {}
+        }
+        return null;
+    }
+
+    public static double calculateHaversineMeters(double lat1, double lon1, double lat2, double lon2) {
+        final double R = 6371000.0;
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                   Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                   Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+
+    private double calculateCivicTextSimilarity(String text1, String text2) {
+        if (text1 == null || text2 == null) return 0.0;
+        Set<String> t1 = extractMeaningfulTokens(text1);
+        Set<String> t2 = extractMeaningfulTokens(text2);
+        if (t1.isEmpty() || t2.isEmpty()) return 0.0;
+
+        Set<String> inter = new HashSet<>(t1);
+        inter.retainAll(t2);
+        Set<String> union = new HashSet<>(t1);
+        union.addAll(t2);
+
+        double jaccard = (double) inter.size() / union.size();
+        double overlap = (double) inter.size() / Math.min(t1.size(), t2.size());
+
+        int civicMatches = 0;
+        int totalCivicTerms = 0;
+        for (String token : union) {
+            if (CIVIC_HIGH_WEIGHT_KEYWORDS.contains(token)) {
+                totalCivicTerms++;
+                if (inter.contains(token)) {
+                    civicMatches++;
+                }
+            }
+        }
+        double civicWeight = totalCivicTerms > 0 ? ((double) civicMatches / totalCivicTerms) : 0.0;
+        double bigramScore = calculateBigramSimilarity(text1, text2);
+
+        return (0.30 * jaccard) + (0.30 * overlap) + (0.25 * civicWeight) + (0.15 * bigramScore);
+    }
+
+    private double calculateAddressSimilarity(String addr1, String addr2) {
+        if (addr1 == null || addr2 == null) return 0.0;
+        String s1 = addr1.toLowerCase().replaceAll("[^a-z0-9\\s]", " ").trim();
+        String s2 = addr2.toLowerCase().replaceAll("[^a-z0-9\\s]", " ").trim();
+        if (s1.isEmpty() || s2.isEmpty()) return 0.0;
+        if (s1.equals(s2)) return 1.0;
+
+        Set<String> t1 = extractMeaningfulTokens(s1);
+        Set<String> t2 = extractMeaningfulTokens(s2);
+        if (t1.isEmpty() || t2.isEmpty()) return 0.0;
+
+        Set<String> inter = new HashSet<>(t1);
+        inter.retainAll(t2);
+        Set<String> union = new HashSet<>(t1);
+        union.addAll(t2);
+
+        double jaccard = (double) inter.size() / union.size();
+        double overlap = (double) inter.size() / Math.min(t1.size(), t2.size());
+
+        Set<String> num1 = extractDigits(s1);
+        Set<String> num2 = extractDigits(s2);
+        boolean numbersMatch = !num1.isEmpty() && !num2.isEmpty() && hasCommonElement(num1, num2);
+
+        double score = 0.5 * jaccard + 0.5 * overlap;
+        if (numbersMatch && score > 0.25) {
+            score = Math.min(1.0, score + 0.20);
+        }
+        return score;
+    }
+
+    private double calculateBigramSimilarity(String text1, String text2) {
+        if (text1 == null || text2 == null) return 0.0;
+        List<String> b1 = extractBigrams(text1);
+        List<String> b2 = extractBigrams(text2);
+        if (b1.isEmpty() || b2.isEmpty()) return 0.0;
+        Set<String> set1 = new HashSet<>(b1);
+        Set<String> set2 = new HashSet<>(b2);
+        Set<String> inter = new HashSet<>(set1);
+        inter.retainAll(set2);
+        return (double) inter.size() / Math.max(1, Math.min(set1.size(), set2.size()));
+    }
+
+    private List<String> extractBigrams(String text) {
+        String normalized = text.toLowerCase().replaceAll("[^a-z0-9\\s]", " ").trim();
+        String[] words = normalized.split("\\s+");
+        List<String> bigrams = new ArrayList<>();
+        for (int i = 0; i < words.length - 1; i++) {
+            if (words[i].length() > 2 && words[i+1].length() > 2) {
+                bigrams.add(words[i] + " " + words[i+1]);
+            }
+        }
+        return bigrams;
+    }
+
+    private Set<String> extractMeaningfulTokens(String text) {
+        if (text == null || text.trim().isEmpty()) return Collections.emptySet();
+        String normalized = text.toLowerCase().replaceAll("[^a-z0-9\\s]", " ");
+        String[] words = normalized.split("\\s+");
+        Set<String> tokens = new HashSet<>();
+        for (String w : words) {
+            String trimmed = w.trim();
+            if (trimmed.length() > 2 && !STOP_WORDS.contains(trimmed)) {
+                tokens.add(trimmed);
+            }
+        }
+        return tokens;
+    }
+
+    private Set<String> extractDigits(String text) {
+        if (text == null) return Collections.emptySet();
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("\\b\\d+\\b").matcher(text);
+        Set<String> digits = new HashSet<>();
+        while (m.find()) {
+            digits.add(m.group());
+        }
+        return digits;
+    }
+
+    private boolean hasCommonElement(Set<String> s1, Set<String> s2) {
+        for (String item : s1) {
+            if (s2.contains(item)) return true;
+        }
+        return false;
+    }
+
+    private String resolveEffectiveCategory(Complaint c) {
+        if (c == null) return "";
+        if (c.getCategory() != null && !c.getCategory().trim().isEmpty() &&
+            !"Other".equalsIgnoreCase(c.getCategory().trim()) &&
+            !"Auto-Detect".equalsIgnoreCase(c.getCategory().trim()) &&
+            !"AUTO".equalsIgnoreCase(c.getCategory().trim())) {
+            return c.getCategory().trim().toUpperCase();
+        }
+        if (c.getAiSuggestedCategory() != null && !c.getAiSuggestedCategory().trim().isEmpty() &&
+            !"OTHER".equalsIgnoreCase(c.getAiSuggestedCategory().trim())) {
+            return c.getAiSuggestedCategory().trim().toUpperCase();
+        }
+        return "";
+    }
+
+    private boolean isRelatedCategory(String cat1, String cat2) {
+        if (cat1.equalsIgnoreCase(cat2)) return true;
+        Set<String> roadDrainage = Set.of("ROAD", "DRAINAGE");
+        if (roadDrainage.contains(cat1) && roadDrainage.contains(cat2)) return true;
+        Set<String> wastePublic = Set.of("WASTE_MANAGEMENT", "PUBLIC_SPACE");
+        if (wastePublic.contains(cat1) && wastePublic.contains(cat2)) return true;
+        return false;
+    }
+
+    private boolean checkWardsMatch(String wardA, String wardB) {
+        if (accessGuard != null) {
+            return accessGuard.isSameWard(wardA, wardB);
+        }
+        if (wardA == null || wardB == null) return false;
+        String a = wardA.trim().toLowerCase();
+        String b = wardB.trim().toLowerCase();
+        if (a.equals(b) || a.contains(b) || b.contains(a)) return true;
+        java.util.regex.Matcher m1 = java.util.regex.Pattern.compile("\\d+").matcher(a);
+        java.util.regex.Matcher m2 = java.util.regex.Pattern.compile("\\d+").matcher(b);
+        if (m1.find() && m2.find()) {
+            return m1.group().equals(m2.group());
+        }
+        return false;
     }
 
     public Complaint reviewAiCategory(String id, String category, String councillorId, String councillorName) {

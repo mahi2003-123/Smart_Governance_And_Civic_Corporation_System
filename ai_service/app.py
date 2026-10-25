@@ -85,6 +85,8 @@ class DuplicateCheckInput(BaseModel):
     new_complaint: str
     new_ward: Optional[str] = ""
     new_location: Optional[str] = ""
+    new_latitude: Optional[float] = None
+    new_longitude: Optional[float] = None
     new_category: Optional[str] = ""
     new_created_at: Optional[str] = ""
     existing_complaints: List[Dict[str, Any]]
@@ -259,11 +261,40 @@ def duplicate_check(data: DuplicateCheckInput):
             loc_seq = calc_string_similarity(normalize_text(new_loc), normalize_text(c_loc))
             loc_score = max(loc_jaccard, loc_overlap * 0.9, loc_seq)
 
+        # GPS coordinate proximity (Haversine)
+        c_lat = c.get('latitude')
+        c_lon = c.get('longitude')
+        gps_score = 0.0
+        if data.new_latitude is not None and data.new_longitude is not None and c_lat is not None and c_lon is not None:
+            try:
+                import math
+                lat1, lon1 = float(data.new_latitude), float(data.new_longitude)
+                lat2, lon2 = float(c_lat), float(c_lon)
+                dlat = math.radians(lat2 - lat1)
+                dlon = math.radians(lon2 - lon1)
+                a = math.sin(dlat/2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon/2)**2
+                dist_m = 6371000 * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+                if dist_m < 50: gps_score = 1.0
+                elif dist_m < 150: gps_score = 0.85
+                elif dist_m < 300: gps_score = 0.65
+                elif dist_m < 600: gps_score = 0.40
+                else: gps_score = 0.10
+                loc_score = max(loc_score, gps_score)
+                has_location = True
+            except Exception:
+                pass
+
         # 3. Category Match
         c_cat = str(c.get('category', '') or "").strip().upper()
         cat_match = 0.0
         if new_cat and c_cat and new_cat != 'OTHER' and c_cat != 'OTHER':
-            cat_match = 0.15 if new_cat == c_cat else -0.20
+            if new_cat == c_cat:
+                cat_match = 0.15
+            elif (new_cat in ['ROAD', 'DRAINAGE'] and c_cat in ['ROAD', 'DRAINAGE']) or \
+                 (new_cat in ['WASTE_MANAGEMENT', 'PUBLIC_SPACE'] and c_cat in ['WASTE_MANAGEMENT', 'PUBLIC_SPACE']):
+                cat_match = 0.05
+            else:
+                cat_match = -0.10
 
         # 4. Status Boost (active issues are more likely duplicates than closed ones)
         c_status = str(c.get('status', '') or "").strip().upper()

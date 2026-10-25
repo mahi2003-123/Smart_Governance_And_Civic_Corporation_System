@@ -397,6 +397,16 @@ export const complaintService = {
     }
   },
 
+  checkDuplicate: async (id: string): Promise<Complaint> => {
+    try {
+      const res = await api.post(`/complaints/${id}/check-duplicate`);
+      invalidateComplaintCache();
+      return mapComplaint(res.data);
+    } catch (err: any) {
+      throw new Error(err.response?.data?.error || err.message || 'Failed to check duplicates.');
+    }
+  },
+
   predictCategory: async (title: string, description: string): Promise<{ category: string; confidence: number; priority?: string; model?: string }> => {
     try {
       const res = await api.post('/complaints/predict-category', { title, description });

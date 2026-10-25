@@ -262,9 +262,17 @@ export const ManageComplaints: React.FC = () => {
                   <TableRow key={row.id} hover sx={{ '&:hover': { bgcolor: '#F8F9F7' }, borderBottom: '1px solid #F3F5F2' }}>
                     <TableCell>
                       <Typography variant="body2" sx={{ fontWeight: 700, color: '#304B3A' }}>{row.trackingNumber}</Typography>
-                      {row.aiSuggestedCategory && !row.isAiCategoryAccepted && (
-                         <Chip label="AI Review" size="small" sx={{ mt: 0.5, height: '18px', fontSize: '10px', bgcolor: '#DCFCE7', color: '#166534', fontWeight: 600 }} />
-                      )}
+                      <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
+                        {row.aiSuggestedCategory && !row.isAiCategoryAccepted && (
+                           <Chip label="AI Review" size="small" sx={{ height: '18px', fontSize: '10px', bgcolor: '#DCFCE7', color: '#166534', fontWeight: 600 }} />
+                        )}
+                        {row.possibleDuplicateId && !row.isDuplicateConfirmed && (
+                           <Chip label={`Dup? ${Math.round((row.duplicateSimilarityScore || 0) * 100)}%`} size="small" sx={{ height: '18px', fontSize: '10px', bgcolor: '#FEF3C7', color: '#92400E', fontWeight: 700 }} />
+                        )}
+                        {row.status === 'LINKED' && (
+                           <Chip label="Linked Dup" size="small" sx={{ height: '18px', fontSize: '10px', bgcolor: '#EFF6FF', color: '#1D4ED8', fontWeight: 600 }} />
+                        )}
+                      </Box>
                     </TableCell>
                     <TableCell>
                       <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#202522' }}>{row.title}</Typography>
