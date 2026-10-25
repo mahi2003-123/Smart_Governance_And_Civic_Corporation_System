@@ -27,8 +27,8 @@ interface ComplaintFormProps {
   initialWard?: string;
   onSubmit: (formData: {
     title: string;
-    category: ComplaintCategory;
-    priority: ComplaintPriority;
+    category?: ComplaintCategory;
+    priority?: ComplaintPriority;
     description: string;
     ward: string;
     locationAddress: string;
@@ -43,8 +43,6 @@ export const ComplaintForm: React.FC<ComplaintFormProps> = ({
   onCancel,
 }) => {
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState<ComplaintCategory>('ROAD');
-  const [priority, setPriority] = useState<ComplaintPriority>('HIGH');
   const [description, setDescription] = useState('');
   const [ward, setWard] = useState(initialWard || WARDS_LIST[0]);
   const [locationAddress, setLocationAddress] = useState('');
@@ -81,8 +79,8 @@ export const ComplaintForm: React.FC<ComplaintFormProps> = ({
     try {
       await onSubmit({
         title,
-        category,
-        priority,
+        category: 'OTHER' as ComplaintCategory,
+        priority: 'MEDIUM' as ComplaintPriority,
         description,
         ward,
         locationAddress,
@@ -111,51 +109,27 @@ export const ComplaintForm: React.FC<ComplaintFormProps> = ({
           }}
         />
 
-        <Box display="grid" gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr' }} gap={2.5}>
-          <CustomTextField
-            select
-            label="Grievance Category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value as ComplaintCategory)}
-            required
-            sx={{ mb: 0 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <CategoryIcon sx={{ color: '#6D5B4A' }} />
-                </InputAdornment>
-              ),
-            }}
-          >
-            {COMPLAINT_CATEGORIES.map((cat) => (
-              <MenuItem key={cat} value={cat}>
-                {cat}
-              </MenuItem>
-            ))}
-          </CustomTextField>
-
-          <CustomTextField
-            select
-            label="Municipality Ward"
-            value={ward}
-            onChange={(e) => setWard(e.target.value)}
-            required
-            sx={{ mb: 0 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <BadgeIcon sx={{ color: '#6D5B4A' }} />
-                </InputAdornment>
-              ),
-            }}
-          >
-            {WARDS_LIST.map((w) => (
-              <MenuItem key={w} value={w}>
-                {w}
-              </MenuItem>
-            ))}
-          </CustomTextField>
-        </Box>
+        <CustomTextField
+          select
+          label="Municipality Ward"
+          value={ward}
+          onChange={(e) => setWard(e.target.value)}
+          required
+          sx={{ mb: 0 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <BadgeIcon sx={{ color: '#6D5B4A' }} />
+              </InputAdornment>
+            ),
+          }}
+        >
+          {WARDS_LIST.map((w) => (
+            <MenuItem key={w} value={w}>
+              {w}
+            </MenuItem>
+          ))}
+        </CustomTextField>
 
         <Box>
           <Typography variant="subtitle2" fontWeight={700} mb={1}>

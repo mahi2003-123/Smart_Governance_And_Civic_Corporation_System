@@ -16,7 +16,6 @@ import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { complaintService } from '../../services/complaintService';
-import { WardSelector } from '../../components/common/WardSelector';
 import { ImageUpload } from '../../components/common/ImageUpload';
 
 export const SubmitComplaint: React.FC = () => {
@@ -25,7 +24,7 @@ export const SubmitComplaint: React.FC = () => {
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [ward, setWard] = useState(user?.ward || 'Ward 1 - Central Town');
+  const ward = user?.ward || 'Ward 1 - Central Town';
   const [locationAddress, setLocationAddress] = useState('');
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -44,10 +43,7 @@ export const SubmitComplaint: React.FC = () => {
       return;
     }
 
-    if (!ward) {
-      setError('Please select a ward from the dropdown.');
-      return;
-    }
+    const complaintWard = user?.ward || ward || 'Ward 1 - Central Town';
 
     setLoading(true);
     setError('');
@@ -57,7 +53,7 @@ export const SubmitComplaint: React.FC = () => {
         title: title.trim(),
         category: 'OTHER',
         description: description.trim(),
-        ward,
+        ward: complaintWard,
         locationAddress: locationAddress.trim(),
         priority: 'MEDIUM',
         images,
@@ -210,16 +206,6 @@ export const SubmitComplaint: React.FC = () => {
           />
 
 
-
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr' }, gap: 2.5 }}>
-            <WardSelector
-              value={ward}
-              onChange={(val) => setWard(val)}
-              label="Ward Jurisdiction *"
-              required
-              helperText="Select municipal ward for this complaint"
-            />
-          </Box>
 
           <TextField
             id="complaint-location-input"
