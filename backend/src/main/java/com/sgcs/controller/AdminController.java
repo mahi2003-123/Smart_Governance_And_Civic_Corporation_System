@@ -41,24 +41,17 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getAllUsers());
     }
 
-    // Rule F: separate GET /api/admin/workers (id, fullName, ward, specialization only) for councillors to pick workers in their own ward
+    // Rule F: GET /api/admin/workers (id, fullName, ward, specialization) for assigning workers
     @GetMapping("/workers")
     @PreAuthorize("hasAnyRole('ADMIN', 'COUNCILLOR')")
     public ResponseEntity<List<WorkerSummaryDto>> getWorkers(@RequestParam(required = false) String ward) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        UserPrincipal principal = (auth != null && auth.getPrincipal() instanceof UserPrincipal p) ? p : null;
-
         List<User> allUsers = adminService.getAllUsers();
-        String filterWard = ward;
-        if (principal != null && "COUNCILLOR".equalsIgnoreCase(principal.getRole())) {
-            filterWard = principal.getWard();
-        }
+        final String targetWard = (ward != null && !ward.trim().isEmpty() && !"ALL".equalsIgnoreCase(ward.trim())) ? ward.trim() : null;
 
-        final String targetWard = filterWard;
         List<WorkerSummaryDto> workers = allUsers.stream()
                 .filter(u -> "WORKER".equalsIgnoreCase(u.getRole()))
                 .filter(u -> u.getStatus() == null || "ACTIVE".equalsIgnoreCase(u.getStatus()))
-                .filter(u -> targetWard == null || targetWard.trim().isEmpty() || targetWard.equalsIgnoreCase("ALL") || accessGuard.isSameWard(u.getWard(), targetWard))
+                .filter(u -> targetWard == null || accessGuard.isSameWard(u.getWard(), targetWard))
                 .map(u -> new WorkerSummaryDto(u.getId(), u.getFullName(), u.getWard(), u.getSpecialization() != null ? u.getSpecialization() : "General"))
                 .toList();
 

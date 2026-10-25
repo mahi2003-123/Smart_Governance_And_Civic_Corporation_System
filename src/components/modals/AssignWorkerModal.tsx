@@ -91,7 +91,7 @@ export const AssignWorkerModal: React.FC<AssignWorkerModalProps> = ({
   useEffect(() => {
     const loadRegisteredWorkers = async () => {
       try {
-        let registered = await adminService.getWorkers(currentComplaint?.ward);
+        let registered = await adminService.getWorkers();
         if (!registered || registered.length === 0) {
           try {
             const users = await adminService.getUsers();
@@ -128,7 +128,11 @@ export const AssignWorkerModal: React.FC<AssignWorkerModalProps> = ({
           const sortedWorkers = [...enhancedWorkers].sort((a, b) => b.score - a.score);
           setWorkersList(sortedWorkers);
           if (sortedWorkers.length > 0) {
-            setSelectedWorkerId(sortedWorkers[0].id);
+            if (currentComplaint.assignedWorkerId && sortedWorkers.some(w => w.id === currentComplaint.assignedWorkerId)) {
+              setSelectedWorkerId(currentComplaint.assignedWorkerId);
+            } else {
+              setSelectedWorkerId(sortedWorkers[0].id);
+            }
           }
         }
       } catch (e) {
