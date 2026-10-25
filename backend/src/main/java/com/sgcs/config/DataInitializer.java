@@ -168,13 +168,33 @@ public class DataInitializer implements CommandLineRunner {
             logger.warn("Warning syncing councillors to wards: {}", e.getMessage());
         }
 
-        // 4. Data Seeding Check — strictly bypassed when dataSeedingEnabled is false
+        // 4. Purge any legacy seeded/mock test workers named "Bob Worker" or with "Ward Test" from database
+        try {
+            List<User> mockWorkers = userRepository.findAll().stream()
+                    .filter(u -> {
+                        String name = u.getFullName() != null ? u.getFullName().trim().toLowerCase() : "";
+                        String email = u.getEmail() != null ? u.getEmail().trim().toLowerCase() : "";
+                        String ward = u.getWard() != null ? u.getWard().trim().toLowerCase() : "";
+                        return name.equals("bob worker") || name.startsWith("bob worker") ||
+                               email.contains("worker_179135") || email.contains("@test.com") ||
+                               ward.contains("ward test");
+                    })
+                    .toList();
+            if (!mockWorkers.isEmpty()) {
+                userRepository.deleteAll(mockWorkers);
+                logger.info("Purged {} legacy mock/test 'Bob Worker' records from database.", mockWorkers.size());
+            }
+        } catch (Exception ex) {
+            logger.warn("Could not purge mock workers: {}", ex.getMessage());
+        }
+
+        // 5. Data Seeding Check — strictly bypassed when dataSeedingEnabled is false
         if (!dataSeedingEnabled) {
             logger.info("Data seeding is DISABLED (data.seeding.enabled=false). ZERO mock complaints/proposals will be inserted.");
             return;
         }
 
-        // 5. Seeding block only executes if explicitly enabled
+        // 6. Seeding block only executes if explicitly enabled
         logger.info("Data seeding is explicitly enabled (data.seeding.enabled=true). Processing initial setup...");
 
         logger.info("Database initialization complete.");

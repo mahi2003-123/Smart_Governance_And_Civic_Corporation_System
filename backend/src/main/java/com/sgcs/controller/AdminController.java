@@ -51,11 +51,24 @@ public class AdminController {
         List<WorkerSummaryDto> workers = allUsers.stream()
                 .filter(u -> "WORKER".equalsIgnoreCase(u.getRole()))
                 .filter(u -> u.getStatus() == null || "ACTIVE".equalsIgnoreCase(u.getStatus()))
+                .filter(u -> !isSeededOrMockWorker(u))
                 .filter(u -> targetWard == null || accessGuard.isSameWard(u.getWard(), targetWard))
                 .map(u -> new WorkerSummaryDto(u.getId(), u.getFullName(), u.getWard(), u.getSpecialization() != null ? u.getSpecialization() : "General"))
                 .toList();
 
         return ResponseEntity.ok(workers);
+    }
+
+    private boolean isSeededOrMockWorker(User u) {
+        if (u == null) return false;
+        String name = u.getFullName() != null ? u.getFullName().trim().toLowerCase() : "";
+        String email = u.getEmail() != null ? u.getEmail().trim().toLowerCase() : "";
+        String ward = u.getWard() != null ? u.getWard().trim().toLowerCase() : "";
+        return name.equals("bob worker") ||
+               name.startsWith("bob worker") ||
+               email.contains("worker_179135") ||
+               email.contains("@test.com") ||
+               ward.contains("ward test");
     }
 
     @PostMapping("/users")

@@ -55,7 +55,20 @@ export const adminService = {
     try {
       const res = await api.get('/admin/workers', { params: { ward } });
       if (res.data && Array.isArray(res.data)) {
-        return res.data.map((u: any) => ({ ...u, role: 'WORKER', status: 'ACTIVE' }));
+        return res.data
+          .filter((u: any) => {
+            const name = String(u?.fullName || u?.name || '').trim().toLowerCase();
+            const email = String(u?.email || '').trim().toLowerCase();
+            const w = String(u?.ward || '').trim().toLowerCase();
+            return !(
+              name === 'bob worker' ||
+              name.startsWith('bob worker') ||
+              email.includes('worker_179135') ||
+              email.includes('@test.com') ||
+              w.includes('ward test')
+            );
+          })
+          .map((u: any) => ({ ...u, role: 'WORKER', status: 'ACTIVE' }));
       }
     } catch (err: any) {
       console.warn('[adminService] Backend worker fetch error:', err);

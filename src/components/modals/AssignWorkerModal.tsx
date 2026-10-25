@@ -39,6 +39,19 @@ interface AssignWorkerModalProps {
   onComplaintUpdated?: (complaint: Complaint) => void;
 }
 
+const isSeededBobWorker = (w: any) => {
+  const name = String(w?.fullName || w?.name || '').trim().toLowerCase();
+  const email = String(w?.email || '').trim().toLowerCase();
+  const ward = String(w?.ward || '').trim().toLowerCase();
+  return (
+    name === 'bob worker' ||
+    name.startsWith('bob worker') ||
+    email.includes('worker_179135') ||
+    email.includes('@test.com') ||
+    ward.includes('ward test')
+  );
+};
+
 export const AssignWorkerModal: React.FC<AssignWorkerModalProps> = ({
   open,
   complaint,
@@ -98,6 +111,9 @@ export const AssignWorkerModal: React.FC<AssignWorkerModalProps> = ({
             registered = users.filter((u) => u.role === 'WORKER' && (u.status || 'ACTIVE') === 'ACTIVE');
           } catch {}
         }
+        
+        // Remove all seeded/mock test workers named "Bob Worker"
+        registered = (registered || []).filter((w) => !isSeededBobWorker(w));
         
         if (registered.length > 0 && currentComplaint) {
           const finalCategory = activeCategory;
