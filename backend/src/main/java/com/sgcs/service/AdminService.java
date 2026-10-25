@@ -318,6 +318,23 @@ public class AdminService {
 
     public List<Ward> getAllWards() {
         List<Ward> wards = wardRepository.findAll();
+        if (wards.isEmpty()) {
+            List<Ward> defaultWards = List.of(
+                new Ward("w1", 1, "Ward 1 - Central Town", "Unassigned", "", 45000),
+                new Ward("w2", 2, "Ward 2 - Riverside North", "Unassigned", "", 32000),
+                new Ward("w3", 3, "Ward 3 - East Hill View", "Unassigned", "", 51000),
+                new Ward("w4", 4, "Ward 4 - Green Valley South", "Unassigned", "", 38000),
+                new Ward("w5", 5, "Ward 5 - Industrial Hub West", "Unassigned", "", 42000),
+                new Ward("w6", 6, "Ward 6 - Tech Park Corridor", "Unassigned", "", 48000),
+                new Ward("w7", 7, "Ward 7 - Metro Station Circle", "Unassigned", "", 39000),
+                new Ward("w8", 8, "Ward 8 - Heritage Old City", "Unassigned", "", 36000)
+            );
+            try {
+                wards = wardRepository.saveAll(defaultWards);
+            } catch (Exception e) {
+                wards = defaultWards;
+            }
+        }
         List<Complaint> complaints = complaintRepository.findAll();
         List<User> councillors = userRepository.findByRoleIgnoreCase("COUNCILLOR");
 

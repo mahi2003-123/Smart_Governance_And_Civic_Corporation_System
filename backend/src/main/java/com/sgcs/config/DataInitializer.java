@@ -128,15 +128,7 @@ public class DataInitializer implements CommandLineRunner {
             logger.info("Created first ADMIN account for: {}", effectiveEmail);
         }
 
-        // 3. Data Seeding Check — strictly bypassed when dataSeedingEnabled is false
-        if (!dataSeedingEnabled) {
-            logger.info("Data seeding is DISABLED (data.seeding.enabled=false). ZERO seeded data will be inserted.");
-            return;
-        }
-
-        // 4. Seeding block only executes if explicitly enabled
-        logger.info("Data seeding is explicitly enabled (data.seeding.enabled=true). Processing initial setup...");
-
+        // 3. Ensure essential municipal wards always exist in database
         if (wardRepository.count() == 0) {
             List<Ward> defaultWards = List.of(
                 new Ward("w1", 1, "Ward 1 - Central Town", "Unassigned", "", 45000),
@@ -151,6 +143,39 @@ public class DataInitializer implements CommandLineRunner {
             wardRepository.saveAll(defaultWards);
             logger.info("Initialized default municipal wards.");
         }
+
+        // Sync registered councillors to ward records
+        try {
+            List<User> registeredCouncillors = userRepository.findByRoleIgnoreCase("COUNCILLOR");
+            List<Ward> currentWards = wardRepository.findAll();
+            for (User c : registeredCouncillors) {
+                if (c.getWard() != null && !c.getWard().trim().isEmpty() && ("ACTIVE".equalsIgnoreCase(c.getStatus()) || c.getStatus() == null)) {
+                    for (Ward w : currentWards) {
+                        String cWard = c.getWard().toLowerCase().trim();
+                        String wName = w.getName().toLowerCase().trim();
+                        if (wName.contains(cWard) || cWard.contains(wName) ||
+                            (w.getWardNumber() != null && cWard.contains(String.valueOf(w.getWardNumber())))) {
+                            w.setCouncillorName(c.getFullName());
+                            w.setCouncillorEmail(c.getEmail());
+                            wardRepository.save(w);
+                            logger.info("Linked Councillor {} to Ward {}", c.getFullName(), w.getName());
+                            break;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Warning syncing councillors to wards: {}", e.getMessage());
+        }
+
+        // 4. Data Seeding Check — strictly bypassed when dataSeedingEnabled is false
+        if (!dataSeedingEnabled) {
+            logger.info("Data seeding is DISABLED (data.seeding.enabled=false). ZERO mock complaints/proposals will be inserted.");
+            return;
+        }
+
+        // 5. Seeding block only executes if explicitly enabled
+        logger.info("Data seeding is explicitly enabled (data.seeding.enabled=true). Processing initial setup...");
 
         logger.info("Database initialization complete.");
     }

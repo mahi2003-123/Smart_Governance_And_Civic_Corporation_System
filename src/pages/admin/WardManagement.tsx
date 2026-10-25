@@ -33,15 +33,22 @@ import { ActionMenu, ActionMenuItem } from '../../components/admin/ActionMenu';
 import { CustomTextField } from '../../components/common/CustomTextField';
 import { matchesWard } from '../../utils/wardUtils';
 
+const DEFAULT_SYSTEM_WARDS: Ward[] = [
+  { id: 'w1', wardNumber: 1, name: 'Ward 1 - Central Town', councillorName: 'Unassigned', councillorEmail: '', population: 45000, activeComplaints: 0, resolvedComplaints: 0 },
+  { id: 'w2', wardNumber: 2, name: 'Ward 2 - Riverside North', councillorName: 'Unassigned', councillorEmail: '', population: 32000, activeComplaints: 0, resolvedComplaints: 0 },
+  { id: 'w3', wardNumber: 3, name: 'Ward 3 - East Hill View', councillorName: 'Unassigned', councillorEmail: '', population: 51000, activeComplaints: 0, resolvedComplaints: 0 },
+  { id: 'w4', wardNumber: 4, name: 'Ward 4 - Green Valley South', councillorName: 'Unassigned', councillorEmail: '', population: 38000, activeComplaints: 0, resolvedComplaints: 0 },
+];
+
 export const WardManagement: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [wards, setWards] = useState<Ward[]>([]);
+  const [wards, setWards] = useState<Ward[]>(DEFAULT_SYSTEM_WARDS);
   const [search, setSearch] = useState('');
   const [openModal, setOpenModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const [wardNumber, setWardNumber] = useState(6);
+  const [wardNumber, setWardNumber] = useState(5);
   const [name, setName] = useState('');
   const [councillorName, setCouncillorName] = useState('');
   const [councillorEmail, setCouncillorEmail] = useState('');
@@ -51,11 +58,12 @@ export const WardManagement: React.FC = () => {
     setLoading(true);
     try {
       const [wData, uData] = await Promise.all([
-        adminService.getWards(),
+        adminService.getWards().catch(() => DEFAULT_SYSTEM_WARDS),
         adminService.getUsers().catch(() => [] as User[]),
       ]);
+      const baseWards: Ward[] = wData && wData.length > 0 ? wData : DEFAULT_SYSTEM_WARDS;
       const activeCouncillors = uData.filter((u) => u.role === 'COUNCILLOR' && (u.status || 'ACTIVE') === 'ACTIVE');
-      const enriched = wData.map((w) => {
+      const enriched = baseWards.map((w) => {
         let cName = w.councillorName;
         let cEmail = w.councillorEmail;
         if (!cName || cName.trim() === '' || cName.toLowerCase() === 'unassigned') {
@@ -71,10 +79,28 @@ export const WardManagement: React.FC = () => {
           councillorEmail: cEmail || '',
         };
       });
+
+      // Also ensure any councillor who has a ward not yet in baseWards gets listed
+      activeCouncillors.forEach((c) => {
+        if (c.ward && !enriched.some((w) => matchesWard(w.name, c.ward))) {
+          enriched.push({
+            id: `w_c_${c.id}`,
+            wardNumber: enriched.length + 1,
+            name: c.ward,
+            councillorName: c.fullName,
+            councillorEmail: c.email,
+            population: 35000,
+            activeComplaints: 0,
+            resolvedComplaints: 0,
+          });
+        }
+      });
+
       setWards(enriched);
       setWardNumber(enriched.length + 1);
     } catch (e) {
       console.error(e);
+      setWards(DEFAULT_SYSTEM_WARDS);
     } finally {
       setLoading(false);
     }
@@ -163,24 +189,19 @@ export const WardManagement: React.FC = () => {
               filtered.map((w) => {
                 const actionItems: ActionMenuItem[] = [
                   {
-                    label: 'View Ward Details',
-                    icon: <VisibilityOutlinedIcon fontSize="small" />,
-                    onClick: () => alert(`Ward Details: ${w.name}`),
-                  },
-                  {
-                    label: 'Assign Councillor',
+                    label: 'Assign / Change Councillor',
                     icon: <PersonAddOutlinedIcon fontSize="small" />,
                     onClick: () => navigate('/admin/councillors'),
                   },
                   {
                     label: 'View Field Workers',
                     icon: <GroupOutlinedIcon fontSize="small" />,
-                    onClick: () => alert(`View field workers in ${w.name}`),
+                    onClick: () => navigate('/admin/workers'),
                   },
                   {
-                    label: 'Edit Ward Info',
-                    icon: <EditOutlinedIcon fontSize="small" />,
-                    onClick: () => alert(`Edit ${w.name}`),
+                    label: 'View Ward Complaints',
+                    icon: <VisibilityOutlinedIcon fontSize="small" />,
+                    onClick: () => navigate('/admin/complaints'),
                   },
                 ];
 
