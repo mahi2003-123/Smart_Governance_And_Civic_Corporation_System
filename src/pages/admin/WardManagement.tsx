@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -24,14 +25,16 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
 import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
 import { adminService } from '../../services/adminService';
-import { Ward } from '../../types';
+import { Ward, User } from '../../types';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader';
 import { FilterBar } from '../../components/admin/FilterBar';
 import { ActionMenu, ActionMenuItem } from '../../components/admin/ActionMenu';
 import { CustomTextField } from '../../components/common/CustomTextField';
+import { matchesWard } from '../../utils/wardUtils';
 
 export const WardManagement: React.FC = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [wards, setWards] = useState<Ward[]>([]);
   const [search, setSearch] = useState('');
@@ -47,9 +50,29 @@ export const WardManagement: React.FC = () => {
   const fetchWards = async () => {
     setLoading(true);
     try {
-      const data = await adminService.getWards();
-      setWards(data);
-      setWardNumber(data.length + 1);
+      const [wData, uData] = await Promise.all([
+        adminService.getWards(),
+        adminService.getUsers().catch(() => [] as User[]),
+      ]);
+      const activeCouncillors = uData.filter((u) => u.role === 'COUNCILLOR' && (u.status || 'ACTIVE') === 'ACTIVE');
+      const enriched = wData.map((w) => {
+        let cName = w.councillorName;
+        let cEmail = w.councillorEmail;
+        if (!cName || cName.trim() === '' || cName.toLowerCase() === 'unassigned') {
+          const found = activeCouncillors.find((u) => matchesWard(u.ward, w.name));
+          if (found) {
+            cName = found.fullName;
+            cEmail = found.email;
+          }
+        }
+        return {
+          ...w,
+          councillorName: cName && cName.trim() !== '' ? cName : 'Unassigned',
+          councillorEmail: cEmail || '',
+        };
+      });
+      setWards(enriched);
+      setWardNumber(enriched.length + 1);
     } catch (e) {
       console.error(e);
     } finally {
@@ -147,7 +170,7 @@ export const WardManagement: React.FC = () => {
                   {
                     label: 'Assign Councillor',
                     icon: <PersonAddOutlinedIcon fontSize="small" />,
-                    onClick: () => alert(`Assign Councillor to ${w.name}`),
+                    onClick: () => navigate('/admin/councillors'),
                   },
                   {
                     label: 'View Field Workers',

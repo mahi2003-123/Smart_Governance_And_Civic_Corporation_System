@@ -19,12 +19,20 @@ public class ProposalService {
     @Autowired
     private AuditService auditService;
 
+    @Autowired
+    private com.sgcs.security.AccessGuard accessGuard;
+
     public List<Proposal> getAllProposals() {
         return proposalRepository.findAllByOrderByCreatedAtDesc();
     }
 
     public List<Proposal> getProposalsByWard(String ward) {
-        return proposalRepository.findByWardOrderByCreatedAtDesc(ward);
+        if (ward == null || ward.trim().isEmpty() || "ALL".equalsIgnoreCase(ward.trim())) {
+            return proposalRepository.findAllByOrderByCreatedAtDesc();
+        }
+        return proposalRepository.findAllByOrderByCreatedAtDesc().stream()
+                .filter(p -> p.getWard() != null && accessGuard.isSameWard(p.getWard(), ward))
+                .toList();
     }
 
     public Proposal createProposal(Proposal proposal) {

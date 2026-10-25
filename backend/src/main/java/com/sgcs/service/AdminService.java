@@ -137,7 +137,7 @@ public class AdminService {
 
         // Update councillor in Ward entity if role is COUNCILLOR
         if ("COUNCILLOR".equalsIgnoreCase(saved.getRole()) && saved.getWard() != null) {
-            Optional<Ward> wardOpt = wardRepository.findByNameIgnoreCase(saved.getWard());
+            Optional<Ward> wardOpt = accessGuard.findMatchingWard(saved.getWard());
             if (wardOpt.isPresent()) {
                 Ward w = wardOpt.get();
                 w.setCouncillorName(saved.getFullName());
@@ -234,11 +234,12 @@ public class AdminService {
             }
         }
 
-        // Clear ward assignment ONLY if the ward's councillor matches this exact user
-        if ("COUNCILLOR".equalsIgnoreCase(user.getRole()) && user.getWard() != null) {
+        // Clear ward assignment if councillor is deleted
+        if ("COUNCILLOR".equalsIgnoreCase(user.getRole())) {
             List<Ward> wards = wardRepository.findAll();
             for (Ward w : wards) {
-                if (w.getCouncillorEmail() != null && w.getCouncillorEmail().equalsIgnoreCase(user.getEmail())) {
+                if ((w.getCouncillorEmail() != null && w.getCouncillorEmail().equalsIgnoreCase(user.getEmail()))
+                        || (user.getWard() != null && accessGuard.isSameWard(w.getName(), user.getWard()))) {
                     w.setCouncillorName("Unassigned");
                     w.setCouncillorEmail("");
                     wardRepository.save(w);
@@ -271,8 +272,29 @@ public class AdminService {
         }
         accessGuard.validateWardExists(newWard.trim());
 
+        String oldWard = user.getWard();
         user.setWard(newWard.trim());
         User saved = userRepository.save(user);
+
+        // If user is a COUNCILLOR, update Ward assignments
+        if ("COUNCILLOR".equalsIgnoreCase(saved.getRole())) {
+            // 1. Clear old ward if assigned to this councillor
+            if (oldWard != null && !oldWard.trim().isEmpty()) {
+                accessGuard.findMatchingWard(oldWard).ifPresent(w -> {
+                    if (saved.getEmail().equalsIgnoreCase(w.getCouncillorEmail())) {
+                        w.setCouncillorName("Unassigned");
+                        w.setCouncillorEmail("");
+                        wardRepository.save(w);
+                    }
+                });
+            }
+            // 2. Assign new ward
+            accessGuard.findMatchingWard(newWard).ifPresent(w -> {
+                w.setCouncillorName(saved.getFullName());
+                w.setCouncillorEmail(saved.getEmail());
+                wardRepository.save(w);
+            });
+        }
 
         String adminId = adminPrincipal != null ? adminPrincipal.getId() : "admin";
         String adminName = adminPrincipal != null ? adminPrincipal.getFullName() : "Super Admin";
@@ -290,30 +312,45 @@ public class AdminService {
         return saved;
     }
 
-    private boolean isSameWard(String wardA, String wardB) {
-        if (wardA == null || wardB == null) return false;
-        String a = wardA.trim().toLowerCase();
-        String b = wardB.trim().toLowerCase();
-        if (a.equals(b)) return true;
-
-        if (a.contains("ward ") && b.contains("ward ")) {
-            String numA = a.substring(a.indexOf("ward ") + 5).split(" ")[0].split("-")[0].trim();
-            String numB = b.substring(b.indexOf("ward ") + 5).split(" ")[0].split("-")[0].trim();
-            if (!numA.isEmpty() && numA.equals(numB)) {
-                return true;
-            }
-        }
-        return false;
+    public boolean isSameWard(String wardA, String wardB) {
+        return accessGuard.isSameWard(wardA, wardB);
     }
 
     public List<Ward> getAllWards() {
         List<Ward> wards = wardRepository.findAll();
         List<Complaint> complaints = complaintRepository.findAll();
+        List<User> councillors = userRepository.findByRoleIgnoreCase("COUNCILLOR");
+
         for (Ward w : wards) {
+            // Find active councillor for this ward
+            User matchingCouncillor = null;
+            for (User u : councillors) {
+                if (u.getWard() != null && ("ACTIVE".equalsIgnoreCase(u.getStatus()) || u.getStatus() == null)) {
+                    if (accessGuard.isSameWard(u.getWard(), w.getName())) {
+                        matchingCouncillor = u;
+                        break;
+                    }
+                }
+            }
+
+            if (matchingCouncillor != null) {
+                if (!matchingCouncillor.getFullName().equals(w.getCouncillorName())
+                        || !matchingCouncillor.getEmail().equals(w.getCouncillorEmail())) {
+                    w.setCouncillorName(matchingCouncillor.getFullName());
+                    w.setCouncillorEmail(matchingCouncillor.getEmail());
+                    try {
+                        wardRepository.save(w);
+                    } catch (Exception ignored) {}
+                }
+            } else if (w.getCouncillorName() == null || w.getCouncillorName().trim().isEmpty()) {
+                w.setCouncillorName("Unassigned");
+                w.setCouncillorEmail("");
+            }
+
             int active = 0;
             int resolved = 0;
             for (Complaint c : complaints) {
-                if (c.getWard() != null && isSameWard(c.getWard(), w.getName())) {
+                if (c.getWard() != null && accessGuard.isSameWard(c.getWard(), w.getName())) {
                     if ("RESOLVED".equalsIgnoreCase(c.getStatus())) {
                         resolved++;
                     } else {

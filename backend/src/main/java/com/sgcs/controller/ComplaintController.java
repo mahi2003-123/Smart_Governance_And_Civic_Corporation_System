@@ -322,7 +322,7 @@ public class ComplaintController {
         String authorRole = principal.getRole();
         String authorAvatar = null;
 
-        Complaint updated = complaintService.addComment(id, authorName, authorRole, content.trim(), authorAvatar);
+        Complaint updated = complaintService.addComment(complaint.getId(), authorName, authorRole, content.trim(), authorAvatar);
         return ResponseEntity.ok(updated);
     }
 

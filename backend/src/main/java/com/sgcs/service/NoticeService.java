@@ -17,12 +17,22 @@ public class NoticeService {
     @Autowired
     private AuditService auditService;
 
+    @Autowired
+    private com.sgcs.security.AccessGuard accessGuard;
+
     public List<Notice> getAllNotices() {
         return noticeRepository.findAllByOrderByPublishDateDesc();
     }
 
     public List<Notice> getNoticesByWard(String ward) {
-        return noticeRepository.findByWardOrderByPublishDateDesc(ward);
+        if (ward == null || ward.trim().isEmpty() || "ALL".equalsIgnoreCase(ward.trim())) {
+            return noticeRepository.findAllByOrderByPublishDateDesc();
+        }
+        return noticeRepository.findAllByOrderByPublishDateDesc().stream()
+                .filter(n -> n.getWard() != null && (accessGuard.isSameWard(n.getWard(), ward)
+                        || n.getWard().toLowerCase().contains("system wide")
+                        || n.getWard().toLowerCase().contains("all wards")))
+                .toList();
     }
 
     @Autowired

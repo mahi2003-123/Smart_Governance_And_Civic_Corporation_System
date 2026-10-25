@@ -39,6 +39,7 @@ export const ComplaintDetails: React.FC = () => {
   const [complaint, setComplaint] = useState<Complaint | null>(null);
   const [newComment, setNewComment] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [commentError, setCommentError] = useState<string | null>(null);
 
   // Feedback State
   const [existingFeedback, setExistingFeedback] = useState<any>(null);
@@ -77,19 +78,27 @@ export const ComplaintDetails: React.FC = () => {
 
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newComment.trim() || !id || !user) return;
+    const commentText = newComment.trim();
+    const targetId = complaint?.id || id;
+    if (!commentText || !targetId) return;
+
     setSubmittingComment(true);
+    setCommentError(null);
     try {
+      const authorName = user?.fullName || 'User';
+      const authorRole = (user?.role || 'CITIZEN') as any;
       const updated = await complaintService.addComment(
-        id,
-        user.fullName,
-        user.role,
-        newComment.trim()
+        targetId,
+        authorName,
+        authorRole,
+        commentText
       );
       setComplaint(updated);
       setNewComment('');
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error('Failed to post comment:', err);
+      const msg = err.response?.data?.error || err.response?.data?.message || err.message || 'Failed to post comment.';
+      setCommentError(msg);
     } finally {
       setSubmittingComment(false);
     }
@@ -672,13 +681,22 @@ export const ComplaintDetails: React.FC = () => {
             )}
           </Stack>
 
+          {commentError && (
+            <Alert severity="error" sx={{ mb: 2, borderRadius: '8px' }} onClose={() => setCommentError(null)}>
+              {commentError}
+            </Alert>
+          )}
+
           <Box component="form" onSubmit={handleAddComment} sx={{ display: 'flex', gap: 1 }}>
             <TextField
               fullWidth
               size="small"
               placeholder="Add official comment..."
               value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
+              onChange={(e) => {
+                setNewComment(e.target.value);
+                if (commentError) setCommentError(null);
+              }}
             />
             <Button
               type="submit"
@@ -693,7 +711,7 @@ export const ComplaintDetails: React.FC = () => {
                 '&:hover': { backgroundColor: '#304B3A' },
               }}
             >
-              <SendOutlinedIcon sx={{ fontSize: 18 }} />
+              {submittingComment ? <CircularProgress size={18} sx={{ color: '#FFFFFF' }} /> : <SendOutlinedIcon sx={{ fontSize: 18 }} />}
             </Button>
           </Box>
         </Box>

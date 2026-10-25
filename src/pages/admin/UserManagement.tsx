@@ -39,6 +39,7 @@ import { FilterBar, FilterOption } from '../../components/admin/FilterBar';
 import { ActionMenu, ActionMenuItem } from '../../components/admin/ActionMenu';
 import { CustomTextField } from '../../components/common/CustomTextField';
 import { AccessDeniedState } from '../../components/common/AccessDeniedState';
+import { matchesWard, formatWardName } from '../../utils/wardUtils';
 
 export const UserManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -154,13 +155,12 @@ export const UserManagement: React.FC = () => {
     }
 
     if (formData.role === 'COUNCILLOR' && formData.ward && formData.ward !== 'All Wards') {
-      const targetWardNum = formData.ward.split('-')[0].trim().toLowerCase();
       const existingCouncillor = users.find(
         (u) =>
           u.role === 'COUNCILLOR' &&
           u.ward &&
-          (u.ward.toLowerCase() === formData.ward.toLowerCase() ||
-           u.ward.toLowerCase().includes(targetWardNum))
+          (u.status || 'ACTIVE') === 'ACTIVE' &&
+          matchesWard(u.ward, formData.ward)
       );
       if (existingCouncillor) {
         setModalError(
@@ -189,7 +189,7 @@ export const UserManagement: React.FC = () => {
         password: '',
         phone: '',
         role: 'COUNCILLOR',
-        ward: wards.length > 0 ? `Ward ${wards[0].wardNumber} - ${wards[0].name}` : 'Ward 1 - Central Town',
+        ward: wards.length > 0 ? formatWardName(wards[0].wardNumber, wards[0].name) : 'Ward 1 - Central Town',
       });
 
       setTimeout(() => {
@@ -474,11 +474,14 @@ export const UserManagement: React.FC = () => {
                       label="Ward Jurisdiction"
                       onChange={(e) => setFormData({ ...formData, ward: e.target.value })}
                     >
-                      {wards.map((w) => (
-                        <MenuItem key={w.id} value={`Ward ${w.wardNumber} - ${w.name}`}>
-                          Ward {w.wardNumber} - {w.name}
-                        </MenuItem>
-                      ))}
+                      {wards.map((w) => {
+                        const formatted = formatWardName(w.wardNumber, w.name);
+                        return (
+                          <MenuItem key={w.id} value={formatted}>
+                            {formatted}
+                          </MenuItem>
+                        );
+                      })}
                       <MenuItem value="System Wide">System Wide</MenuItem>
                     </Select>
                   </FormControl>

@@ -5,12 +5,19 @@ import com.sgcs.entity.Notice;
 import com.sgcs.entity.Notification;
 import com.sgcs.entity.Proposal;
 import com.sgcs.entity.User;
+import com.sgcs.entity.Ward;
 import com.sgcs.exception.BadRequestException;
 import com.sgcs.repository.UserRepository;
 import com.sgcs.repository.WardRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Component
 public class AccessGuard {
@@ -21,6 +28,82 @@ public class AccessGuard {
     @Autowired
     private WardRepository wardRepository;
 
+    public String extractWardNumber(String str) {
+        if (str == null) return null;
+        Pattern p = Pattern.compile("(?:ward\\s*|w|^)(\\d+)");
+        Matcher m = p.matcher(str.toLowerCase());
+        if (m.find()) return m.group(1);
+        Matcher m2 = Pattern.compile("\\d+").matcher(str);
+        if (m2.find()) return m2.group();
+        return null;
+    }
+
+    public String cleanWardName(String str) {
+        if (str == null) return "";
+        return str.replaceAll("(?i)ward\\s*\\d*\\s*[-:]*", "")
+                  .replaceAll("[^a-zA-Z0-9]", "")
+                  .toLowerCase()
+                  .trim();
+    }
+
+    public Optional<Ward> findMatchingWard(String rawWard) {
+        if (rawWard == null || rawWard.trim().isEmpty() || wardRepository == null) {
+            return Optional.empty();
+        }
+        String target = rawWard.trim();
+        List<Ward> all = wardRepository.findAll();
+
+        // 1. Exact or ID match
+        for (Ward w : all) {
+            if (target.equalsIgnoreCase(w.getName()) || (w.getId() != null && target.equalsIgnoreCase(w.getId()))) {
+                return Optional.of(w);
+            }
+        }
+
+        // 2. Extracted number match
+        String num = extractWardNumber(target);
+        if (num != null) {
+            for (Ward w : all) {
+                if (w.getWardNumber() != null && num.equals(String.valueOf(w.getWardNumber()))) {
+                    return Optional.of(w);
+                }
+            }
+        }
+
+        // 3. Clean string match
+        String cleanTarget = cleanWardName(target);
+        if (!cleanTarget.isEmpty()) {
+            for (Ward w : all) {
+                String cleanW = cleanWardName(w.getName());
+                if (!cleanW.isEmpty() && (cleanW.equals(cleanTarget) || cleanW.contains(cleanTarget) || cleanTarget.contains(cleanW))) {
+                    return Optional.of(w);
+                }
+            }
+        }
+
+        // 4. Standard aliases check
+        Map<String, List<String>> aliases = Map.of(
+            "1", List.of("central", "central town"),
+            "2", List.of("south", "riverside", "riverside north"),
+            "3", List.of("east", "east hill", "east hill view", "hill view"),
+            "4", List.of("green valley", "green valley south", "valley south")
+        );
+        for (Map.Entry<String, List<String>> entry : aliases.entrySet()) {
+            String wardNum = entry.getKey();
+            List<String> keywords = entry.getValue();
+            boolean matchesTarget = (num != null && num.equals(wardNum)) || keywords.stream().anyMatch(target.toLowerCase()::contains);
+            if (matchesTarget) {
+                for (Ward w : all) {
+                    if (w.getWardNumber() != null && wardNum.equals(String.valueOf(w.getWardNumber()))) {
+                        return Optional.of(w);
+                    }
+                }
+            }
+        }
+
+        return Optional.empty();
+    }
+
     public boolean isSameWard(String wardA, String wardB) {
         if (wardA == null || wardB == null) return false;
         String a = wardA.trim().toLowerCase();
@@ -28,13 +111,51 @@ public class AccessGuard {
         if (a.isEmpty() || b.isEmpty()) return false;
         if (a.equals(b)) return true;
 
-        if (a.contains("ward ") && b.contains("ward ")) {
-            String numA = a.substring(a.indexOf("ward ") + 5).split("[\\s\\-]")[0].trim();
-            String numB = b.substring(b.indexOf("ward ") + 5).split("[\\s\\-]")[0].trim();
-            if (!numA.isEmpty() && numA.equals(numB)) {
+        String numA = extractWardNumber(a);
+        String numB = extractWardNumber(b);
+
+        if (numA != null && numB != null) {
+            return numA.equals(numB);
+        }
+
+        // Check if both resolve to the same ward in the repository
+        if (wardRepository != null) {
+            Optional<Ward> matchA = findMatchingWard(a);
+            Optional<Ward> matchB = findMatchingWard(b);
+            if (matchA.isPresent() && matchB.isPresent() && matchA.get().getId().equals(matchB.get().getId())) {
                 return true;
             }
         }
+
+        // Clean names
+        String cleanA = cleanWardName(a);
+        String cleanB = cleanWardName(b);
+        if (!cleanA.isEmpty() && !cleanB.isEmpty()) {
+            if (cleanA.equals(cleanB) || cleanA.contains(cleanB) || cleanB.contains(cleanA)) {
+                return true;
+            }
+        }
+
+        // SGCS default ward aliases check
+        Map<String, List<String>> aliases = Map.of(
+            "1", List.of("central", "central town"),
+            "2", List.of("south", "riverside", "riverside north"),
+            "3", List.of("east", "east hill", "east hill view", "hill view"),
+            "4", List.of("green valley", "green valley south", "valley south")
+        );
+
+        for (Map.Entry<String, List<String>> entry : aliases.entrySet()) {
+            String wardNum = entry.getKey();
+            List<String> keywords = entry.getValue();
+
+            boolean aMatches = (numA != null && numA.equals(wardNum)) || keywords.stream().anyMatch(a::contains);
+            boolean bMatches = (numB != null && numB.equals(wardNum)) || keywords.stream().anyMatch(b::contains);
+
+            if (aMatches && bMatches) {
+                return true;
+            }
+        }
+
         return a.contains(b) || b.contains(a);
     }
 
@@ -53,12 +174,33 @@ public class AccessGuard {
         throw new AccessDeniedException("Forbidden: Only the assigned worker or admin can " + action + " this task");
     }
 
+    public boolean isCouncillorForWard(UserPrincipal principal, String targetWard) {
+        if (principal == null) return false;
+        if (isAdmin(principal)) return true;
+        if (!"COUNCILLOR".equalsIgnoreCase(principal.getRole())) return false;
+
+        if (isSameWard(principal.getWard(), targetWard)) {
+            return true;
+        }
+
+        if (targetWard != null && !targetWard.trim().isEmpty() && wardRepository != null) {
+            return wardRepository.findAll().stream().anyMatch(w ->
+                isSameWard(w.getName(), targetWard) && (
+                    (w.getCouncillorEmail() != null && principal.getEmail() != null && w.getCouncillorEmail().equalsIgnoreCase(principal.getEmail())) ||
+                    (w.getCouncillorName() != null && principal.getFullName() != null && w.getCouncillorName().equalsIgnoreCase(principal.getFullName())) ||
+                    (w.getId() != null && principal.getWard() != null && (w.getId().equalsIgnoreCase(principal.getWard()) || isSameWard(w.getId(), principal.getWard())))
+                )
+            );
+        }
+        return false;
+    }
+
     // A.2: approve, reject-proof: only the COUNCILLOR whose ward equals complaint.ward, or ADMIN. Otherwise 403.
     public void checkCouncillorCanReviewProof(UserPrincipal principal, Complaint complaint, String action) {
         if (principal == null) throw new AccessDeniedException("Forbidden - Insufficient permissions");
         if (isAdmin(principal)) return;
 
-        if ("COUNCILLOR".equalsIgnoreCase(principal.getRole()) && isSameWard(principal.getWard(), complaint.getWard())) {
+        if (isCouncillorForWard(principal, complaint.getWard())) {
             return;
         }
         throw new AccessDeniedException("Forbidden: Only the ward councillor of " + complaint.getWard() + " or admin can " + action);
@@ -69,7 +211,7 @@ public class AccessGuard {
         if (principal == null) throw new AccessDeniedException("Forbidden - Insufficient permissions");
         if (isAdmin(principal)) return;
 
-        if ("COUNCILLOR".equalsIgnoreCase(principal.getRole()) && isSameWard(principal.getWard(), complaint.getWard())) {
+        if (isCouncillorForWard(principal, complaint.getWard())) {
             return;
         }
         throw new AccessDeniedException("Forbidden: Only the ward councillor of " + complaint.getWard() + " or admin can " + action);
@@ -99,17 +241,24 @@ public class AccessGuard {
 
         String role = principal.getRole() != null ? principal.getRole().toUpperCase() : "";
         if ("CITIZEN".equals(role)) {
-            if (principal.getId().equals(complaint.getCitizenId())) {
+            boolean matchesId = principal.getId() != null && principal.getId().equals(complaint.getCitizenId());
+            boolean matchesEmail = principal.getEmail() != null && complaint.getCitizenId() != null && principal.getEmail().equalsIgnoreCase(complaint.getCitizenId());
+            boolean matchesName = principal.getFullName() != null && complaint.getCitizenName() != null && principal.getFullName().equalsIgnoreCase(complaint.getCitizenName());
+            boolean matchesPhone = principal.getPhone() != null && !principal.getPhone().trim().isEmpty() && complaint.getCitizenPhone() != null && principal.getPhone().trim().equals(complaint.getCitizenPhone().trim());
+            if (matchesId || matchesEmail || matchesName || matchesPhone) {
                 return;
             }
             throw new AccessDeniedException("Forbidden: Citizen may read only their own complaint");
         } else if ("WORKER".equals(role)) {
-            if (principal.getId().equals(complaint.getAssignedWorkerId())) {
+            boolean matchesId = principal.getId() != null && principal.getId().equals(complaint.getAssignedWorkerId());
+            boolean matchesEmail = principal.getEmail() != null && complaint.getAssignedWorkerId() != null && principal.getEmail().equalsIgnoreCase(complaint.getAssignedWorkerId());
+            boolean matchesName = principal.getFullName() != null && complaint.getAssignedWorkerName() != null && principal.getFullName().equalsIgnoreCase(complaint.getAssignedWorkerName());
+            if (matchesId || matchesEmail || matchesName) {
                 return;
             }
             throw new AccessDeniedException("Forbidden: Worker may read only complaints assigned to them");
         } else if ("COUNCILLOR".equals(role)) {
-            if (isSameWard(principal.getWard(), complaint.getWard())) {
+            if (isCouncillorForWard(principal, complaint.getWard())) {
                 return;
             }
             throw new AccessDeniedException("Forbidden: Councillor may read only complaints in their assigned ward");
@@ -144,17 +293,24 @@ public class AccessGuard {
 
         String role = principal.getRole() != null ? principal.getRole().toUpperCase() : "";
         if ("CITIZEN".equals(role)) {
-            if (principal.getId().equals(complaint.getCitizenId())) {
+            boolean matchesId = principal.getId() != null && principal.getId().equals(complaint.getCitizenId());
+            boolean matchesEmail = principal.getEmail() != null && complaint.getCitizenId() != null && principal.getEmail().equalsIgnoreCase(complaint.getCitizenId());
+            boolean matchesName = principal.getFullName() != null && complaint.getCitizenName() != null && principal.getFullName().equalsIgnoreCase(complaint.getCitizenName());
+            boolean matchesPhone = principal.getPhone() != null && !principal.getPhone().trim().isEmpty() && complaint.getCitizenPhone() != null && principal.getPhone().trim().equals(complaint.getCitizenPhone().trim());
+            if (matchesId || matchesEmail || matchesName || matchesPhone) {
                 return;
             }
             throw new AccessDeniedException("Forbidden: Citizen may comment only on their own complaints");
         } else if ("WORKER".equals(role)) {
-            if (principal.getId().equals(complaint.getAssignedWorkerId())) {
+            boolean matchesId = principal.getId() != null && principal.getId().equals(complaint.getAssignedWorkerId());
+            boolean matchesEmail = principal.getEmail() != null && complaint.getAssignedWorkerId() != null && principal.getEmail().equalsIgnoreCase(complaint.getAssignedWorkerId());
+            boolean matchesName = principal.getFullName() != null && complaint.getAssignedWorkerName() != null && principal.getFullName().equalsIgnoreCase(complaint.getAssignedWorkerName());
+            if (matchesId || matchesEmail || matchesName) {
                 return;
             }
             throw new AccessDeniedException("Forbidden: Worker may comment only on complaints assigned to them");
         } else if ("COUNCILLOR".equals(role)) {
-            if (isSameWard(principal.getWard(), complaint.getWard())) {
+            if (isCouncillorForWard(principal, complaint.getWard())) {
                 return;
             }
             throw new AccessDeniedException("Forbidden: Councillor may comment only on complaints in their assigned ward");
@@ -168,7 +324,7 @@ public class AccessGuard {
             throw new BadRequestException("Ward is required");
         }
         String target = ward.trim();
-        boolean exists = wardRepository.findAll().stream().anyMatch(w ->
+        boolean exists = findMatchingWard(target).isPresent() || wardRepository.findAll().stream().anyMatch(w ->
             isSameWard(w.getName(), target) ||
             (w.getId() != null && w.getId().equalsIgnoreCase(target)) ||
             (w.getWardNumber() != null && (

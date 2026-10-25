@@ -83,7 +83,12 @@ public class ComplaintService {
     }
 
     public List<Complaint> getComplaintsByWard(String ward) {
-        return complaintRepository.findByWardOrderByCreatedAtDesc(ward);
+        if (ward == null || ward.trim().isEmpty() || "ALL".equalsIgnoreCase(ward.trim())) {
+            return complaintRepository.findAllByOrderByCreatedAtDesc();
+        }
+        return complaintRepository.findAllByOrderByCreatedAtDesc().stream()
+                .filter(c -> c.getWard() != null && accessGuard.isSameWard(c.getWard(), ward))
+                .toList();
     }
 
     public List<Complaint> getComplaintsForWorker(String workerId, String workerName, String workerEmail, String ward) {
@@ -1002,7 +1007,7 @@ public class ComplaintService {
     }
 
     public Complaint addComment(String id, String authorName, String authorRole, String content, String authorAvatar) {
-        Complaint complaint = complaintRepository.findById(id)
+        Complaint complaint = getComplaintById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
 
         Complaint.ComplaintComment comment = new Complaint.ComplaintComment(authorName, authorRole, content, authorAvatar);

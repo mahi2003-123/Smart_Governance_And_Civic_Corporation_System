@@ -8,7 +8,6 @@ import {
   Alert,
   Paper,
   InputAdornment,
-  MenuItem
 } from '@mui/material';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
@@ -19,18 +18,15 @@ import { useAuth } from '../../hooks/useAuth';
 import { complaintService } from '../../services/complaintService';
 import { WardSelector } from '../../components/common/WardSelector';
 import { ImageUpload } from '../../components/common/ImageUpload';
-import { ComplaintPriority } from '../../types';
 
 export const SubmitComplaint: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState<string>('ROAD');
   const [description, setDescription] = useState('');
   const [ward, setWard] = useState(user?.ward || 'Ward 1 - Central Town');
   const [locationAddress, setLocationAddress] = useState('');
-  const [priority, setPriority] = useState<ComplaintPriority>('MEDIUM');
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -59,11 +55,11 @@ export const SubmitComplaint: React.FC = () => {
     try {
       const created = await complaintService.createComplaint({
         title: title.trim(),
-        category: category as any,
+        category: 'OTHER',
         description: description.trim(),
         ward,
         locationAddress: locationAddress.trim(),
-        priority,
+        priority: 'MEDIUM',
         images,
         citizenId: user?.id || 'usr_citizen_01',
         citizenName: user?.fullName || 'Citizen Resident',
@@ -174,7 +170,7 @@ export const SubmitComplaint: React.FC = () => {
           Report a Civic Grievance
         </Typography>
         <Typography variant="body1" sx={{ color: '#68706B' }}>
-          Submit public grievances directly to your municipal ward councillor for inspection and repair work assignment.
+          Submit public grievances directly to your municipal ward councillor. Your ward councillor will assess the grievance, determine the civic category and urgency level, and dispatch repair field staff.
         </Typography>
       </Box>
 
@@ -213,38 +209,7 @@ export const SubmitComplaint: React.FC = () => {
             required
           />
 
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2.5 }}>
-            <TextField
-              select
-              fullWidth
-              label="Civic Category"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              helperText="Select the category that best describes your grievance"
-            >
-              <MenuItem value="ROAD">Road Damage & Potholes</MenuItem>
-              <MenuItem value="WATER_SUPPLY">Water Supply & Leakage</MenuItem>
-              <MenuItem value="WASTE_MANAGEMENT">Garbage & Waste Disposal</MenuItem>
-              <MenuItem value="DRAINAGE">Drainage & Sewage Overflow</MenuItem>
-              <MenuItem value="STREET_LIGHT">Street Light Failure</MenuItem>
-              <MenuItem value="PUBLIC_SPACE">Public Spaces & Parks</MenuItem>
-              <MenuItem value="Other">Other Grievance</MenuItem>
-            </TextField>
 
-            <TextField
-              select
-              fullWidth
-              label="Urgency / Priority"
-              value={priority}
-              onChange={(e) => setPriority(e.target.value as ComplaintPriority)}
-              helperText="Mark URGENT for critical public hazards"
-            >
-              <MenuItem value="LOW">Low - Routine</MenuItem>
-              <MenuItem value="MEDIUM">Medium - Normal</MenuItem>
-              <MenuItem value="HIGH">High - Important</MenuItem>
-              <MenuItem value="URGENT">🚨 URGENT - Immediate Hazard</MenuItem>
-            </TextField>
-          </Box>
 
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr' }, gap: 2.5 }}>
             <WardSelector

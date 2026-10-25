@@ -50,6 +50,7 @@ export const AssignWorkerModal: React.FC<AssignWorkerModalProps> = ({
   const [currentComplaint, setCurrentComplaint] = useState<Complaint | null>(complaint);
   const [workersList, setWorkersList] = useState<any[]>([]);
   const [selectedWorkerId, setSelectedWorkerId] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('ROAD');
   const [selectedPriority, setSelectedPriority] = useState<ComplaintPriority>('MEDIUM');
   const [dueDate, setDueDate] = useState<string>('');
   const [loading, setLoading] = useState(false);
@@ -80,6 +81,7 @@ export const AssignWorkerModal: React.FC<AssignWorkerModalProps> = ({
   useEffect(() => {
     if (open && currentComplaint) {
       setSelectedPriority(currentComplaint.priority || 'MEDIUM');
+      setSelectedCategory(currentComplaint.category || currentComplaint.aiSuggestedCategory || 'ROAD');
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       setDueDate(tomorrow.toISOString().split('T')[0]);
@@ -149,12 +151,12 @@ export const AssignWorkerModal: React.FC<AssignWorkerModalProps> = ({
 
     setLoading(true);
     try {
-      // Background Silently Accept AI Recommendation
-      if (currentComplaint && currentComplaint.aiSuggestedCategory && !currentComplaint.isAiCategoryAccepted) {
+      // Councillor decides and sets the civic category
+      if (currentComplaint && selectedCategory) {
         try {
-          await complaintService.reviewAiCategory(currentComplaint.id, currentComplaint.aiSuggestedCategory);
-        } catch(e) {
-           console.error('Failed to auto-accept AI category in DB', e);
+          await complaintService.reviewAiCategory(currentComplaint.id, selectedCategory);
+        } catch (err) {
+          console.error('Failed to update category in DB', err);
         }
       }
       
@@ -421,8 +423,25 @@ export const AssignWorkerModal: React.FC<AssignWorkerModalProps> = ({
                     Assignment Parameters
                   </Typography>
                   
-                  <Box sx={{ display: 'flex', gap: 3, mb: 4, flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
-                    <Box sx={{ flex: 1, minWidth: '200px' }}>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr 1fr' }, gap: 2.5, mb: 4 }}>
+                    <Box sx={{ minWidth: '180px' }}>
+                      <CustomTextField
+                        select
+                        label="Civic Category"
+                        value={selectedCategory}
+                        onChange={(e) => setSelectedCategory(e.target.value)}
+                        fullWidth
+                      >
+                        <MenuItem value="ROAD">Road Damage & Potholes</MenuItem>
+                        <MenuItem value="WATER_SUPPLY">Water Supply & Leakage</MenuItem>
+                        <MenuItem value="WASTE_MANAGEMENT">Garbage & Waste Disposal</MenuItem>
+                        <MenuItem value="DRAINAGE">Drainage & Sewage Overflow</MenuItem>
+                        <MenuItem value="STREET_LIGHT">Street Light Failure</MenuItem>
+                        <MenuItem value="PUBLIC_SPACE">Public Spaces & Parks</MenuItem>
+                        <MenuItem value="OTHER">Other / General Maintenance</MenuItem>
+                      </CustomTextField>
+                    </Box>
+                    <Box sx={{ minWidth: '180px' }}>
                       <CustomTextField select label="Priority / Risk Level" value={selectedPriority} onChange={(e) => setSelectedPriority(e.target.value as any)} fullWidth>
                         <MenuItem value="LOW"><span style={{marginRight: '8px'}}>🟢</span> Low Priority</MenuItem>
                         <MenuItem value="MEDIUM"><span style={{marginRight: '8px'}}>🔵</span> Standard Alert</MenuItem>
@@ -430,7 +449,7 @@ export const AssignWorkerModal: React.FC<AssignWorkerModalProps> = ({
                         <MenuItem value="URGENT"><span style={{marginRight: '8px'}}>🔴</span> URGENT EMERGENCY</MenuItem>
                       </CustomTextField>
                     </Box>
-                    <Box sx={{ flex: 1, minWidth: '200px' }}>
+                    <Box sx={{ minWidth: '180px' }}>
                       <CustomTextField type="date" label="Expected SLA Deadline" value={dueDate} onChange={(e) => setDueDate(e.target.value)} fullWidth InputLabelProps={{ shrink: true }} />
                     </Box>
                   </Box>

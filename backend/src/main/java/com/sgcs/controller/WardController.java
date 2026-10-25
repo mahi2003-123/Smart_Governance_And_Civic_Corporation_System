@@ -2,12 +2,14 @@ package com.sgcs.controller;
 
 import com.sgcs.entity.Ward;
 import com.sgcs.repository.WardRepository;
+import com.sgcs.service.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,15 +22,20 @@ public class WardController {
     @Autowired
     private WardRepository wardRepository;
 
+    @Autowired
+    private AdminService adminService;
+
     @GetMapping
     public ResponseEntity<List<Ward>> getWards() {
-        List<Ward> wards = wardRepository.findAllByOrderByWardNumberAsc();
+        List<Ward> wards = adminService.getAllWards();
+        wards.sort(Comparator.comparingInt(w -> w.getWardNumber() != null ? w.getWardNumber() : 0));
         return ResponseEntity.ok(wards);
     }
 
     @GetMapping("/public")
     public ResponseEntity<List<Map<String, Object>>> getPublicWards() {
-        List<Ward> wards = wardRepository.findAllByOrderByWardNumberAsc();
+        List<Ward> wards = adminService.getAllWards();
+        wards.sort(Comparator.comparingInt(w -> w.getWardNumber() != null ? w.getWardNumber() : 0));
         List<Map<String, Object>> result = wards.stream().map(w -> {
             Map<String, Object> map = new HashMap<>();
             map.put("id", w.getId());

@@ -5,6 +5,7 @@ import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
 import { useNavigate } from 'react-router-dom';
 import { adminService } from '../../services/adminService';
 import { CivicAnalytics, SystemActivityLog, Ward } from '../../types';
+import { matchesWard } from '../../utils/wardUtils';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader';
 import { AdminStat } from '../../components/admin/AdminStat';
@@ -35,7 +36,25 @@ export const AdminDashboard: React.FC = () => {
         ]);
         setAnalytics(analyticsData);
         setActivities(activityData);
-        setWards(wardData);
+
+        const councillors = userData.filter((u) => u.role === 'COUNCILLOR' && (u.status || 'ACTIVE') === 'ACTIVE');
+        const enrichedWards = wardData.map((w) => {
+          let cName = w.councillorName;
+          let cEmail = w.councillorEmail;
+          if (!cName || cName.trim() === '' || cName.toLowerCase() === 'unassigned') {
+            const found = councillors.find((c) => matchesWard(c.ward, w.name));
+            if (found) {
+              cName = found.fullName;
+              cEmail = found.email;
+            }
+          }
+          return {
+            ...w,
+            councillorName: cName && cName.trim() !== '' ? cName : 'Unassigned',
+            councillorEmail: cEmail || '',
+          };
+        });
+        setWards(enrichedWards);
 
         setTotalCitizens(userData.filter((u) => u.role === 'CITIZEN').length);
         setTotalCouncillors(userData.filter((u) => u.role === 'COUNCILLOR').length);

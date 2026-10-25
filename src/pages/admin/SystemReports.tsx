@@ -44,7 +44,7 @@ import {
 
 import { adminService } from '../../services/adminService';
 import { complaintService } from '../../services/complaintService';
-import { CivicAnalytics, Ward, Complaint } from '../../types';
+import { CivicAnalytics, Ward, Complaint, User } from '../../types';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader';
 import { matchesWard } from '../../utils/wardUtils';
@@ -73,20 +73,23 @@ export const SystemReports: React.FC = () => {
   const [analytics, setAnalytics] = useState<CivicAnalytics | null>(null);
   const [wards, setWards] = useState<Ward[]>([]);
   const [complaints, setComplaints] = useState<Complaint[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [selectedWard, setSelectedWard] = useState<string>('ALL');
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [aData, wData, cData] = await Promise.all([
+        const [aData, wData, cData, uData] = await Promise.all([
           adminService.getAnalytics(),
           adminService.getWards(),
           complaintService.getComplaints({}, true).catch(() => [] as Complaint[]),
+          adminService.getUsers().catch(() => [] as User[]),
         ]);
         setAnalytics(aData);
         setWards(wData);
         setComplaints(cData);
+        setUsers(uData);
       } catch (e) {
         console.error('Failed to load municipal reports data:', e);
       } finally {
@@ -100,12 +103,20 @@ export const SystemReports: React.FC = () => {
   const wardStats = useMemo<WardStat[]>(() => {
     // 1. Gather all unique ward names
     const wardMap = new Map<string, { id: string; name: string; councillor: string }>();
+    const activeCouncillors = users.filter((u) => u.role === 'COUNCILLOR' && (u.status || 'ACTIVE') === 'ACTIVE');
 
     wards.forEach((w) => {
+      let cName = w.councillorName;
+      if (!cName || cName.trim() === '' || cName.toLowerCase() === 'unassigned' || cName === 'Assigned Councillor') {
+        const found = activeCouncillors.find((u) => matchesWard(u.ward, w.name));
+        if (found) {
+          cName = found.fullName;
+        }
+      }
       wardMap.set(w.name.trim(), {
         id: w.id,
         name: w.name.trim(),
-        councillor: w.councillorName || 'Assigned Councillor',
+        councillor: cName && cName.trim() !== '' ? cName : 'Unassigned',
       });
     });
 
@@ -121,10 +132,11 @@ export const SystemReports: React.FC = () => {
           }
         }
         if (!matchedKey) {
+          const found = activeCouncillors.find((u) => matchesWard(u.ward, trimmed));
           wardMap.set(trimmed, {
             id: `w_${trimmed.replace(/\s+/g, '_')}`,
             name: trimmed,
-            councillor: 'Municipal Office',
+            councillor: found ? found.fullName : 'Municipal Office',
           });
         }
       }
@@ -165,7 +177,7 @@ export const SystemReports: React.FC = () => {
 
     // Sort by ward name naturally or ward number
     return results.sort((a, b) => a.wardName.localeCompare(b.wardName, undefined, { numeric: true }));
-  }, [wards, complaints]);
+  }, [wards, complaints, users]);
 
   // Filtered complaints based on selected ward dropdown
   const filteredComplaints = useMemo(() => {

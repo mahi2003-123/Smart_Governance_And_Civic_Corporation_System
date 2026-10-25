@@ -144,7 +144,7 @@ export const CouncillorDashboard: React.FC = () => {
 
   const wardPerformanceData = ['Ward 1', 'Ward 2', 'Ward 3', 'Ward 4'].map((wardName) => {
     const matching = complaints.filter(
-      (c) => c.ward && c.ward.toLowerCase().includes(wardName.toLowerCase())
+      (c) => matchesWard(c.ward, wardName)
     );
     const active = matching.filter((c) => c.status === 'PENDING' || c.status === 'IN_PROGRESS').length;
     const resolved = matching.filter((c) => c.status === 'RESOLVED').length;

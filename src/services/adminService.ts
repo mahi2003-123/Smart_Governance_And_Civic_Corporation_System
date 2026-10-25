@@ -101,6 +101,16 @@ export const adminService = {
     }
   },
 
+  updateUserWard: async (userId: string, newWard: string): Promise<User> => {
+    try {
+      const res = await api.put(`/admin/users/${userId}/ward`, { ward: newWard });
+      return res.data;
+    } catch (err: any) {
+      console.error('[adminService] Backend ward update error:', err);
+      throw new Error(err.response?.data?.error || 'Failed to update user ward in database.');
+    }
+  },
+
   getWards: async (): Promise<Ward[]> => {
     try {
       const res = await api.get('/admin/wards');

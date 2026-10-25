@@ -37,6 +37,7 @@ import { AdminPageHeader } from '../../components/admin/AdminPageHeader';
 import { FilterBar, FilterOption } from '../../components/admin/FilterBar';
 import { ActionMenu, ActionMenuItem } from '../../components/admin/ActionMenu';
 import { CustomTextField } from '../../components/common/CustomTextField';
+import { matchesWard, formatWardName } from '../../utils/wardUtils';
 
 export const CouncillorManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -54,6 +55,13 @@ export const CouncillorManagement: React.FC = () => {
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState('');
   const [modalSuccess, setModalSuccess] = useState('');
+
+  // Reassign Modal State
+  const [reassignModalOpen, setReassignModalOpen] = useState(false);
+  const [selectedCouncillor, setSelectedCouncillor] = useState<User | null>(null);
+  const [selectedNewWard, setSelectedNewWard] = useState('');
+  const [reassignLoading, setReassignLoading] = useState(false);
+  const [reassignError, setReassignError] = useState('');
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -73,7 +81,7 @@ export const CouncillorManagement: React.FC = () => {
       setCouncillors(uData.filter((u) => u.role === 'COUNCILLOR'));
       setWards(wData);
       if (wData.length > 0) {
-        setFormData((prev) => ({ ...prev, ward: `Ward ${wData[0].wardNumber} - ${wData[0].name}` }));
+        setFormData((prev) => ({ ...prev, ward: formatWardName(wData[0].wardNumber, wData[0].name) }));
       }
     } catch (e) {
       console.error(e);
@@ -150,13 +158,12 @@ export const CouncillorManagement: React.FC = () => {
     }
 
     // Check 1 Councillor per ward constraint
-    const targetWardNum = formData.ward.split('-')[0].trim().toLowerCase();
     const existing = allUsers.find(
       (u) =>
         u.role === 'COUNCILLOR' &&
         u.ward &&
-        (u.ward.toLowerCase() === formData.ward.toLowerCase() ||
-         u.ward.toLowerCase().includes(targetWardNum))
+        (u.status || 'ACTIVE') === 'ACTIVE' &&
+        matchesWard(u.ward, formData.ward)
     );
 
     if (existing) {
@@ -183,7 +190,7 @@ export const CouncillorManagement: React.FC = () => {
         fullName: '',
         email: '',
         phone: '',
-        ward: wards.length > 0 ? `Ward ${wards[0].wardNumber} - ${wards[0].name}` : 'Ward 1 - Central Town',
+        ward: wards.length > 0 ? formatWardName(wards[0].wardNumber, wards[0].name) : 'Ward 1 - Central Town',
       });
 
       setTimeout(() => setOpenModal(false), 1200);
@@ -191,6 +198,39 @@ export const CouncillorManagement: React.FC = () => {
       setModalError(err.message || 'Failed to create councillor record.');
     } finally {
       setModalLoading(false);
+    }
+  };
+
+  const handleReassignWard = async () => {
+    if (!selectedCouncillor || !selectedNewWard) return;
+    setReassignError('');
+
+    const existing = allUsers.find(
+      (u) =>
+        u.id !== selectedCouncillor.id &&
+        u.role === 'COUNCILLOR' &&
+        u.ward &&
+        (u.status || 'ACTIVE') === 'ACTIVE' &&
+        matchesWard(u.ward, selectedNewWard)
+    );
+
+    if (existing) {
+      setReassignError(
+        `Ward "${selectedNewWard}" already has an assigned Councillor (${existing.fullName} - ${existing.email}). Only 1 Councillor is permitted per municipal ward.`
+      );
+      return;
+    }
+
+    setReassignLoading(true);
+    try {
+      const updated = await adminService.updateUserWard(selectedCouncillor.id, selectedNewWard);
+      setCouncillors((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+      setAllUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+      setReassignModalOpen(false);
+    } catch (err: any) {
+      setReassignError(err.message || 'Failed to reassign councillor ward.');
+    } finally {
+      setReassignLoading(false);
     }
   };
 
@@ -292,7 +332,12 @@ export const CouncillorManagement: React.FC = () => {
                   {
                     label: 'Reassign Ward',
                     icon: <SwapHorizOutlinedIcon fontSize="small" />,
-                    onClick: () => alert(`Reassign Ward for ${c.fullName}`),
+                    onClick: () => {
+                      setSelectedCouncillor(c);
+                      setSelectedNewWard(c.ward || (wards[0] ? formatWardName(wards[0].wardNumber, wards[0].name) : ''));
+                      setReassignError('');
+                      setReassignModalOpen(true);
+                    },
                   },
                   {
                     label: 'Edit Details',
@@ -386,11 +431,14 @@ export const CouncillorManagement: React.FC = () => {
                     label="Assigned Ward Jurisdiction"
                     onChange={(e) => setFormData({ ...formData, ward: e.target.value })}
                   >
-                    {wards.map((w) => (
-                      <MenuItem key={w.id} value={`Ward ${w.wardNumber} - ${w.name}`}>
-                        Ward {w.wardNumber} - {w.name}
-                      </MenuItem>
-                    ))}
+                    {wards.map((w) => {
+                      const formatted = formatWardName(w.wardNumber, w.name);
+                      return (
+                        <MenuItem key={w.id} value={formatted}>
+                          {formatted}
+                        </MenuItem>
+                      );
+                    })}
                   </Select>
                 </FormControl>
               </Grid>
@@ -446,6 +494,80 @@ export const CouncillorManagement: React.FC = () => {
             </Button>
           </DialogActions>
         </Box>
+      </Dialog>
+
+      {/* Reassign Ward Modal */}
+      <Dialog
+        open={reassignModalOpen}
+        onClose={() => setReassignModalOpen(false)}
+        maxWidth="xs"
+        fullWidth
+        slotProps={{ paper: { sx: { borderRadius: '8px', p: 1 } } }}
+      >
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, color: '#202522' }}>
+            Reassign Municipal Ward
+          </Typography>
+          <IconButton size="small" onClick={() => setReassignModalOpen(false)}>
+            <CloseOutlinedIcon fontSize="small" />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers sx={{ borderColor: '#E5E8E4' }}>
+          {selectedCouncillor && (
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#1C2A24' }}>
+                {selectedCouncillor.fullName}
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#68706B', display: 'block' }}>
+                Current Ward: {selectedCouncillor.ward || 'Unassigned'}
+              </Typography>
+            </Box>
+          )}
+
+          {reassignError && (
+            <Alert severity="error" sx={{ mb: 2, borderRadius: '6px' }}>
+              {reassignError}
+            </Alert>
+          )}
+
+          <FormControl fullWidth size="small" sx={{ mt: 1 }}>
+            <InputLabel id="reassign-ward-label">New Ward Jurisdiction</InputLabel>
+            <Select
+              labelId="reassign-ward-label"
+              value={selectedNewWard}
+              label="New Ward Jurisdiction"
+              onChange={(e) => setSelectedNewWard(e.target.value)}
+            >
+              {wards.map((w) => {
+                const formatted = formatWardName(w.wardNumber, w.name);
+                return (
+                  <MenuItem key={w.id} value={formatted}>
+                    {formatted}
+                  </MenuItem>
+                );
+              })}
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setReassignModalOpen(false)} sx={{ color: '#68706B', textTransform: 'none' }}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleReassignWard}
+            variant="contained"
+            disabled={reassignLoading || !selectedNewWard}
+            sx={{
+              backgroundColor: '#496A57',
+              color: '#FFFFFF',
+              textTransform: 'none',
+              px: 3,
+              '&:hover': { backgroundColor: '#304B3A' },
+            }}
+          >
+            {reassignLoading ? 'Saving...' : 'Update Ward'}
+          </Button>
+        </DialogActions>
       </Dialog>
     </Box>
   );
