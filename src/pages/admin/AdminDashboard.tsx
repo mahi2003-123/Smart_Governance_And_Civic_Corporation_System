@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, Divider, Stack } from '@mui/material';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Box, Typography, Button, Divider, Stack, Alert } from '@mui/material';
 import ArrowForwardOutlinedIcon from '@mui/icons-material/ArrowForwardOutlined';
 import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { useNavigate } from 'react-router-dom';
 import { adminService } from '../../services/adminService';
 import { CivicAnalytics, SystemActivityLog, Ward } from '../../types';
@@ -12,70 +13,121 @@ import { AdminStat } from '../../components/admin/AdminStat';
 import { ActivityFeed } from '../../components/admin/ActivityFeed';
 import { AccessDeniedState } from '../../components/common/AccessDeniedState';
 
+const DEFAULT_ANALYTICS: CivicAnalytics = {
+  totalComplaints: 0,
+  pendingComplaints: 0,
+  inProgressComplaints: 0,
+  resolvedComplaints: 0,
+  totalProposals: 0,
+  activeNotices: 0,
+  categoryBreakdown: [],
+  monthlyTrends: [],
+};
+
 export const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [forbidden, setForbidden] = useState(false);
-  const [analytics, setAnalytics] = useState<CivicAnalytics | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [analytics, setAnalytics] = useState<CivicAnalytics>(DEFAULT_ANALYTICS);
   const [activities, setActivities] = useState<SystemActivityLog[]>([]);
   const [wards, setWards] = useState<Ward[]>([]);
   const [totalCitizens, setTotalCitizens] = useState(0);
   const [totalCouncillors, setTotalCouncillors] = useState(0);
   const [totalWorkers, setTotalWorkers] = useState(0);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setForbidden(false);
-      try {
-        const [analyticsData, activityData, wardData, userData] = await Promise.all([
-          adminService.getAnalytics(),
-          adminService.getActivityLogs(),
-          adminService.getWards(),
-          adminService.getUsers(),
-        ]);
-        setAnalytics(analyticsData);
-        setActivities(activityData);
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setForbidden(false);
+    setError(null);
+    try {
+      const [analyticsRes, activityRes, wardRes, userRes] = await Promise.allSettled([
+        adminService.getAnalytics(),
+        adminService.getActivityLogs(),
+        adminService.getWards(),
+        adminService.getUsers(),
+      ]);
 
-        const councillors = userData.filter((u) => u.role === 'COUNCILLOR' && (u.status || 'ACTIVE') === 'ACTIVE');
-        const enrichedWards = wardData.map((w) => {
-          let cName = w.councillorName;
-          let cEmail = w.councillorEmail;
-          if (!cName || cName.trim() === '' || cName.toLowerCase() === 'unassigned') {
-            const found = councillors.find((c) => matchesWard(c.ward, w.name));
-            if (found) {
-              cName = found.fullName;
-              cEmail = found.email;
-            }
+      // Detect permission / forbidden failures
+      const results = [analyticsRes, activityRes, wardRes, userRes];
+      for (const res of results) {
+        if (res.status === 'rejected') {
+          const err = res.reason;
+          if (err?.response?.status === 403 || err?.status === 403) {
+            setForbidden(true);
+            return;
           }
-          return {
-            ...w,
-            councillorName: cName && cName.trim() !== '' ? cName : 'Unassigned',
-            councillorEmail: cEmail || '',
-          };
-        });
-        setWards(enrichedWards);
-
-        setTotalCitizens(userData.filter((u) => u.role === 'CITIZEN').length);
-        setTotalCouncillors(userData.filter((u) => u.role === 'COUNCILLOR').length);
-        setTotalWorkers(userData.filter((u) => u.role === 'WORKER').length);
-      } catch (e: any) {
-        console.error(e);
-        if (e?.response?.status === 403 || e?.status === 403) {
-          setForbidden(true);
         }
-      } finally {
-        setLoading(false);
       }
-    };
-    fetchData();
+
+      let hadRejections = false;
+
+      if (analyticsRes.status === 'fulfilled' && analyticsRes.value) {
+        setAnalytics(analyticsRes.value);
+      } else {
+        hadRejections = true;
+      }
+
+      if (activityRes.status === 'fulfilled' && Array.isArray(activityRes.value)) {
+        setActivities(activityRes.value);
+      } else {
+        hadRejections = true;
+      }
+
+      const wardData = wardRes.status === 'fulfilled' && Array.isArray(wardRes.value) ? wardRes.value : [];
+      const userData = userRes.status === 'fulfilled' && Array.isArray(userRes.value) ? userRes.value : [];
+
+      if (wardRes.status === 'rejected' || userRes.status === 'rejected') {
+        hadRejections = true;
+      }
+
+      const councillors = userData.filter((u) => u.role === 'COUNCILLOR' && (u.status || 'ACTIVE') === 'ACTIVE');
+      const enrichedWards = wardData.map((w) => {
+        let cName = w.councillorName;
+        let cEmail = w.councillorEmail;
+        if (!cName || cName.trim() === '' || cName.toLowerCase() === 'unassigned') {
+          const found = councillors.find((c) => matchesWard(c.ward, w.name));
+          if (found) {
+            cName = found.fullName;
+            cEmail = found.email;
+          }
+        }
+        return {
+          ...w,
+          councillorName: cName && cName.trim() !== '' ? cName : 'Unassigned',
+          councillorEmail: cEmail || '',
+        };
+      });
+      setWards(enrichedWards);
+
+      setTotalCitizens(userData.filter((u) => u.role === 'CITIZEN').length);
+      setTotalCouncillors(userData.filter((u) => u.role === 'COUNCILLOR').length);
+      setTotalWorkers(userData.filter((u) => u.role === 'WORKER').length);
+
+      if (hadRejections) {
+        setError('Unable to load some live municipal records. Displaying cached overview.');
+      }
+    } catch (e: any) {
+      console.error(e);
+      if (e?.response?.status === 403 || e?.status === 403) {
+        setForbidden(true);
+      } else {
+        setError('Failed to reach backend server. Please check your connection.');
+      }
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   if (forbidden) {
     return <AccessDeniedState message="You do not have administrative privileges to access the Super Admin Dashboard." />;
   }
 
-  if (loading || !analytics) {
+  if (loading) {
     return <LoadingSpinner message="Loading Super Admin System Overview..." />;
   }
 
@@ -93,6 +145,20 @@ export const AdminDashboard: React.FC = () => {
         actionIcon={<PersonAddOutlinedIcon sx={{ fontSize: 18 }} />}
         onActionClick={() => navigate('/admin/users')}
       />
+
+      {error && (
+        <Alert
+          severity="warning"
+          sx={{ mb: 4, borderRadius: 2 }}
+          action={
+            <Button color="inherit" size="small" startIcon={<RefreshIcon />} onClick={fetchData}>
+              Retry
+            </Button>
+          }
+        >
+          {error}
+        </Alert>
+      )}
 
       {/* 2. System Summary */}
       <Box sx={{ mb: 5 }}>

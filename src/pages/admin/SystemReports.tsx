@@ -81,8 +81,8 @@ export const SystemReports: React.FC = () => {
       setLoading(true);
       try {
         const [aData, wData, cData, uData] = await Promise.all([
-          adminService.getAnalytics(),
-          adminService.getWards(),
+          adminService.getAnalytics().catch(() => null),
+          adminService.getWards().catch(() => [] as Ward[]),
           complaintService.getComplaints({}, true).catch(() => [] as Complaint[]),
           adminService.getUsers().catch(() => [] as User[]),
         ]);
@@ -268,7 +268,7 @@ export const SystemReports: React.FC = () => {
     window.print();
   };
 
-  if (loading || !analytics) {
+  if (loading) {
     return <LoadingSpinner message="Generating Municipal Performance Reports & Ward Analytics..." />;
   }
 
