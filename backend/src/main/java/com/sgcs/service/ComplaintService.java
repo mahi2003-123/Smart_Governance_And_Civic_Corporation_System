@@ -496,12 +496,33 @@ public class ComplaintService {
         public String getMatchReason() { return matchReason; }
     }
 
+    public static class LocationMatchResult {
+        private final double score;
+        private final boolean match;
+        private final String reason;
+
+        public LocationMatchResult(double score, boolean match, String reason) {
+            this.score = score;
+            this.match = match;
+            this.reason = reason;
+        }
+
+        public double getScore() { return score; }
+        public boolean isMatch() { return match; }
+        public String getReason() { return reason; }
+    }
+
     private static final Set<String> STOP_WORDS = Set.of(
         "the", "is", "at", "which", "on", "a", "an", "and", "or", "in", "near", "to",
         "for", "of", "from", "by", "with", "it", "this", "that", "there", "very", "please",
         "has", "have", "been", "my", "our", "are", "was", "were", "sir", "madam",
         "complaint", "issue", "problem", "kindly", "request", "help", "urgently", "action",
         "take", "area", "ward", "colony", "block", "nagar"
+    );
+
+    private static final Set<String> ADDRESS_STOP_WORDS = Set.of(
+        "the", "at", "on", "a", "an", "and", "or", "in", "near", "to", "for", "of", "from",
+        "by", "with", "opposite", "opp", "behind", "beside", "front", "next", "close", "ward"
     );
 
     private static final Set<String> CIVIC_HIGH_WEIGHT_KEYWORDS = Set.of(
@@ -545,7 +566,7 @@ public class ComplaintService {
                 double[] cCoords = extractCoordinates(c.getLocationAddress());
                 if (savedCoords != null && cCoords != null) {
                     return calculateHaversineMeters(savedCoords[0], savedCoords[1],
-                                                   cCoords[0], cCoords[1]) < 500.0;
+                                                   cCoords[0], cCoords[1]) < 250.0;
                 }
                 return false;
             })
@@ -568,6 +589,8 @@ public class ComplaintService {
                 String newFullText = (saved.getTitle() != null && !saved.getTitle().trim().isEmpty() ? saved.getTitle().trim() + ". " : "") + 
                                      (saved.getDescription() != null ? saved.getDescription().trim() : "");
                 dupReq.put("new_complaint", newFullText);
+                dupReq.put("new_title", saved.getTitle());
+                dupReq.put("new_description", saved.getDescription());
                 dupReq.put("new_ward", saved.getWard());
                 dupReq.put("new_location", saved.getLocationAddress());
                 if (savedCoords != null) {
@@ -581,6 +604,8 @@ public class ComplaintService {
                 for (Complaint ac : candidates) {
                     Map<String, Object> item = new HashMap<>();
                     item.put("id", ac.getId());
+                    item.put("title", ac.getTitle());
+                    item.put("description", ac.getDescription());
                     String acFullText = (ac.getTitle() != null && !ac.getTitle().trim().isEmpty() ? ac.getTitle().trim() + ". " : "") + 
                                         (ac.getDescription() != null ? ac.getDescription().trim() : "");
                     item.put("text", acFullText);
@@ -637,6 +662,23 @@ public class ComplaintService {
             }
         }
 
+        // Safety gate: verify candidate matches location before assigning duplicate link
+        if (bestDuplicateId != null) {
+            final String finalDupId = bestDuplicateId;
+            Complaint candidateComp = candidates.stream()
+                .filter(c -> c != null && c.getId() != null && c.getId().equals(finalDupId))
+                .findFirst().orElse(null);
+            if (candidateComp != null) {
+                LocationMatchResult locResult = evaluateLocationMatch(saved, candidateComp);
+                if (!locResult.isMatch()) {
+                    logger.info("Discarded duplicate candidate {} because location does not match ({})",
+                        finalDupId, locResult.getReason());
+                    bestDuplicateId = null;
+                    bestScore = null;
+                }
+            }
+        }
+
         if (bestDuplicateId != null) {
             saved.setPossibleDuplicateId(bestDuplicateId);
             saved.setDuplicateSimilarityScore(bestScore);
@@ -650,11 +692,7 @@ public class ComplaintService {
             return null;
         }
 
-        String newFullText = (newComp.getTitle() != null ? newComp.getTitle() + ". " : "") +
-                             (newComp.getDescription() != null ? newComp.getDescription() : "");
-        String newLoc = newComp.getLocationAddress();
         String newCat = resolveEffectiveCategory(newComp);
-
         Complaint bestMatch = null;
         double highestScore = 0.0;
         String bestReason = "";
@@ -662,75 +700,61 @@ public class ComplaintService {
         for (Complaint ex : existingComplaints) {
             if (ex.getId() == null || ex.getId().equals(newComp.getId())) continue;
 
-            // 1. Text Similarity
-            String exFullText = (ex.getTitle() != null ? ex.getTitle() + ". " : "") +
-                                (ex.getDescription() != null ? ex.getDescription() : "");
-            double textSim = calculateCivicTextSimilarity(newFullText, exFullText);
-
-            // 2. Location Similarity (GPS or Address)
-            double locSim = 0.0;
-            boolean hasGps = false;
-            double[] c1 = extractCoordinates(newLoc);
-            double[] c2 = extractCoordinates(ex.getLocationAddress());
-            if (c1 != null && c2 != null) {
-                hasGps = true;
-                double dist = calculateHaversineMeters(c1[0], c1[1], c2[0], c2[1]);
-                if (dist < 40.0) locSim = 1.0;
-                else if (dist < 100.0) locSim = 0.88;
-                else if (dist < 200.0) locSim = 0.72;
-                else if (dist < 400.0) locSim = 0.50;
-                else if (dist < 800.0) locSim = 0.25;
-                else locSim = 0.05;
-            } else {
-                locSim = calculateAddressSimilarity(newLoc, ex.getLocationAddress());
+            // 1. LOCATION CHECK (Mandatory requirement: location must match)
+            LocationMatchResult locResult = evaluateLocationMatch(newComp, ex);
+            if (!locResult.isMatch()) {
+                // Different locations -> CANNOT be a duplicate!
+                continue;
             }
 
-            // 3. Category Match
+            // 2. TITLE / COMPLAINT CHECK
+            double titleSim = calculateTitleSimilarity(newComp.getTitle(), ex.getTitle(),
+                                                       newComp.getDescription(), ex.getDescription());
+            if (titleSim < 0.35) {
+                // Complaint titles do not match
+                continue;
+            }
+
+            // 3. DESCRIPTION CHECK
+            double descSim = calculateDescriptionSimilarity(newComp.getDescription(), ex.getDescription());
+            if (descSim < 0.35) {
+                // Complaint descriptions do not match
+                continue;
+            }
+
+            // --- ALL 3 ARE MATCHING: Title, Description, and Location! ---
+
+            // 4. Category Modifier
             String exCat = resolveEffectiveCategory(ex);
             double catModifier = 0.0;
             if (!newCat.isEmpty() && !exCat.isEmpty() && !"OTHER".equals(newCat) && !"OTHER".equals(exCat)) {
                 if (newCat.equalsIgnoreCase(exCat)) {
-                    catModifier = 0.15;
+                    catModifier = 0.10;
                 } else if (isRelatedCategory(newCat, exCat)) {
-                    catModifier = 0.05;
+                    catModifier = 0.03;
                 } else {
-                    catModifier = -0.20;
+                    catModifier = -0.15;
                 }
             }
 
-            // 4. Temporal Proximity
+            // 5. Temporal Proximity
             double timeModifier = 0.0;
             if (newComp.getCreatedAt() != null && ex.getCreatedAt() != null) {
                 long hoursBetween = Math.abs(Duration.between(newComp.getCreatedAt(), ex.getCreatedAt()).toHours());
-                if (hoursBetween <= 48) timeModifier = 0.10;
-                else if (hoursBetween <= 168) timeModifier = 0.05;
+                if (hoursBetween <= 48) timeModifier = 0.08;
+                else if (hoursBetween <= 168) timeModifier = 0.04;
                 else if (hoursBetween > 1440) timeModifier = -0.05;
             }
 
-            // 5. Final Combined Score Calculation
-            double totalScore;
-            if (hasGps && locSim >= 0.70) {
-                totalScore = (0.45 * textSim) + (0.40 * locSim) + catModifier + timeModifier;
-                if (textSim >= 0.35 && (catModifier >= 0.0)) {
-                    totalScore = Math.max(totalScore, 0.75 + (0.20 * textSim));
-                }
-            } else if (locSim >= 0.40) {
-                totalScore = (0.45 * textSim) + (0.35 * locSim) + catModifier + timeModifier;
-            } else {
-                totalScore = (0.75 * textSim) + (0.10 * locSim) + catModifier + timeModifier;
-            }
-
-            if (textSim >= 0.65) {
-                totalScore = Math.max(totalScore, textSim + 0.10);
-            }
-
+            // 6. Final Combined Score Calculation
+            double totalScore = (0.35 * locResult.getScore()) + (0.35 * descSim) + (0.20 * titleSim) + catModifier + timeModifier;
             totalScore = Math.max(0.0, Math.min(0.99, totalScore));
 
             if (totalScore > highestScore) {
                 highestScore = totalScore;
                 bestMatch = ex;
-                bestReason = String.format("Match with #%s (Text: %.0f%%, Location: %.0f%%)",
-                    ex.getTrackingNumber(), textSim * 100, locSim * 100);
+                bestReason = String.format("Match with #%s (Title: %.0f%%, Desc: %.0f%%, Loc: %.0f%%)",
+                    ex.getTrackingNumber(), titleSim * 100, descSim * 100, locResult.getScore() * 100);
             }
         }
 
@@ -776,7 +800,7 @@ public class ComplaintService {
                     double[] cCoords = extractCoordinates(c.getLocationAddress());
                     if (compCoords != null && cCoords != null) {
                         return calculateHaversineMeters(compCoords[0], compCoords[1],
-                                                       cCoords[0], cCoords[1]) < 500.0;
+                                                       cCoords[0], cCoords[1]) < 250.0;
                     }
                     return false;
                 })
@@ -849,6 +873,120 @@ public class ComplaintService {
         return (0.30 * jaccard) + (0.30 * overlap) + (0.25 * civicWeight) + (0.15 * bigramScore);
     }
 
+    public LocationMatchResult evaluateLocationMatch(Complaint c1, Complaint c2) {
+        if (c1 == null || c2 == null) {
+            return new LocationMatchResult(0.0, false, "Null complaint");
+        }
+
+        String w1 = c1.getWard();
+        String w2 = c2.getWard();
+        boolean wardsProvided = w1 != null && !w1.trim().isEmpty() && w2 != null && !w2.trim().isEmpty();
+        boolean wardsMatch = !wardsProvided || checkWardsMatch(w1, w2);
+
+        double[] coords1 = extractCoordinates(c1.getLocationAddress());
+        double[] coords2 = extractCoordinates(c2.getLocationAddress());
+
+        // 1. If GPS coordinates exist on both complaints, spatial proximity is ground truth
+        if (coords1 != null && coords2 != null) {
+            double distMeters = calculateHaversineMeters(coords1[0], coords1[1], coords2[0], coords2[1]);
+            if (distMeters <= 75.0) {
+                return new LocationMatchResult(1.0, true, String.format("GPS distance %.1fm (<=75m)", distMeters));
+            } else if (distMeters <= 150.0) {
+                return new LocationMatchResult(0.85, true, String.format("GPS distance %.1fm (<=150m)", distMeters));
+            } else if (distMeters <= 250.0 && wardsMatch) {
+                double textSim = calculateAddressSimilarity(c1.getLocationAddress(), c2.getLocationAddress());
+                if (textSim >= 0.30) {
+                    return new LocationMatchResult(0.65, true, String.format("GPS distance %.1fm with address overlap", distMeters));
+                }
+            }
+            // If GPS distance is greater than 250m, it is definitely a different location!
+            return new LocationMatchResult(0.0, false, String.format("GPS distance %.1fm (>200m) - different location", distMeters));
+        }
+
+        // 2. If wards are provided and do not match, cannot be same location
+        if (wardsProvided && !wardsMatch) {
+            return new LocationMatchResult(0.0, false, "Different municipality wards (" + w1 + " vs " + w2 + ")");
+        }
+
+        // 3. Address textual similarity
+        String addr1 = c1.getLocationAddress();
+        String addr2 = c2.getLocationAddress();
+        if (addr1 == null || addr2 == null || addr1.trim().isEmpty() || addr2.trim().isEmpty()) {
+            return new LocationMatchResult(0.0, false, "Missing address");
+        }
+
+        double addrSim = calculateAddressSimilarity(addr1, addr2);
+        if (addrSim >= 0.40) {
+            return new LocationMatchResult(addrSim, true, String.format("Address match (%.0f%%)", addrSim * 100));
+        }
+
+        return new LocationMatchResult(addrSim, false, String.format("Different addresses (%.0f%% similarity)", addrSim * 100));
+    }
+
+    public double calculateTitleSimilarity(String t1, String t2, String d1, String d2) {
+        if (t1 == null) t1 = "";
+        if (t2 == null) t2 = "";
+        String s1 = t1.trim();
+        String s2 = t2.trim();
+
+        if (s1.equalsIgnoreCase(s2) && !s1.isEmpty()) {
+            return 1.0;
+        }
+
+        Set<String> tokens1 = extractMeaningfulTokens(s1);
+        Set<String> tokens2 = extractMeaningfulTokens(s2);
+
+        // If one title is missing or has no meaningful tokens, try matching against description
+        if (tokens1.isEmpty() || tokens2.isEmpty()) {
+            if (!tokens1.isEmpty() && d2 != null) {
+                Set<String> d2Tokens = extractMeaningfulTokens(d2);
+                Set<String> inter = new HashSet<>(tokens1);
+                inter.retainAll(d2Tokens);
+                if (!inter.isEmpty()) {
+                    return (double) inter.size() / tokens1.size();
+                }
+            }
+            if (!tokens2.isEmpty() && d1 != null) {
+                Set<String> d1Tokens = extractMeaningfulTokens(d1);
+                Set<String> inter = new HashSet<>(tokens2);
+                inter.retainAll(d1Tokens);
+                if (!inter.isEmpty()) {
+                    return (double) inter.size() / tokens2.size();
+                }
+            }
+            return 0.0;
+        }
+
+        Set<String> inter = new HashSet<>(tokens1);
+        inter.retainAll(tokens2);
+        Set<String> union = new HashSet<>(tokens1);
+        union.addAll(tokens2);
+
+        double jaccard = (double) inter.size() / union.size();
+        double overlap = (double) inter.size() / Math.min(tokens1.size(), tokens2.size());
+
+        int civicMatches = 0;
+        for (String t : inter) {
+            if (CIVIC_HIGH_WEIGHT_KEYWORDS.contains(t)) {
+                civicMatches++;
+            }
+        }
+
+        double score = 0.5 * jaccard + 0.5 * overlap;
+        if (civicMatches > 0) {
+            score = Math.min(1.0, score + 0.20 * civicMatches);
+        }
+        return score;
+    }
+
+    public double calculateDescriptionSimilarity(String d1, String d2) {
+        if (d1 == null || d2 == null) return 0.0;
+        if (d1.trim().equalsIgnoreCase(d2.trim()) && !d1.trim().isEmpty()) {
+            return 1.0;
+        }
+        return calculateCivicTextSimilarity(d1, d2);
+    }
+
     private double calculateAddressSimilarity(String addr1, String addr2) {
         if (addr1 == null || addr2 == null) return 0.0;
         String s1 = addr1.toLowerCase().replaceAll("[^a-z0-9\\s]", " ").trim();
@@ -856,8 +994,12 @@ public class ComplaintService {
         if (s1.isEmpty() || s2.isEmpty()) return 0.0;
         if (s1.equals(s2)) return 1.0;
 
-        Set<String> t1 = extractMeaningfulTokens(s1);
-        Set<String> t2 = extractMeaningfulTokens(s2);
+        if (s1.contains(s2) || s2.contains(s1)) {
+            return 0.90;
+        }
+
+        Set<String> t1 = extractAddressTokens(s1);
+        Set<String> t2 = extractAddressTokens(s2);
         if (t1.isEmpty() || t2.isEmpty()) return 0.0;
 
         Set<String> inter = new HashSet<>(t1);
@@ -870,13 +1012,32 @@ public class ComplaintService {
 
         Set<String> num1 = extractDigits(s1);
         Set<String> num2 = extractDigits(s2);
-        boolean numbersMatch = !num1.isEmpty() && !num2.isEmpty() && hasCommonElement(num1, num2);
+        boolean hasNumbers = !num1.isEmpty() && !num2.isEmpty();
+        boolean numbersConflict = hasNumbers && !hasCommonElement(num1, num2);
+
+        if (numbersConflict) {
+            return 0.05;
+        }
 
         double score = 0.5 * jaccard + 0.5 * overlap;
-        if (numbersMatch && score > 0.25) {
+        if (hasNumbers && hasCommonElement(num1, num2) && score > 0.25) {
             score = Math.min(1.0, score + 0.20);
         }
         return score;
+    }
+
+    private Set<String> extractAddressTokens(String text) {
+        if (text == null || text.trim().isEmpty()) return Collections.emptySet();
+        String normalized = text.toLowerCase().replaceAll("[^a-z0-9\\s]", " ");
+        String[] words = normalized.split("\\s+");
+        Set<String> tokens = new HashSet<>();
+        for (String w : words) {
+            String trimmed = w.trim();
+            if (trimmed.length() > 1 && !ADDRESS_STOP_WORDS.contains(trimmed)) {
+                tokens.add(trimmed);
+            }
+        }
+        return tokens;
     }
 
     private double calculateBigramSimilarity(String text1, String text2) {

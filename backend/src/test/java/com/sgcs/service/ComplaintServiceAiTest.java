@@ -242,6 +242,46 @@ public class ComplaintServiceAiTest {
     }
 
     @Test
+    @DisplayName("Should NOT flag as duplicate when complaint text is identical but location is different")
+    public void testDuplicateDetectionRejectsWhenLocationIsDifferent() {
+        Complaint existing = new Complaint();
+        existing.setId("cmp_master_loc1");
+        existing.setTrackingNumber("TRK-LOC-01");
+        existing.setTitle("Broken Street Light");
+        existing.setDescription("Street light is completely dark and bulb is broken");
+        existing.setCategory("STREET_LIGHT");
+        existing.setPriority("MEDIUM");
+        existing.setWard("Ward 1 - Central Town");
+        existing.setLocationAddress("Main Boulevard Sector 4");
+        existing.setStatus("PENDING");
+        existing.setCitizenId("usr_cit_01");
+        existing.setCitizenName("First Citizen");
+        existing.setCitizenPhone("9876543210");
+        existing.setCreatedAt(LocalDateTime.now());
+        existing.setUpdatedAt(LocalDateTime.now());
+        databaseStore.put("cmp_master_loc1", existing);
+
+        dupResponse.put("possible_duplicate_id", "cmp_master_loc1");
+        dupResponse.put("similarity", 0.90);
+
+        Complaint newComplaint = new Complaint();
+        newComplaint.setTitle("Broken Street Light");
+        newComplaint.setDescription("Street light is completely dark and bulb is broken");
+        newComplaint.setCategory("STREET_LIGHT");
+        newComplaint.setPriority("MEDIUM");
+        newComplaint.setWard("Ward 5 - Airport Road");
+        newComplaint.setLocationAddress("Airport Terminal Road near Gate 2");
+        newComplaint.setCitizenId("usr_cit_05");
+        newComplaint.setCitizenName("Second Citizen");
+        newComplaint.setCitizenPhone("9876543215");
+
+        Complaint created = complaintService.createComplaint(newComplaint);
+
+        assertNull(created.getPossibleDuplicateId(), "Must NOT be marked as duplicate when location is in a different ward / address!");
+        assertNull(created.getDuplicateSimilarityScore());
+    }
+
+    @Test
     @DisplayName("Should notify citizen and dispatch alerts when priority is escalated to URGENT")
     public void testUpdatePriorityToUrgentNotifiesCitizenAndWard() {
         Complaint complaint = new Complaint();

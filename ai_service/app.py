@@ -83,6 +83,8 @@ class PredictRequest(BaseModel):
 
 class DuplicateCheckInput(BaseModel):
     new_complaint: str
+    new_title: Optional[str] = ""
+    new_description: Optional[str] = ""
     new_ward: Optional[str] = ""
     new_location: Optional[str] = ""
     new_latitude: Optional[float] = None
@@ -193,12 +195,21 @@ def root_check():
 @app.post("/duplicate-check", dependencies=[Depends(verify_internal_key)])
 @app.post("/ai/duplicate-check", dependencies=[Depends(verify_internal_key)])
 def duplicate_check(data: DuplicateCheckInput):
-    new_text = str(data.new_complaint or "").strip()
+    new_complaint_full = str(data.new_complaint or "").strip()
+    new_title = str(data.new_title or "").strip()
+    new_desc = str(data.new_description or "").strip()
+    if not new_title and new_complaint_full:
+        parts = new_complaint_full.split('.', 1)
+        new_title = parts[0].strip()
+        new_desc = parts[1].strip() if len(parts) > 1 else new_title
+    if not new_desc:
+        new_desc = new_complaint_full
+
     new_loc = str(data.new_location or "").strip()
     new_cat = str(data.new_category or "").strip().upper()
     existing = data.existing_complaints
 
-    if len(new_text) > 2000:
+    if len(new_complaint_full) > 2000:
         raise HTTPException(status_code=413, detail="New complaint text exceeds maximum limit of 2000 characters")
     if len(existing) > 500:
         raise HTTPException(status_code=413, detail="existing_complaints exceeds maximum limit of 500 items")
@@ -207,11 +218,13 @@ def duplicate_check(data: DuplicateCheckInput):
         if len(t) > 2000:
             raise HTTPException(status_code=413, detail=f"Complaint at index {idx} exceeds maximum text limit of 2000 characters")
 
-    if not new_text or not existing:
+    if not new_complaint_full or not existing:
         return {"possible_duplicate_id": None, "similarity": 0.0}
 
-    new_tokens = extract_tokens(new_text)
+    new_title_tokens = extract_tokens(new_title)
+    new_desc_tokens = extract_tokens(new_desc)
     new_loc_tokens = extract_tokens(new_loc)
+    new_digits = set(re.findall(r'\b\d+\b', new_loc))
 
     best_match = None
     highest_score = 0.0
@@ -219,53 +232,23 @@ def duplicate_check(data: DuplicateCheckInput):
     vectorizer = ai_system.get("vectorizer")
 
     for c in existing:
-        # Check ward compatibility
-        c_ward = c.get('ward', '')
-        if not are_wards_compatible(data.new_ward, c_ward):
-            continue
+        c_ward = str(c.get('ward', '') or '').strip()
+        wards_match = are_wards_compatible(data.new_ward, c_ward)
 
-        c_text = str(c.get('text', '') or "").strip()
-        c_tokens = extract_tokens(c_text)
-        if not new_tokens or not c_tokens:
-            continue
-
-        # 1. Text & Semantic Overlap
-        union = new_tokens | c_tokens
-        inter = new_tokens & c_tokens
-        jaccard = len(inter) / len(union) if union else 0.0
-        overlap = len(inter) / min(len(new_tokens), len(c_tokens)) if min(len(new_tokens), len(c_tokens)) > 0 else 0.0
-
-        cos_sim = 0.0
-        if vectorizer is not None:
-            try:
-                m1 = vectorizer.transform([new_text])
-                m2 = vectorizer.transform([c_text])
-                cos_sim = float(cosine_similarity(m1, m2)[0][0])
-            except Exception:
-                cos_sim = 0.0
-
-        # Blended text score
-        text_score = 0.50 * cos_sim + 0.25 * jaccard + 0.25 * overlap
-
-        # 2. Location Similarity
+        # 1. Location Matching (Mandatory prerequisite: locations must match)
         c_loc = str(c.get('location', '') or "").strip()
         c_loc_tokens = extract_tokens(c_loc)
-        has_location = bool(new_loc_tokens and c_loc_tokens)
-        loc_score = 0.0
-
-        if has_location:
-            loc_inter = new_loc_tokens & c_loc_tokens
-            loc_union = new_loc_tokens | c_loc_tokens
-            loc_jaccard = len(loc_inter) / len(loc_union) if loc_union else 0.0
-            loc_overlap = len(loc_inter) / min(len(new_loc_tokens), len(c_loc_tokens)) if min(len(new_loc_tokens), len(c_loc_tokens)) > 0 else 0.0
-            loc_seq = calc_string_similarity(normalize_text(new_loc), normalize_text(c_loc))
-            loc_score = max(loc_jaccard, loc_overlap * 0.9, loc_seq)
-
-        # GPS coordinate proximity (Haversine)
+        c_digits = set(re.findall(r'\b\d+\b', c_loc))
+        
         c_lat = c.get('latitude')
         c_lon = c.get('longitude')
-        gps_score = 0.0
-        if data.new_latitude is not None and data.new_longitude is not None and c_lat is not None and c_lon is not None:
+        has_gps = (data.new_latitude is not None and data.new_longitude is not None and 
+                   c_lat is not None and c_lon is not None)
+
+        is_loc_match = False
+        loc_score = 0.0
+
+        if has_gps:
             try:
                 import math
                 lat1, lon1 = float(data.new_latitude), float(data.new_longitude)
@@ -274,60 +257,131 @@ def duplicate_check(data: DuplicateCheckInput):
                 dlon = math.radians(lon2 - lon1)
                 a = math.sin(dlat/2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon/2)**2
                 dist_m = 6371000 * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-                if dist_m < 50: gps_score = 1.0
-                elif dist_m < 150: gps_score = 0.85
-                elif dist_m < 300: gps_score = 0.65
-                elif dist_m < 600: gps_score = 0.40
-                else: gps_score = 0.10
-                loc_score = max(loc_score, gps_score)
-                has_location = True
+                if dist_m <= 75:
+                    loc_score = 1.0
+                    is_loc_match = True
+                elif dist_m <= 150:
+                    loc_score = 0.85
+                    is_loc_match = True
+                elif dist_m <= 250 and wards_match:
+                    loc_score = 0.65
+                    is_loc_match = True
+                else:
+                    loc_score = 0.0
+                    is_loc_match = False
             except Exception:
-                pass
+                has_gps = False
 
-        # 3. Category Match
+        if not has_gps:
+            if not wards_match and data.new_ward and c_ward:
+                continue
+
+            if new_digits and c_digits and not (new_digits & c_digits):
+                is_loc_match = False
+                loc_score = 0.0
+            else:
+                if new_loc and c_loc:
+                    s1 = normalize_text(new_loc)
+                    s2 = normalize_text(c_loc)
+                    if s1 == s2 or s1 in s2 or s2 in s1:
+                        loc_score = 0.90
+                    else:
+                        loc_inter = new_loc_tokens & c_loc_tokens
+                        loc_union = new_loc_tokens | c_loc_tokens
+                        loc_jaccard = len(loc_inter) / len(loc_union) if loc_union else 0.0
+                        loc_overlap = len(loc_inter) / min(len(new_loc_tokens), len(c_loc_tokens)) if min(len(new_loc_tokens), len(c_loc_tokens)) > 0 else 0.0
+                        loc_seq = calc_string_similarity(s1, s2)
+                        loc_score = max(loc_jaccard, loc_overlap * 0.85, loc_seq)
+                    if loc_score >= 0.40:
+                        is_loc_match = True
+
+        # IF LOCATION DOES NOT MATCH, CANNOT BE A DUPLICATE!
+        if not is_loc_match:
+            continue
+
+        # 2. Title Matching
+        c_title = str(c.get('title', '') or "").strip()
+        c_title_tokens = extract_tokens(c_title)
+        title_score = 0.0
+        if new_title and c_title:
+            if normalize_text(new_title) == normalize_text(c_title):
+                title_score = 1.0
+            else:
+                t_inter = new_title_tokens & c_title_tokens
+                t_union = new_title_tokens | c_title_tokens
+                t_jacc = len(t_inter) / len(t_union) if t_union else 0.0
+                t_over = len(t_inter) / min(len(new_title_tokens), len(c_title_tokens)) if min(len(new_title_tokens), len(c_title_tokens)) > 0 else 0.0
+                t_seq = calc_string_similarity(normalize_text(new_title), normalize_text(c_title))
+                title_score = max(t_jacc, t_over, t_seq)
+        elif new_title_tokens:
+            c_text_all = str(c.get('text', '') or "")
+            c_all_tokens = extract_tokens(c_text_all)
+            t_inter = new_title_tokens & c_all_tokens
+            title_score = len(t_inter) / len(new_title_tokens) if new_title_tokens else 0.0
+        else:
+            title_score = 0.50
+
+        if title_score < 0.35:
+            continue
+
+        # 3. Description Matching
+        c_desc = str(c.get('description', '') or c.get('text', '') or "").strip()
+        c_desc_tokens = extract_tokens(c_desc)
+        if not new_desc_tokens or not c_desc_tokens:
+            continue
+
+        d_inter = new_desc_tokens & c_desc_tokens
+        d_union = new_desc_tokens | c_desc_tokens
+        d_jacc = len(d_inter) / len(d_union) if d_union else 0.0
+        d_over = len(d_inter) / min(len(new_desc_tokens), len(c_desc_tokens)) if min(len(new_desc_tokens), len(c_desc_tokens)) > 0 else 0.0
+
+        cos_sim = 0.0
+        if vectorizer is not None:
+            try:
+                m1 = vectorizer.transform([new_desc])
+                m2 = vectorizer.transform([c_desc])
+                cos_sim = float(cosine_similarity(m1, m2)[0][0])
+            except Exception:
+                cos_sim = 0.0
+
+        desc_score = 0.45 * cos_sim + 0.30 * d_jacc + 0.25 * d_over
+        if desc_score < 0.35:
+            continue
+
+        # 4. Category & Status modifiers
         c_cat = str(c.get('category', '') or "").strip().upper()
         cat_match = 0.0
         if new_cat and c_cat and new_cat != 'OTHER' and c_cat != 'OTHER':
             if new_cat == c_cat:
-                cat_match = 0.15
+                cat_match = 0.10
             elif (new_cat in ['ROAD', 'DRAINAGE'] and c_cat in ['ROAD', 'DRAINAGE']) or \
                  (new_cat in ['WASTE_MANAGEMENT', 'PUBLIC_SPACE'] and c_cat in ['WASTE_MANAGEMENT', 'PUBLIC_SPACE']):
-                cat_match = 0.05
+                cat_match = 0.03
             else:
-                cat_match = -0.10
+                cat_match = -0.15
 
-        # 4. Status Boost (active issues are more likely duplicates than closed ones)
         c_status = str(c.get('status', '') or "").strip().upper()
-        status_boost = 0.08 if c_status in ['OPEN', 'PENDING', 'ASSIGNED', 'IN_PROGRESS', 'PENDING_APPROVAL'] else 0.0
+        status_boost = 0.05 if c_status in ['OPEN', 'PENDING', 'ASSIGNED', 'IN_PROGRESS', 'PENDING_APPROVAL'] else 0.0
 
-        # Weighted combination
-        if has_location and loc_score > 0.2:
-            score = (
-                0.50 * text_score +
-                0.30 * loc_score +
-                cat_match +
-                status_boost
-            )
-        else:
-            score = (
-                0.75 * text_score +
-                cat_match +
-                status_boost
-            )
-
-        # Strong semantic text match override
-        if cos_sim >= 0.55 or text_score >= 0.50:
-            score = max(score, text_score)
+        # Combined 3-way score (Title, Description, and Location all matched)
+        score = (
+            0.35 * loc_score +
+            0.35 * desc_score +
+            0.20 * title_score +
+            cat_match +
+            status_boost
+        )
+        score = max(0.0, min(0.99, score))
 
         if score > highest_score:
             highest_score = score
             best_match = c
 
-    # Threshold for flagging possible duplicate (calibrated at 0.45)
-    if highest_score >= 0.45 and best_match:
+    # Threshold for duplicate: 0.48
+    if highest_score >= 0.48 and best_match:
         return {
             "possible_duplicate_id": best_match.get('id'),
-            "similarity": round(min(highest_score, 0.99), 4)
+            "similarity": round(highest_score, 2)
         }
 
     return {"possible_duplicate_id": None, "similarity": 0.0}
