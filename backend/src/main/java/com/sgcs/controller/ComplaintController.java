@@ -251,7 +251,7 @@ public class ComplaintController {
         // Rule A.2: approve: only the COUNCILLOR whose ward equals complaint.ward, or ADMIN.
         accessGuard.checkCouncillorCanReviewProof(principal, complaint, "approve");
 
-        Complaint updated = complaintService.approveTask(id, principal.getId(), principal.getFullName());
+        Complaint updated = complaintService.approveTask(complaint.getId(), principal.getId(), principal.getFullName());
         return ResponseEntity.ok(updated);
     }
 
@@ -276,7 +276,7 @@ public class ComplaintController {
                 feedback = body.get("notes").trim();
             }
         }
-        Complaint updated = complaintService.rejectTaskProof(id, principal.getId(), principal.getFullName(), feedback);
+        Complaint updated = complaintService.rejectTaskProof(complaint.getId(), principal.getId(), principal.getFullName(), feedback);
         return ResponseEntity.ok(updated);
     }
 

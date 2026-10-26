@@ -91,7 +91,7 @@ export const CouncillorDashboard: React.FC = () => {
     if (!user) return;
     try {
       const updated = await complaintService.approveTask(complaintId, user.fullName);
-      setComplaints((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+      setComplaints((prev) => prev.map((c) => (c.id === updated.id || c.trackingNumber === updated.trackingNumber ? updated : c)));
       setVerifyModalComplaint(null);
     } catch (e) {
       console.error(e);
@@ -103,7 +103,7 @@ export const CouncillorDashboard: React.FC = () => {
     if (!user) return;
     try {
       const updated = await complaintService.rejectTaskProof(complaintId, user.fullName, feedback);
-      setComplaints((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+      setComplaints((prev) => prev.map((c) => (c.id === updated.id || c.trackingNumber === updated.trackingNumber ? updated : c)));
       setVerifyModalComplaint(null);
     } catch (e) {
       console.error(e);

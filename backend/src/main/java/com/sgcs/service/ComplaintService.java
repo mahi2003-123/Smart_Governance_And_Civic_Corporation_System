@@ -1235,7 +1235,7 @@ public class ComplaintService {
     }
 
     public Complaint reviewAiCategory(String id, String category, String councillorId, String councillorName) {
-        Complaint complaint = complaintRepository.findById(id)
+        Complaint complaint = complaintRepository.findByIdOrTrackingNumber(id, id)
                 .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
                 
         String oldCategory = complaint.getCategory();
@@ -1259,7 +1259,7 @@ public class ComplaintService {
     }
 
     public Complaint linkDuplicate(String id, String masterId, boolean isDuplicate, String councillorId, String councillorName) {
-        Complaint complaint = complaintRepository.findById(id)
+        Complaint complaint = complaintRepository.findByIdOrTrackingNumber(id, id)
                 .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
                 
         complaint.setIsDuplicateConfirmed(isDuplicate);
@@ -1319,7 +1319,7 @@ public class ComplaintService {
             throw new IllegalArgumentException("Invalid status value.");
         }
 
-        Complaint complaint = complaintRepository.findById(id)
+        Complaint complaint = complaintRepository.findByIdOrTrackingNumber(id, id)
                 .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
 
         String oldStatus = complaint.getStatus();
@@ -1351,7 +1351,7 @@ public class ComplaintService {
     }
 
     public Complaint assignWorker(String id, Map<String, String> body) {
-        Complaint complaint = complaintRepository.findById(id)
+        Complaint complaint = complaintRepository.findByIdOrTrackingNumber(id, id)
                 .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
         
         String oldWorkerId = complaint.getAssignedWorkerId();
@@ -1460,7 +1460,7 @@ public class ComplaintService {
     }
 
     public Complaint startTask(String id, String workerId, String workerName) {
-        Complaint complaint = complaintRepository.findById(id)
+        Complaint complaint = complaintRepository.findByIdOrTrackingNumber(id, id)
                 .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
 
         complaint.setStatus("IN_PROGRESS");
@@ -1505,7 +1505,7 @@ public class ComplaintService {
             }
         }
 
-        Complaint complaint = complaintRepository.findById(id)
+        Complaint complaint = complaintRepository.findByIdOrTrackingNumber(id, id)
                 .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
 
         complaint.setStatus("PENDING_APPROVAL");
@@ -1555,7 +1555,7 @@ public class ComplaintService {
     }
 
     public Complaint approveTask(String id, String councillorId, String councillorName) {
-        Complaint complaint = complaintRepository.findById(id)
+        Complaint complaint = complaintRepository.findByIdOrTrackingNumber(id, id)
                 .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
 
         complaint.setStatus("RESOLVED");
@@ -1597,7 +1597,7 @@ public class ComplaintService {
     }
 
     public Complaint rejectTaskProof(String id, String councillorId, String councillorName, String feedback) {
-        Complaint complaint = complaintRepository.findById(id)
+        Complaint complaint = complaintRepository.findByIdOrTrackingNumber(id, id)
                 .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
 
         complaint.setStatus("IN_PROGRESS");
@@ -1644,7 +1644,7 @@ public class ComplaintService {
             imageValidator.validateSingleImage(delayImage, "delayImage");
         }
 
-        Complaint complaint = complaintRepository.findById(id)
+        Complaint complaint = complaintRepository.findByIdOrTrackingNumber(id, id)
                 .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
 
         complaint.setDelayReason(reason);
@@ -1723,7 +1723,7 @@ public class ComplaintService {
         if (newPriority == null || !List.of("LOW", "MEDIUM", "HIGH", "URGENT").contains(newPriority.toUpperCase().trim())) {
             throw new IllegalArgumentException("Invalid priority: must be LOW, MEDIUM, HIGH, or URGENT");
         }
-        Complaint complaint = complaintRepository.findById(id)
+        Complaint complaint = complaintRepository.findByIdOrTrackingNumber(id, id)
                 .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with id: " + id));
 
         checkPriorityAccess(complaint, updatedByRole, userWard);

@@ -179,11 +179,19 @@ public class AccessGuard {
         if (isAdmin(principal)) return true;
         if (!"COUNCILLOR".equalsIgnoreCase(principal.getRole())) return false;
 
+        if (principal.getWard() == null || principal.getWard().trim().isEmpty() || "ALL".equalsIgnoreCase(principal.getWard().trim())) {
+            return true;
+        }
+
+        if (targetWard == null || targetWard.trim().isEmpty() || "ALL".equalsIgnoreCase(targetWard.trim())) {
+            return true;
+        }
+
         if (isSameWard(principal.getWard(), targetWard)) {
             return true;
         }
 
-        if (targetWard != null && !targetWard.trim().isEmpty() && wardRepository != null) {
+        if (wardRepository != null) {
             return wardRepository.findAll().stream().anyMatch(w ->
                 isSameWard(w.getName(), targetWard) && (
                     (w.getCouncillorEmail() != null && principal.getEmail() != null && w.getCouncillorEmail().equalsIgnoreCase(principal.getEmail())) ||

@@ -46,7 +46,8 @@ export const VerifyProofModal: React.FC<VerifyProofModalProps> = ({
     setActionType('APPROVE');
     setError(null);
     try {
-      await onApprove(complaint.id);
+      const targetId = complaint.id || complaint.trackingNumber;
+      await onApprove(targetId);
       onClose();
     } catch (e: any) {
       console.error(e);
@@ -66,7 +67,8 @@ export const VerifyProofModal: React.FC<VerifyProofModalProps> = ({
     setActionType('REJECT');
     setError(null);
     try {
-      await onRejectProof(complaint.id, feedback);
+      const targetId = complaint.id || complaint.trackingNumber;
+      await onRejectProof(targetId, feedback);
       setFeedback('');
       onClose();
     } catch (e: any) {
