@@ -238,7 +238,7 @@ public class ComplaintController {
         return ResponseEntity.ok(updated);
     }
 
-    @RequestMapping(value = "/{id}/approve", method = {RequestMethod.POST, RequestMethod.PATCH})
+    @RequestMapping(value = {"/{id}/approve", "/{id}/approve-completion"}, method = {RequestMethod.POST, RequestMethod.PATCH})
     public ResponseEntity<Complaint> approveTask(@PathVariable String id) {
         UserPrincipal principal = getCurrentUser();
         if (principal == null) {
@@ -255,7 +255,7 @@ public class ComplaintController {
         return ResponseEntity.ok(updated);
     }
 
-    @RequestMapping(value = "/{id}/reject-proof", method = {RequestMethod.POST, RequestMethod.PATCH})
+    @RequestMapping(value = {"/{id}/reject-proof", "/{id}/reject-completion"}, method = {RequestMethod.POST, RequestMethod.PATCH})
     public ResponseEntity<Complaint> rejectTaskProof(@PathVariable String id, @RequestBody(required = false) Map<String, String> body) {
         UserPrincipal principal = getCurrentUser();
         if (principal == null) {
@@ -268,7 +268,14 @@ public class ComplaintController {
         // Rule A.2: reject-proof: only the COUNCILLOR whose ward equals complaint.ward, or ADMIN.
         accessGuard.checkCouncillorCanReviewProof(principal, complaint, "reject proof for");
 
-        String feedback = body != null ? body.get("feedback") : "Evidence insufficient";
+        String feedback = "Evidence insufficient";
+        if (body != null) {
+            if (body.get("feedback") != null && !body.get("feedback").trim().isEmpty()) {
+                feedback = body.get("feedback").trim();
+            } else if (body.get("notes") != null && !body.get("notes").trim().isEmpty()) {
+                feedback = body.get("notes").trim();
+            }
+        }
         Complaint updated = complaintService.rejectTaskProof(id, principal.getId(), principal.getFullName(), feedback);
         return ResponseEntity.ok(updated);
     }

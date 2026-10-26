@@ -61,11 +61,12 @@ CIVIC_KEYWORD_RULES = {
         "leakage from pipe", "water pipe broken"
     ],
     "WASTE_MANAGEMENT": [
-        "garbage", "trash", "waste dumped", "dumping yard", "dustbin overflowing",
+        "waste management", "waste", "garbage", "trash", "rubbish", "waste dumped", "dumping yard", "dustbin overflowing",
         "garbage bin", "garbage truck", "litter", "plastic waste", "dead animal",
         "rotting waste", "foul smell from garbage", "sanitation worker", "debris dumped",
         "construction rubble", "solid waste", "bio waste", "uncleaned trash",
-        "dumping ground", "street sweeping"
+        "dumping ground", "street sweeping", "dustbin", "waste disposal", "waste collection",
+        "sanitation", "cleanliness", "uncollected waste"
     ],
     "DRAINAGE": [
         "drainage", "drain", "drains", "sewer", "sewage", "gutter", "gutters",
@@ -129,7 +130,7 @@ def evaluate_keyword_signals(cleaned_text: str) -> dict:
         scores["ROAD"] += 3.5
     if "drinking water" in cleaned_text or "tap water" in cleaned_text or "water supply" in cleaned_text:
         scores["WATER_SUPPLY"] += 3.5
-    if "garbage" in cleaned_text or "dustbin" in cleaned_text or "waste dump" in cleaned_text:
+    if "garbage" in cleaned_text or "dustbin" in cleaned_text or "waste dump" in cleaned_text or "waste" in cleaned_text or "waste management" in cleaned_text:
         scores["WASTE_MANAGEMENT"] += 3.5
 
     for cat, phrases in CIVIC_KEYWORD_RULES.items():

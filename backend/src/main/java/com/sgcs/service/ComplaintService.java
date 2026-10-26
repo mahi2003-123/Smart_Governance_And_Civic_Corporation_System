@@ -71,27 +71,37 @@ public class ComplaintService {
     }
 
     public List<Complaint> getAllComplaints() {
-        return complaintRepository.findAllByOrderByCreatedAtDesc();
+        return complaintRepository.findAllByOrderByCreatedAtDesc().stream()
+                .map(this::autoHealUnclassifiedComplaint)
+                .toList();
     }
 
     public List<Complaint> getActiveComplaints() {
-        return complaintRepository.findActiveComplaints();
+        return complaintRepository.findActiveComplaints().stream()
+                .map(this::autoHealUnclassifiedComplaint)
+                .toList();
     }
 
     public Optional<Complaint> getComplaintById(String id) {
-        return complaintRepository.findByIdOrTrackingNumber(id, id);
+        return complaintRepository.findByIdOrTrackingNumber(id, id)
+                .map(this::autoHealUnclassifiedComplaint);
     }
 
     public List<Complaint> getComplaintsByCitizen(String citizenId) {
-        return complaintRepository.findByCitizenIdOrderByCreatedAtDesc(citizenId);
+        return complaintRepository.findByCitizenIdOrderByCreatedAtDesc(citizenId).stream()
+                .map(this::autoHealUnclassifiedComplaint)
+                .toList();
     }
 
     public List<Complaint> getComplaintsByWard(String ward) {
         if (ward == null || ward.trim().isEmpty() || "ALL".equalsIgnoreCase(ward.trim())) {
-            return complaintRepository.findAllByOrderByCreatedAtDesc();
+            return complaintRepository.findAllByOrderByCreatedAtDesc().stream()
+                    .map(this::autoHealUnclassifiedComplaint)
+                    .toList();
         }
         return complaintRepository.findAllByOrderByCreatedAtDesc().stream()
                 .filter(c -> c.getWard() != null && accessGuard.isSameWard(c.getWard(), ward))
+                .map(this::autoHealUnclassifiedComplaint)
                 .toList();
     }
 
@@ -102,11 +112,47 @@ public class ComplaintService {
         String cleanId = workerId.trim();
         return complaintRepository.findAllByOrderByCreatedAtDesc().stream()
                 .filter(c -> cleanId.equals(c.getAssignedWorkerId()))
+                .map(this::autoHealUnclassifiedComplaint)
                 .toList();
     }
 
     public List<Complaint> getComplaintsForWorker(String workerId, String workerName, String ward) {
         return getComplaintsForWorker(workerId, workerName, null, ward);
+    }
+
+    public Complaint autoHealUnclassifiedComplaint(Complaint c) {
+        if (c == null) return null;
+        if (Boolean.TRUE.equals(c.getIsAiCategoryAccepted())) {
+            return c;
+        }
+        String aiCat = c.getAiSuggestedCategory();
+        String currentCat = c.getCategory();
+        boolean needsHealing = (aiCat == null || aiCat.trim().isEmpty() || "OTHER".equalsIgnoreCase(aiCat.trim()))
+                || (currentCat == null || currentCat.trim().isEmpty() || "OTHER".equalsIgnoreCase(currentCat.trim()));
+
+        if (needsHealing) {
+            String text = (c.getTitle() != null && !c.getTitle().trim().isEmpty() ? c.getTitle().trim() + ". " : "") +
+                         (c.getDescription() != null ? c.getDescription().trim() : "");
+            Map<String, Object> result = classifyWithBuiltInCivicEngine(text);
+            String cat = (String) result.get("category");
+            Object confObj = result.get("confidence");
+            double conf = confObj instanceof Number ? ((Number) confObj).doubleValue() : 0.0;
+            if (cat != null && !"OTHER".equalsIgnoreCase(cat) && conf >= 0.25) {
+                c.setAiSuggestedCategory(cat);
+                c.setAiConfidence(conf);
+                c.setAiModel((String) result.get("model"));
+                c.setAiStatus("COMPLETED");
+                if (currentCat == null || currentCat.trim().isEmpty() || "OTHER".equalsIgnoreCase(currentCat.trim()) || "Auto-Detect".equalsIgnoreCase(currentCat.trim())) {
+                    c.setCategory(cat);
+                }
+                try {
+                    return complaintRepository.save(c);
+                } catch (Exception e) {
+                    logger.debug("Failed to auto-heal complaint category: {}", e.getMessage());
+                }
+            }
+        }
+        return c;
     }
 
     private final java.security.SecureRandom secureRandom = new java.security.SecureRandom();
@@ -352,11 +398,49 @@ public class ComplaintService {
         String clean = text.toLowerCase().trim();
         String priority = estimateBuiltInPriority(clean);
 
+        // 0. Direct match on municipal category names or phrases
+        if (clean.contains("waste management") || clean.contains("waste_management")) {
+            return Map.of(
+                "category", "WASTE_MANAGEMENT",
+                "confidence", 0.995,
+                "priority", priority,
+                "model", "SGCS-Embedded-Civic-Engine"
+            );
+        }
+        if (clean.contains("street light") || clean.contains("streetlight") || clean.contains("street_light") || clean.contains("street lighting")) {
+            return Map.of(
+                "category", "STREET_LIGHT",
+                "confidence", 0.995,
+                "priority", priority,
+                "model", "SGCS-Embedded-Civic-Engine"
+            );
+        }
+        if (clean.contains("water supply") || clean.contains("water_supply") || clean.contains("drinking water")) {
+            return Map.of(
+                "category", "WATER_SUPPLY",
+                "confidence", 0.995,
+                "priority", priority,
+                "model", "SGCS-Embedded-Civic-Engine"
+            );
+        }
+        if (clean.contains("public space") || clean.contains("public_space") || clean.contains("public spaces")) {
+            return Map.of(
+                "category", "PUBLIC_SPACE",
+                "confidence", 0.995,
+                "priority", priority,
+                "model", "SGCS-Embedded-Civic-Engine"
+            );
+        }
+
         // 1. DRAINAGE (including water logging & stagnant water disambiguation)
         if (clean.contains("water logging") || clean.contains("waterlogging") || clean.contains("stagnant water") ||
-            clean.contains("drain") || clean.contains("drainage") || clean.contains("sewer") ||
-            clean.contains("sewage") || clean.contains("gutter") || clean.contains("manhole") ||
-            clean.contains("nullah") || clean.contains("culvert blocked") || clean.contains("sullage")) {
+            clean.contains("stagnant rain water") || clean.contains("drain") || clean.contains("drainage") ||
+            clean.contains("drains") || clean.contains("sewer") || clean.contains("sewage") ||
+            clean.contains("sewerage") || clean.contains("gutter") || clean.contains("gutters") ||
+            clean.contains("manhole") || clean.contains("nullah") || clean.contains("culvert") ||
+            clean.contains("sullage") || clean.contains("blocked drain") || clean.contains("clogged drain") ||
+            clean.contains("open drain") || clean.contains("septic tank") || clean.contains("gutter overflow") ||
+            clean.contains("choked drain")) {
             return Map.of(
                 "category", "DRAINAGE",
                 "confidence", 0.985,
@@ -366,11 +450,14 @@ public class ComplaintService {
         }
 
         // 2. STREET_LIGHT
-        if (clean.contains("street light") || clean.contains("streetlight") || clean.contains("lamp post") ||
-            clean.contains("pole light") || clean.contains("dark street") || clean.contains("pitch dark") ||
-            clean.contains("fused bulb") || clean.contains("light fixture") || clean.contains("high mast") ||
-            clean.contains("flickering light") || clean.contains("wire hanging from pole") || clean.contains("bulb burnt") ||
-            clean.contains("street lamp") || clean.contains("lighting")) {
+        if (clean.contains("street light") || clean.contains("streetlight") || clean.contains("streetlights") ||
+            clean.contains("street lights") || clean.contains("street lighting") || clean.contains("lamp post") ||
+            clean.contains("lamppost") || clean.contains("pole light") || clean.contains("dark street") ||
+            clean.contains("pitch dark") || clean.contains("dark road") || clean.contains("fused bulb") ||
+            clean.contains("light fixture") || clean.contains("high mast") || clean.contains("flickering light") ||
+            clean.contains("wire hanging from pole") || clean.contains("bulb burnt") || clean.contains("street lamp") ||
+            clean.contains("lighting") || clean.contains("light not working") || clean.contains("lights not working") ||
+            clean.contains("light broken") || clean.contains("broken street light") || clean.contains("electric pole")) {
             return Map.of(
                 "category", "STREET_LIGHT",
                 "confidence", 0.992,
@@ -380,13 +467,15 @@ public class ComplaintService {
         }
 
         // 3. ROAD & POTHOLES
-        if (clean.contains("pothole") || clean.contains("potholes") || clean.contains("road broken") ||
-            clean.contains("damaged road") || clean.contains("crater") || clean.contains("craters") ||
-            clean.contains("asphalt") || clean.contains("bitumen") || clean.contains("tar road") ||
+        if (clean.contains("pothole") || clean.contains("potholes") || clean.contains("pot hole") || clean.contains("pot holes") ||
+            clean.contains("road broken") || clean.contains("broken road") || clean.contains("damaged road") || clean.contains("road damage") ||
+            clean.contains("bad road") || clean.contains("road repair") || clean.contains("road work") ||
+            clean.contains("crater") || clean.contains("craters") || clean.contains("asphalt") || clean.contains("bitumen") || clean.contains("tar road") ||
             clean.contains("speed breaker") || clean.contains("speed bump") || clean.contains("road divider") ||
-            clean.contains("road cave") || clean.contains("pavement damaged") || clean.contains("footpath broken") ||
+            clean.contains("road cave") || clean.contains("road collapse") || clean.contains("pavement") || clean.contains("footpath") ||
             clean.contains("paver block") || clean.contains("bumpy road") || clean.contains("uneven road") ||
-            clean.contains("road resurfacing") || clean.contains("dug up road")) {
+            clean.contains("road resurfacing") || clean.contains("dug up road") || clean.contains("sidewalk") ||
+            clean.contains("zebra crossing") || clean.equals("road") || clean.equals("roads") || clean.startsWith("road ") || clean.endsWith(" road")) {
             return Map.of(
                 "category", "ROAD",
                 "confidence", 0.991,
@@ -397,10 +486,13 @@ public class ComplaintService {
 
         // 4. WATER_SUPPLY
         if (clean.contains("drinking water") || clean.contains("tap water") || clean.contains("pipeline leak") ||
-            clean.contains("pipe burst") || clean.contains("water supply") || clean.contains("no water") ||
-            clean.contains("water shortage") || clean.contains("low water pressure") || clean.contains("muddy water") ||
-            clean.contains("dirty drinking water") || clean.contains("contaminated water") || clean.contains("water meter") ||
-            clean.contains("water valve") || clean.contains("borewell") || clean.contains("water tanker")) {
+            clean.contains("pipe burst") || clean.contains("burst pipe") || clean.contains("pipe leak") ||
+            clean.contains("water leakage") || clean.contains("water pipe") || clean.contains("pipeline burst") ||
+            clean.contains("water supply") || clean.contains("no water") || clean.contains("water shortage") ||
+            clean.contains("low water pressure") || clean.contains("muddy water") || clean.contains("dirty drinking water") ||
+            clean.contains("contaminated water") || clean.contains("no tap water") || clean.contains("water meter") ||
+            clean.contains("water valve") || clean.contains("borewell") || clean.contains("water tanker") ||
+            clean.contains("municipal tap")) {
             return Map.of(
                 "category", "WATER_SUPPLY",
                 "confidence", 0.988,
@@ -410,11 +502,17 @@ public class ComplaintService {
         }
 
         // 5. WASTE_MANAGEMENT
-        if (clean.contains("garbage") || clean.contains("trash") || clean.contains("waste dumped") ||
-            clean.contains("dustbin") || clean.contains("litter") || clean.contains("rotting") ||
-            clean.contains("dead animal") || clean.contains("carcass") || clean.contains("plastic waste") ||
-            clean.contains("sanitation worker") || clean.contains("solid waste") || clean.contains("debris dumped") ||
-            clean.contains("rubble") || clean.contains("stench from garbage") || clean.contains("street sweeping")) {
+        if (clean.contains("waste") || clean.contains("garbage") || clean.contains("trash") ||
+            clean.contains("rubbish") || clean.contains("dustbin") || clean.contains("dust bin") ||
+            clean.contains("garbage bin") || clean.contains("trash bin") || clean.contains("litter") ||
+            clean.contains("dump") || clean.contains("dumped") || clean.contains("dumping") ||
+            clean.contains("rotting") || clean.contains("dead animal") || clean.contains("carcass") ||
+            clean.contains("plastic waste") || clean.contains("solid waste") || clean.contains("bio waste") ||
+            clean.contains("sanitation") || clean.contains("sanitary") || clean.contains("sanitation worker") ||
+            clean.contains("debris dumped") || clean.contains("rubble") || clean.contains("stench") ||
+            clean.contains("foul smell") || clean.contains("street sweeping") || clean.contains("sweeper") ||
+            clean.contains("sweeping") || clean.contains("compost") || clean.contains("cleanliness") ||
+            clean.contains("uncollected") || clean.contains("waste collection") || clean.contains("waste disposal")) {
             return Map.of(
                 "category", "WASTE_MANAGEMENT",
                 "confidence", 0.989,
@@ -424,7 +522,8 @@ public class ComplaintService {
         }
 
         // 6. PUBLIC_SPACE
-        if (clean.contains("park") || clean.contains("playground") || clean.contains("public garden") ||
+        if (clean.contains("public space") || clean.contains("public_space") || clean.contains("public spaces") ||
+            clean.contains("park") || clean.contains("playground") || clean.contains("public garden") ||
             clean.contains("garden") || clean.contains("bench") || clean.contains("benches") ||
             clean.contains("swing") || clean.contains("swings") || clean.contains("slide") ||
             clean.contains("open gym") || clean.contains("walking track") || clean.contains("jogging track") ||

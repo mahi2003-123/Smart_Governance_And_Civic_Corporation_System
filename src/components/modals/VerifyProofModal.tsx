@@ -37,17 +37,20 @@ export const VerifyProofModal: React.FC<VerifyProofModalProps> = ({
   const [feedback, setFeedback] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [actionType, setActionType] = useState<'APPROVE' | 'REJECT' | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   if (!complaint) return null;
 
   const handleApprove = async () => {
     setSubmitting(true);
     setActionType('APPROVE');
+    setError(null);
     try {
       await onApprove(complaint.id);
       onClose();
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      setError(e.message || 'Failed to approve completion proof. Please try again.');
     } finally {
       setSubmitting(false);
       setActionType(null);
@@ -56,17 +59,19 @@ export const VerifyProofModal: React.FC<VerifyProofModalProps> = ({
 
   const handleReject = async () => {
     if (!feedback.trim()) {
-      alert('Please provide feedback explaining why rework is requested.');
+      setError('Please provide feedback explaining why rework is requested.');
       return;
     }
     setSubmitting(true);
     setActionType('REJECT');
+    setError(null);
     try {
       await onRejectProof(complaint.id, feedback);
       setFeedback('');
       onClose();
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      setError(e.message || 'Failed to request rework. Please try again.');
     } finally {
       setSubmitting(false);
       setActionType(null);
@@ -93,6 +98,11 @@ export const VerifyProofModal: React.FC<VerifyProofModalProps> = ({
       </DialogTitle>
 
       <DialogContent dividers sx={{ py: 2.5 }}>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
         <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#202522', mb: 0.5 }}>
           {complaint.title}
         </Typography>

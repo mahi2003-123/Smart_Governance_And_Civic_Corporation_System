@@ -86,20 +86,52 @@ export const AssignWorkerModal: React.FC<AssignWorkerModalProps> = ({
     setCurrentComplaint(complaint);
   }, [complaint]);
 
-  // Auto-resolve working category natively silently
-  const activeCategory = currentComplaint?.isAiCategoryAccepted 
-    ? currentComplaint.category 
-    : (currentComplaint?.aiSuggestedCategory || currentComplaint?.category || 'Other');
+  // Auto-resolve working category natively
+  const inferredCivicCategory = (() => {
+    const rawCat = currentComplaint?.category;
+    const rawAi = currentComplaint?.aiSuggestedCategory;
+    if (currentComplaint?.isAiCategoryAccepted && rawCat && rawCat !== 'OTHER' && rawCat !== 'Other') {
+      return rawCat;
+    }
+    if (rawAi && rawAi !== 'OTHER' && rawAi !== 'Other') {
+      return rawAi;
+    }
+    if (rawCat && rawCat !== 'OTHER' && rawCat !== 'Other') {
+      return rawCat;
+    }
+    const text = `${currentComplaint?.title || ''} ${currentComplaint?.description || ''}`.toLowerCase();
+    if (text.includes('waste') || text.includes('garbage') || text.includes('trash') || text.includes('rubbish') || text.includes('dustbin') || text.includes('dump') || text.includes('sanitation') || text.includes('litter')) {
+      return 'WASTE_MANAGEMENT';
+    }
+    if (text.includes('pothole') || text.includes('road') || text.includes('asphalt') || text.includes('tar') || text.includes('speed breaker') || text.includes('pavement')) {
+      return 'ROAD';
+    }
+    if (text.includes('street light') || text.includes('streetlight') || text.includes('lamp post') || text.includes('dark street') || text.includes('light not working')) {
+      return 'STREET_LIGHT';
+    }
+    if (text.includes('water supply') || text.includes('drinking water') || text.includes('pipe burst') || text.includes('pipeline leak') || text.includes('no water')) {
+      return 'WATER_SUPPLY';
+    }
+    if (text.includes('drain') || text.includes('sewer') || text.includes('gutter') || text.includes('waterlogging') || text.includes('water logging') || text.includes('manhole')) {
+      return 'DRAINAGE';
+    }
+    if (text.includes('park') || text.includes('garden') || text.includes('playground') || text.includes('bench')) {
+      return 'PUBLIC_SPACE';
+    }
+    return rawCat || 'OTHER';
+  })();
+
+  const activeCategory = inferredCivicCategory;
 
   useEffect(() => {
     if (open && currentComplaint) {
       setSelectedPriority(currentComplaint.priority || 'MEDIUM');
-      setSelectedCategory(currentComplaint.category || currentComplaint.aiSuggestedCategory || 'ROAD');
+      setSelectedCategory(inferredCivicCategory !== 'OTHER' ? inferredCivicCategory : (currentComplaint.category || 'ROAD'));
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       setDueDate(tomorrow.toISOString().split('T')[0]);
     }
-  }, [open, currentComplaint]);
+  }, [open, currentComplaint, inferredCivicCategory]);
 
   useEffect(() => {
     const loadRegisteredWorkers = async () => {

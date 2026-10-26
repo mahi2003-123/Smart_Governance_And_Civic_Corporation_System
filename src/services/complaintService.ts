@@ -22,12 +22,54 @@ const normalizeImages = (val: any): string[] => {
   return [];
 };
 
-const mapComplaint = (item: any): Complaint => ({
-  ...item,
-  images: normalizeImages(item?.images),
-  comments: Array.isArray(item?.comments) ? item.comments : [],
-  timeline: Array.isArray(item?.timeline) ? item.timeline : [],
-});
+const inferCategoryFromText = (title?: string, description?: string): string | null => {
+  const clean = `${title || ''} ${description || ''}`.toLowerCase();
+  if (clean.includes('waste') || clean.includes('garbage') || clean.includes('trash') || clean.includes('rubbish') || clean.includes('dustbin') || clean.includes('dump') || clean.includes('sanitation') || clean.includes('litter') || clean.includes('rotting')) {
+    return 'WASTE_MANAGEMENT';
+  }
+  if (clean.includes('pothole') || clean.includes('road') || clean.includes('asphalt') || clean.includes('tar road') || clean.includes('speed breaker') || clean.includes('pavement') || clean.includes('crater')) {
+    return 'ROAD';
+  }
+  if (clean.includes('street light') || clean.includes('streetlight') || clean.includes('lamp post') || clean.includes('dark street') || clean.includes('light not working') || clean.includes('bulb')) {
+    return 'STREET_LIGHT';
+  }
+  if (clean.includes('drinking water') || clean.includes('water supply') || clean.includes('tap water') || clean.includes('pipe burst') || clean.includes('pipeline leak') || clean.includes('no water')) {
+    return 'WATER_SUPPLY';
+  }
+  if (clean.includes('water logging') || clean.includes('waterlogging') || clean.includes('drain') || clean.includes('sewer') || clean.includes('sewage') || clean.includes('gutter') || clean.includes('manhole')) {
+    return 'DRAINAGE';
+  }
+  if (clean.includes('park') || clean.includes('playground') || clean.includes('garden') || clean.includes('public space') || clean.includes('bench')) {
+    return 'PUBLIC_SPACE';
+  }
+  return null;
+};
+
+const mapComplaint = (item: any): Complaint => {
+  let category = item?.category;
+  let aiSuggestedCategory = item?.aiSuggestedCategory;
+
+  if (!item?.isAiCategoryAccepted) {
+    const isCatGeneric = !category || category === 'OTHER' || category === 'Other' || category === 'AUTO' || category === 'Auto-Detect';
+    const isAiGeneric = !aiSuggestedCategory || aiSuggestedCategory === 'OTHER' || aiSuggestedCategory === 'Other';
+    if (isCatGeneric || isAiGeneric) {
+      const inferred = inferCategoryFromText(item?.title, item?.description);
+      if (inferred) {
+        if (isAiGeneric) aiSuggestedCategory = inferred;
+        if (isCatGeneric) category = inferred;
+      }
+    }
+  }
+
+  return {
+    ...item,
+    category: category || 'OTHER',
+    aiSuggestedCategory: aiSuggestedCategory || category,
+    images: normalizeImages(item?.images),
+    comments: Array.isArray(item?.comments) ? item.comments : [],
+    timeline: Array.isArray(item?.timeline) ? item.timeline : [],
+  };
+};
 
 export const complaintService = {
   invalidateCache: invalidateComplaintCache,
@@ -326,9 +368,9 @@ export const complaintService = {
     }
   },
 
-  approveCompletion: async (id: string, approverName: string, notes?: string): Promise<Complaint> => {
+  approveTask: async (id: string, approverName?: string, notes?: string): Promise<Complaint> => {
     try {
-      const res = await api.post(`/complaints/${id}/approve-completion`, { approverName, notes });
+      const res = await api.post(`/complaints/${id}/approve`, { approverName, notes });
       if (res.data) {
         invalidateComplaintCache();
         return mapComplaint(res.data);
@@ -339,17 +381,25 @@ export const complaintService = {
     }
   },
 
-  rejectCompletion: async (id: string, reviewerName: string, notes: string): Promise<Complaint> => {
+  rejectTaskProof: async (id: string, reviewerName?: string, feedback?: string): Promise<Complaint> => {
     try {
-      const res = await api.post(`/complaints/${id}/reject-completion`, { reviewerName, notes });
+      const res = await api.post(`/complaints/${id}/reject-proof`, { reviewerName, feedback, notes: feedback });
       if (res.data) {
         invalidateComplaintCache();
         return mapComplaint(res.data);
       }
-      throw new Error('Failed to reject completion.');
+      throw new Error('Failed to request rework.');
     } catch (err: any) {
       throw new Error(err.response?.data?.error || err.message || 'Failed to request rework.');
     }
+  },
+
+  approveCompletion: async (id: string, approverName: string, notes?: string): Promise<Complaint> => {
+    return complaintService.approveTask(id, approverName, notes);
+  },
+
+  rejectCompletion: async (id: string, reviewerName: string, notes: string): Promise<Complaint> => {
+    return complaintService.rejectTaskProof(id, reviewerName, notes);
   },
 
   addComment: async (

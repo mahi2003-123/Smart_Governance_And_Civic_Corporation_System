@@ -311,4 +311,37 @@ public class ComplaintServiceAiTest {
                 .anyMatch(n -> "usr_cit_05".equals(n.getRecipientId()) && n.getTitle().contains("Escalated to URGENT"));
         assertTrue(notifiedCitizen, "Citizen should be notified when their complaint is escalated to URGENT");
     }
+
+    @Test
+    @DisplayName("Should detect WASTE_MANAGEMENT category for waste management title")
+    public void testClassifyWasteManagementWithBuiltInCivicEngine() {
+        Map<String, Object> result = complaintService.classifyWithBuiltInCivicEngine("waste management");
+        assertEquals("WASTE_MANAGEMENT", result.get("category"));
+        assertTrue(((Number) result.get("confidence")).doubleValue() >= 0.90);
+
+        Map<String, Object> result2 = complaintService.classifyWithBuiltInCivicEngine("garbage not collected for three days in lane 4");
+        assertEquals("WASTE_MANAGEMENT", result2.get("category"));
+
+        Map<String, Object> result3 = complaintService.classifyWithBuiltInCivicEngine("waste collection delayed, dustbins overflowing");
+        assertEquals("WASTE_MANAGEMENT", result3.get("category"));
+    }
+
+    @Test
+    @DisplayName("Should auto-heal unclassified complaint with title waste management from OTHER to WASTE_MANAGEMENT")
+    public void testAutoHealUnclassifiedComplaintForWasteManagement() {
+        Complaint unclassified = new Complaint();
+        unclassified.setId("cmp_unclassified_001");
+        unclassified.setTitle("waste management");
+        unclassified.setDescription("Waste on the road not collected");
+        unclassified.setCategory("OTHER");
+        unclassified.setAiSuggestedCategory("OTHER");
+        unclassified.setIsAiCategoryAccepted(false);
+        unclassified.setWard("Ward 1 - Central Town");
+        unclassified.setLocationAddress("Ward 1 Central Town");
+
+        Complaint healed = complaintService.autoHealUnclassifiedComplaint(unclassified);
+        assertEquals("WASTE_MANAGEMENT", healed.getAiSuggestedCategory());
+        assertEquals("WASTE_MANAGEMENT", healed.getCategory());
+        assertTrue(healed.getAiConfidence() >= 0.90);
+    }
 }

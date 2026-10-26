@@ -77,8 +77,10 @@ export const ManageComplaints: React.FC = () => {
     try {
       const updated = await complaintService.approveTask(complaintId, user.fullName);
       setComplaints((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+      setVerifyModalComplaint(null);
     } catch (e) {
       console.error(e);
+      throw e;
     }
   };
 
@@ -87,8 +89,10 @@ export const ManageComplaints: React.FC = () => {
     try {
       const updated = await complaintService.rejectTaskProof(complaintId, user.fullName, feedback);
       setComplaints((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+      setVerifyModalComplaint(null);
     } catch (e) {
       console.error(e);
+      throw e;
     }
   };
 
