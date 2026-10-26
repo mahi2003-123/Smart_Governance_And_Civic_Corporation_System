@@ -39,7 +39,6 @@ import DraftsIcon from '@mui/icons-material/Drafts';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { complaintService } from '../../services/complaintService';
-import { notificationService } from '../../services/notificationService';
 import { Complaint, ComplaintStatus } from '../../types';
 import { requestFirebaseNotificationPermission, registerTokenWithBackend, onMessageListener, isFirebaseConfigured } from '../../utils/firebase';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
@@ -289,14 +288,6 @@ export const WorkerDashboard: React.FC = () => {
         afterPhoto,
         beforePhoto || undefined
       );
-
-      // Generate notification for citizen and councillor
-      await notificationService.addNotification({
-        title: 'Work Order Completed (Pending Councillor Approval)',
-        message: `${user.fullName} completed work on ${selectedTask.trackingNumber} ("${selectedTask.title}") and submitted proof for Councillor verification.`,
-        type: 'COMPLAINT',
-        linkUrl: `/citizen/complaints/${selectedTask.id}`
-      });
 
       setAssignedTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
       setCompleteModalOpen(false);

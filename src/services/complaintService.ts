@@ -317,27 +317,55 @@ export const complaintService = {
     }
   },
 
-  startTask: async (id: string, workerId: string, workerName: string): Promise<Complaint> => {
+  startTask: async (id: string, workerId?: string, workerName?: string): Promise<Complaint> => {
     try {
-      const res = await api.post(`/complaints/${id}/start-task`, { workerId, workerName });
+      const res = await api.post(`/complaints/${id}/start`, { workerId, workerName });
       if (res.data) {
         invalidateComplaintCache();
         return mapComplaint(res.data);
       }
       throw new Error('Failed to start task.');
     } catch (err: any) {
-      throw new Error(err.response?.data?.error || err.message || 'Failed to start task.');
+      throw new Error(err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to start task.');
     }
   },
 
-  completeTask: async (id: string, workerId: string, workerName: string, notes: string, afterImage: string, beforeImage?: string): Promise<Complaint> => {
+  completeTask: async (
+    id: string,
+    notesOrWorkerId: string,
+    afterImageOrWorkerName: string,
+    beforeImageOrNotes?: string,
+    afterImageParam?: string,
+    beforeImageParam?: string
+  ): Promise<Complaint> => {
     try {
-      const res = await api.post(`/complaints/${id}/complete-task`, {
-        workerId,
-        workerName,
+      let notes = '';
+      let afterImage = '';
+      let beforeImage: string | undefined = undefined;
+      let workerId: string | undefined = undefined;
+      let workerName: string | undefined = undefined;
+
+      if (afterImageParam !== undefined) {
+        // Called as (id, workerId, workerName, notes, afterImage, beforeImage)
+        workerId = notesOrWorkerId;
+        workerName = afterImageOrWorkerName;
+        notes = beforeImageOrNotes || '';
+        afterImage = afterImageParam;
+        beforeImage = beforeImageParam;
+      } else {
+        // Called as (id, notes, afterImage, beforeImage)
+        notes = notesOrWorkerId || '';
+        afterImage = afterImageOrWorkerName;
+        beforeImage = beforeImageOrNotes;
+      }
+
+      const res = await api.post(`/complaints/${id}/complete`, {
         notes,
         afterImage,
-        beforeImage
+        completionImage: afterImage,
+        beforeImage,
+        workerId,
+        workerName
       });
       if (res.data) {
         invalidateComplaintCache();
@@ -345,17 +373,40 @@ export const complaintService = {
       }
       throw new Error('Failed to complete task.');
     } catch (err: any) {
-      throw new Error(err.response?.data?.error || err.message || 'Failed to submit task completion.');
+      throw new Error(err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to submit task completion.');
     }
   },
 
-  reportDelay: async (id: string, workerId: string, workerName: string, reason: string, notes: string, delayImage?: string): Promise<Complaint> => {
+  reportDelay: async (
+    id: string,
+    reasonOrWorkerId: string,
+    notesOrWorkerName?: string,
+    delayImageOrReason?: string,
+    notesParam?: string,
+    delayImageParam?: string
+  ): Promise<Complaint> => {
     try {
-      const res = await api.post(`/complaints/${id}/report-delay`, {
-        workerId,
-        workerName,
+      let reason = '';
+      let notes = '';
+      let delayImage: string | undefined = undefined;
+
+      if (notesParam !== undefined || delayImageParam !== undefined) {
+        // Called as (id, workerId, workerName, reason, notes, delayImage)
+        reason = delayImageOrReason || '';
+        notes = notesParam || '';
+        delayImage = delayImageParam;
+      } else {
+        // Called as (id, reason, notes, delayImage)
+        reason = reasonOrWorkerId;
+        notes = notesOrWorkerName || '';
+        delayImage = delayImageOrReason;
+      }
+
+      const res = await api.post(`/complaints/${id}/delay`, {
         reason,
+        delayReason: reason,
         notes,
+        delayNotes: notes,
         delayImage
       });
       if (res.data) {
@@ -364,7 +415,7 @@ export const complaintService = {
       }
       throw new Error('Failed to report delay.');
     } catch (err: any) {
-      throw new Error(err.response?.data?.error || err.message || 'Failed to log task delay.');
+      throw new Error(err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to log task delay.');
     }
   },
 

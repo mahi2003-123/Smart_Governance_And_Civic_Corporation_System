@@ -84,10 +84,24 @@ public class SecurityConfig {
 
                 // Fine-grained Complaints Endpoints
                 .requestMatchers(HttpMethod.POST, "/api/complaints").hasRole("CITIZEN")
-                .requestMatchers(HttpMethod.POST, "/api/complaints/*/start", "/api/complaints/*/complete", "/api/complaints/*/delay").hasAnyRole("WORKER", "ADMIN")
-                .requestMatchers(HttpMethod.PATCH, "/api/complaints/*/start", "/api/complaints/*/complete", "/api/complaints/*/delay").hasAnyRole("WORKER", "ADMIN")
-                .requestMatchers(HttpMethod.POST, "/api/complaints/*/approve", "/api/complaints/*/reject-proof").hasAnyRole("COUNCILLOR", "ADMIN")
-                .requestMatchers(HttpMethod.PATCH, "/api/complaints/*/approve", "/api/complaints/*/reject-proof").hasAnyRole("COUNCILLOR", "ADMIN")
+                .requestMatchers(HttpMethod.POST,
+                        "/api/complaints/*/start", "/api/complaints/*/start-task",
+                        "/api/complaints/*/complete", "/api/complaints/*/complete-task",
+                        "/api/complaints/*/delay", "/api/complaints/*/report-delay"
+                ).hasAnyRole("WORKER", "ADMIN")
+                .requestMatchers(HttpMethod.PATCH,
+                        "/api/complaints/*/start", "/api/complaints/*/start-task",
+                        "/api/complaints/*/complete", "/api/complaints/*/complete-task",
+                        "/api/complaints/*/delay", "/api/complaints/*/report-delay"
+                ).hasAnyRole("WORKER", "ADMIN")
+                .requestMatchers(HttpMethod.POST,
+                        "/api/complaints/*/approve", "/api/complaints/*/approve-completion",
+                        "/api/complaints/*/reject-proof", "/api/complaints/*/reject-completion"
+                ).hasAnyRole("COUNCILLOR", "ADMIN")
+                .requestMatchers(HttpMethod.PATCH,
+                        "/api/complaints/*/approve", "/api/complaints/*/approve-completion",
+                        "/api/complaints/*/reject-proof", "/api/complaints/*/reject-completion"
+                ).hasAnyRole("COUNCILLOR", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/complaints/*/assign", "/api/complaints/*/ai-category", "/api/complaints/*/link-duplicate", "/api/complaints/*/check-duplicate").hasAnyRole("COUNCILLOR", "ADMIN")
                 .requestMatchers(HttpMethod.PATCH, "/api/complaints/*/assign", "/api/complaints/*/ai-category", "/api/complaints/*/link-duplicate", "/api/complaints/*/check-duplicate").hasAnyRole("COUNCILLOR", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/complaints/*/comment", "/api/complaints/*/comments").hasAnyRole("CITIZEN", "WORKER", "COUNCILLOR", "ADMIN")

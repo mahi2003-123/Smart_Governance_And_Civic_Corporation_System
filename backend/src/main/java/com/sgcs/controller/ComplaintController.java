@@ -194,7 +194,7 @@ public class ComplaintController {
         return ResponseEntity.ok(updated);
     }
 
-    @RequestMapping(value = "/{id}/start", method = {RequestMethod.POST, RequestMethod.PATCH})
+    @RequestMapping(value = {"/{id}/start", "/{id}/start-task"}, method = {RequestMethod.POST, RequestMethod.PATCH})
     public ResponseEntity<Complaint> startTask(@PathVariable String id) {
         UserPrincipal principal = getCurrentUser();
         if (principal == null) {
@@ -211,7 +211,7 @@ public class ComplaintController {
         return ResponseEntity.ok(updated);
     }
 
-    @RequestMapping(value = "/{id}/complete", method = {RequestMethod.POST, RequestMethod.PATCH})
+    @RequestMapping(value = {"/{id}/complete", "/{id}/complete-task"}, method = {RequestMethod.POST, RequestMethod.PATCH})
     public ResponseEntity<Complaint> completeTask(@PathVariable String id, @RequestBody Map<String, String> body) {
         UserPrincipal principal = getCurrentUser();
         if (principal == null) {
@@ -280,7 +280,7 @@ public class ComplaintController {
         return ResponseEntity.ok(updated);
     }
 
-    @RequestMapping(value = "/{id}/delay", method = {RequestMethod.POST, RequestMethod.PATCH})
+    @RequestMapping(value = {"/{id}/delay", "/{id}/report-delay"}, method = {RequestMethod.POST, RequestMethod.PATCH})
     public ResponseEntity<Complaint> reportDelay(@PathVariable String id, @RequestBody Map<String, String> body) {
         UserPrincipal principal = getCurrentUser();
         if (principal == null) {
@@ -293,8 +293,8 @@ public class ComplaintController {
         // Rule A.1: delay: only the assigned worker or ADMIN.
         accessGuard.checkWorkerCanModifyTask(principal, complaint, "report delay on");
 
-        String reason = body != null ? body.get("reason") : null;
-        String notes = body != null ? body.get("notes") : null;
+        String reason = body != null ? (body.get("reason") != null ? body.get("reason") : body.get("delayReason")) : null;
+        String notes = body != null ? (body.get("notes") != null ? body.get("notes") : body.get("delayNotes")) : null;
         String delayImage = body != null ? body.get("delayImage") : null;
 
         // Requirement 4: Server-side validation of delay image
