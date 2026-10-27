@@ -15,9 +15,20 @@ public class PostgreSqlMigrationAndDataTest {
     private static final String USER = "postgres";
     private static final String PASS = "";
 
+    private boolean isPostgreSqlAvailable() {
+        try (Connection conn = DriverManager.getConnection(JDBC_URL, USER, PASS)) {
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     @Test
     @DisplayName("Verify Flyway V1 and V2 migrations yield exactly 15 tables and no proposal_votes")
     public void testFlywayMigrationsYieldExact15Tables() throws Exception {
+        org.junit.jupiter.api.Assumptions.assumeTrue(isPostgreSqlAvailable(),
+                "Local PostgreSQL test instance at " + JDBC_URL + " is not running. Skipping integration test.");
+
         // 1. Reset public schema cleanly using a dedicated connection
         try (Connection resetConn = DriverManager.getConnection(JDBC_URL, USER, PASS);
              Statement stmt = resetConn.createStatement()) {

@@ -28,6 +28,9 @@ services:
         fromDatabase:
           name: sgcs-postgres
           property: password
+      # External Neon Serverless PostgreSQL connection URL (takes precedence when supplied)
+      - key: DATABASE_URL
+        sync: false
       - key: JWT_SECRET
         generateValue: true
       - key: DATA_SEEDING_ENABLED
